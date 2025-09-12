@@ -1,0 +1,55 @@
+@extends('layouts.admin')
+
+@section('title', 'Додати послугу')
+@section('page-title', 'Додати нову послугу')
+
+@section('content')
+<div class="max-w-2xl">
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" action="{{ route('admin.services.store') }}">
+            @csrf
+
+            <div class="mb-6">
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Назва послуги *</label>
+                <input type="text" id="name" name="name" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="{{ old('name') }}">
+                @error('name')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-6">
+                <label for="description" class="block text-sm font-medium text-gray-700 mb-2">Опис</label>
+                <textarea id="description" name="description" rows="4" 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Опишіть особливості послуги...">{{ old('description') }}</textarea>
+                @error('description')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-6">
+                <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Тривалість (хвилин) *</label>
+                <input type="number" id="duration" name="duration" required min="15" step="15"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       value="{{ old('duration', 60) }}">
+                @error('duration')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <a href="{{ route('admin.services.index') }}" 
+                   class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
+                    Скасувати
+                </a>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+                    Створити послугу
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
