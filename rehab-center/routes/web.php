@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\MasterController;
@@ -29,7 +30,7 @@ Route::get('/masters/{master}/available-slots/{date}/{service}', [MasterControll
 // Auth routes
 Auth::routes(['register' => false]);
 
-// Admin routes
+// Admin routes з middleware в маршрутах
 Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
@@ -43,7 +44,7 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     });
 });
 
-// Page routes (dynamic pages)
+// Page routes - ВАЖЛИВО: має бути в кінці
 Route::get('/{slug}', function ($slug) {
     $page = \App\Models\Page::findBySlug($slug);
     if (!$page) {

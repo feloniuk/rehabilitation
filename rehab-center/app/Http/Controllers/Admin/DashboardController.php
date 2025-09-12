@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -9,15 +8,11 @@ use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'role:admin,master']);
-    }
 
     public function index()
     {
         $user = auth()->user();
-
+        
         if ($user->isAdmin()) {
             $appointments = Appointment::with(['client', 'master', 'service'])
                                       ->where('appointment_date', '>=', today())

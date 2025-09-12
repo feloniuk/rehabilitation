@@ -11,15 +11,11 @@ use Illuminate\Support\Facades\Storage;
 
 class MasterController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'role:admin']);
-    }
 
     public function index()
     {
         $masters = User::where('role', 'master')
-                      ->with('masterServices.service')
+                      ->with('masterServices')
                       ->paginate(10);
         
         return view('admin.masters.index', compact('masters'));
@@ -47,6 +43,8 @@ class MasterController extends Controller
             'services.*.price' => 'required|numeric|min:0',
             'services.*.duration' => 'nullable|integer|min:15',
         ]);
+
+        print_r($request);
 
         $master = User::create([
             'name' => $request->name,
@@ -82,7 +80,9 @@ class MasterController extends Controller
     public function show($id)
     {
         $master = User::where('role', 'master')
-                     ->with(['masterServices.service', 'masterAppointments.client'])
+                     ->with(['masterServices.service', 'masterAppointments' => function($query) {
+                         $query->orderBy('appointment_date', 'desc')->limit(10);
+                     }, 'masterAppointments.client'])
                      ->findOrFail($id);
         
         return view('admin.masters.show', compact('master'));

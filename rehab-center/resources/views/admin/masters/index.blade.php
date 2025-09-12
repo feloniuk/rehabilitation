@@ -48,7 +48,7 @@
                             {{ $master->email }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $master->master_services_count }} послуг
+                            {{ $master->masterServices->count() }} послуг
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($master->is_active)
