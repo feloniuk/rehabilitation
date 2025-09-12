@@ -1,4 +1,5 @@
 <?php
+// app/Http/Controllers/Admin/MasterController.php - ВИПРАВЛЕНА ВАЛІДАЦІЯ
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -11,24 +12,6 @@ use Illuminate\Support\Facades\Storage;
 
 class MasterController extends Controller
 {
-
-    public function index()
-    {
-        $masters = User::where('role', 'master')
-                      ->with('masterServices')
-                      ->paginate(10);
-        
-        return view('admin.masters.index', compact('masters'));
-    }
-
-    public function create()
-    {
-        $services = Service::where('is_active', true)->get();
-        $defaultSchedule = $this->getDefaultSchedule();
-        
-        return view('admin.masters.create', compact('services', 'defaultSchedule'));
-    }
-
     public function store(Request $request)
     {
         $request->validate([
@@ -39,12 +22,24 @@ class MasterController extends Controller
             'description' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'work_schedule' => 'required|array',
-            'services' => 'required|array',
-            'services.*.price' => 'required|numeric|min:0',
-            'services.*.duration' => 'nullable|integer|min:15',
+            'services' => 'nullable|array', // ЗМІНЕНО: nullable замість required
         ]);
 
-        print_r($request);
+        // Додаткова валідація для послуг
+        $selectedServices = [];
+        if ($request->has('services')) {
+            foreach ($request->services as $serviceId => $serviceData) {
+                if (isset($serviceData['price']) && !empty($serviceData['price'])) {
+                    $selectedServices[$serviceId] = $serviceData;
+                }
+            }
+        }
+
+        // Перевіряємо чи вибрано хоча б одну послугу
+        if (empty($selectedServices)) {
+            return back()->withErrors(['services' => 'Оберіть хоча б одну послугу та вкажіть ціну.'])
+                        ->withInput();
+        }
 
         $master = User::create([
             'name' => $request->name,
@@ -62,41 +57,18 @@ class MasterController extends Controller
             $master->update(['photo' => $path]);
         }
 
-        foreach ($request->services as $serviceId => $serviceData) {
-            if (isset($serviceData['price']) && $serviceData['price'] > 0) {
-                MasterService::create([
-                    'master_id' => $master->id,
-                    'service_id' => $serviceId,
-                    'price' => $serviceData['price'],
-                    'duration' => $serviceData['duration'] ?: null,
-                ]);
-            }
+        // Створюємо тільки вибрані послуги
+        foreach ($selectedServices as $serviceId => $serviceData) {
+            MasterService::create([
+                'master_id' => $master->id,
+                'service_id' => $serviceId,
+                'price' => $serviceData['price'],
+                'duration' => $serviceData['duration'] ?: null,
+            ]);
         }
 
         return redirect()->route('admin.masters.index')
                         ->with('success', 'Майстра успішно створено');
-    }
-
-    public function show($id)
-    {
-        $master = User::where('role', 'master')
-                     ->with(['masterServices.service', 'masterAppointments' => function($query) {
-                         $query->orderBy('appointment_date', 'desc')->limit(10);
-                     }, 'masterAppointments.client'])
-                     ->findOrFail($id);
-        
-        return view('admin.masters.show', compact('master'));
-    }
-
-    public function edit($id)
-    {
-        $master = User::where('role', 'master')
-                     ->with('masterServices')
-                     ->findOrFail($id);
-        
-        $services = Service::where('is_active', true)->get();
-        
-        return view('admin.masters.edit', compact('master', 'services'));
     }
 
     public function update(Request $request, $id)
@@ -111,8 +83,24 @@ class MasterController extends Controller
             'description' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'work_schedule' => 'required|array',
-            'services' => 'required|array',
+            'services' => 'nullable|array', // ЗМІНЕНО: nullable замість required
         ]);
+
+        // Додаткова валідація для послуг
+        $selectedServices = [];
+        if ($request->has('services')) {
+            foreach ($request->services as $serviceId => $serviceData) {
+                if (isset($serviceData['price']) && !empty($serviceData['price'])) {
+                    $selectedServices[$serviceId] = $serviceData;
+                }
+            }
+        }
+
+        // Перевіряємо чи вибрано хоча б одну послугу
+        if (empty($selectedServices)) {
+            return back()->withErrors(['services' => 'Оберіть хоча б одну послугу та вкажіть ціну.'])
+                        ->withInput();
+        }
 
         $updateData = [
             'name' => $request->name,
@@ -136,21 +124,59 @@ class MasterController extends Controller
 
         $master->update($updateData);
 
-        // Update services
+        // Оновлюємо послуги
         $master->masterServices()->delete();
-        foreach ($request->services as $serviceId => $serviceData) {
-            if (isset($serviceData['price']) && $serviceData['price'] > 0) {
-                MasterService::create([
-                    'master_id' => $master->id,
-                    'service_id' => $serviceId,
-                    'price' => $serviceData['price'],
-                    'duration' => $serviceData['duration'] ?: null,
-                ]);
-            }
+        foreach ($selectedServices as $serviceId => $serviceData) {
+            MasterService::create([
+                'master_id' => $master->id,
+                'service_id' => $serviceId,
+                'price' => $serviceData['price'],
+                'duration' => $serviceData['duration'] ?: null,
+            ]);
         }
 
         return redirect()->route('admin.masters.index')
                         ->with('success', 'Дані майстра оновлено');
+    }
+
+    // Інші методи залишаються без змін...
+    public function index()
+    {
+        $masters = User::where('role', 'master')
+                      ->with('masterServices')
+                      ->paginate(10);
+        
+        return view('admin.masters.index', compact('masters'));
+    }
+
+    public function create()
+    {
+        $services = Service::where('is_active', true)->get();
+        $defaultSchedule = $this->getDefaultSchedule();
+        
+        return view('admin.masters.create', compact('services', 'defaultSchedule'));
+    }
+
+    public function show($id)
+    {
+        $master = User::where('role', 'master')
+                     ->with(['masterServices.service', 'masterAppointments' => function($query) {
+                         $query->orderBy('appointment_date', 'desc')->limit(10);
+                     }, 'masterAppointments.client'])
+                     ->findOrFail($id);
+        
+        return view('admin.masters.show', compact('master'));
+    }
+
+    public function edit($id)
+    {
+        $master = User::where('role', 'master')
+                     ->with('masterServices')
+                     ->findOrFail($id);
+        
+        $services = Service::where('is_active', true)->get();
+        
+        return view('admin.masters.edit', compact('master', 'services'));
     }
 
     public function destroy($id)

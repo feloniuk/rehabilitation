@@ -9,6 +9,17 @@
         <form method="POST" action="{{ route('admin.masters.store') }}" enctype="multipart/form-data">
             @csrf
 
+            {{-- Показуємо помилки валідації --}}
+            @if ($errors->any())
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-2">Ім'я *</label>
@@ -112,37 +123,53 @@
 
             <!-- Services and Prices -->
             <div class="mb-6">
-                <h3 class="text-lg font-semibold mb-4">Послуги та ціни</h3>
+                <h3 class="text-lg font-semibold mb-4">Послуги та ціни *</h3>
+                <p class="text-sm text-gray-600 mb-4">Оберіть принаймні одну послугу та вкажіть ціну</p>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @foreach($services as $service)
                         <div class="border rounded-lg p-4">
                             <div class="flex items-center mb-3">
-                                <input type="checkbox" id="service_{{ $service->id }}" 
-                                       onchange="toggleService({{ $service->id }})" class="mr-2">
+                                <input type="checkbox" 
+                                       id="service_{{ $service->id }}" 
+                                       data-service-id="{{ $service->id }}"
+                                       class="service-checkbox mr-2"
+                                       {{ old("services.$service->id.price") ? 'checked' : '' }}>
                                 <label for="service_{{ $service->id }}" class="font-medium">
                                     {{ $service->name }}
                                 </label>
                             </div>
                             
-                            <div id="service_fields_{{ $service->id }}" class="space-y-2" style="display: none;">
+                            <div id="service_fields_{{ $service->id }}" 
+                                 class="service-fields space-y-2" 
+                                 style="display: {{ old("services.$service->id.price") ? 'block' : 'none' }};">
                                 <div>
                                     <label class="block text-sm text-gray-600">Ціна (грн) *</label>
-                                    <input type="number" name="services[{{ $service->id }}][price]" step="0.01" min="0"
-                                           class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                    <input type="number" 
+                                           name="services[{{ $service->id }}][price]" 
+                                           step="0.01" 
+                                           min="0"
+                                           class="price-input w-full px-2 py-1 border border-gray-300 rounded text-sm"
                                            value="{{ old("services.$service->id.price") }}">
                                 </div>
                                 <div>
                                     <label class="block text-sm text-gray-600">Тривалість (хв)</label>
-                                    <input type="number" name="services[{{ $service->id }}][duration]" min="15"
+                                    <input type="number" 
+                                           name="services[{{ $service->id }}][duration]" 
+                                           min="15"
                                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                                            placeholder="{{ $service->duration }}" 
                                            value="{{ old("services.$service->id.duration") }}">
-                                    <p class="text-xs text-gray-500">Залишіть пустим для використання стандартної тривалості ({{ $service->duration }} хв)</p>
+                                    <p class="text-xs text-gray-500">Залишіть пустим для стандартної тривалості ({{ $service->duration }} хв)</p>
                                 </div>
                             </div>
                         </div>
                     @endforeach
                 </div>
+                
+                @error('services')
+                    <p class="text-red-500 text-sm mt-2">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="flex justify-end space-x-4">
@@ -161,29 +188,42 @@
 
 @push('scripts')
 <script>
-function toggleService(serviceId) {
-    const checkbox = document.getElementById(`service_${serviceId}`);
-    const fields = document.getElementById(`service_fields_${serviceId}`);
-    
-    if (checkbox.checked) {
-        fields.style.display = 'block';
-        fields.querySelector('input[name$="[price]"]').required = true;
-    } else {
-        fields.style.display = 'none';
-        fields.querySelector('input[name$="[price]"]').required = false;
-    }
-}
-
-// Initialize services that were previously selected
 document.addEventListener('DOMContentLoaded', function() {
-    @if(old('services'))
-        @foreach(old('services') as $serviceId => $serviceData)
-            @if(isset($serviceData['price']) && $serviceData['price'])
-                document.getElementById('service_{{ $serviceId }}').checked = true;
-                toggleService({{ $serviceId }});
-            @endif
-        @endforeach
-    @endif
+    // Отримуємо всі чекбокси послуг
+    const serviceCheckboxes = document.querySelectorAll('.service-checkbox');
+    
+    serviceCheckboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            const serviceId = this.dataset.serviceId;
+            const fieldsContainer = document.getElementById(`service_fields_${serviceId}`);
+            const priceInput = fieldsContainer.querySelector('.price-input');
+            
+            if (this.checked) {
+                fieldsContainer.style.display = 'block';
+                priceInput.required = true;
+            } else {
+                fieldsContainer.style.display = 'none';
+                priceInput.required = false;
+                priceInput.value = ''; // Очищаємо значення
+            }
+        });
+    });
+    
+    // Перевіряємо чи є вибрані послуги при відправці форми
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const checkedServices = document.querySelectorAll('.service-checkbox:checked');
+        const hasValidServices = Array.from(checkedServices).some(function(checkbox) {
+            const serviceId = checkbox.dataset.serviceId;
+            const priceInput = document.querySelector(`input[name="services[${serviceId}][price]"]`);
+            return priceInput && priceInput.value && parseFloat(priceInput.value) > 0;
+        });
+        
+        if (!hasValidServices) {
+            e.preventDefault();
+            alert('Оберіть принаймні одну послугу та вкажіть ціну більше 0');
+        }
+    });
 });
 </script>
 @endpush
