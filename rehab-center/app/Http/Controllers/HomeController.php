@@ -14,7 +14,7 @@ class HomeController extends Controller
                       ->where('is_active', true)
                       ->with('masterServices.service')
                       ->get();
-        
+
         $mapSettings = [
             'address' => Setting::get('center_address', ''),
             'coordinates' => Setting::get('center_coordinates', '50.4501,30.5234') // Kyiv default

@@ -145,7 +145,7 @@ class MasterController extends Controller
         $masters = User::where('role', 'master')
                       ->with('masterServices')
                       ->paginate(10);
-        
+
         return view('admin.masters.index', compact('masters'));
     }
 
@@ -153,7 +153,7 @@ class MasterController extends Controller
     {
         $services = Service::where('is_active', true)->get();
         $defaultSchedule = $this->getDefaultSchedule();
-        
+
         return view('admin.masters.create', compact('services', 'defaultSchedule'));
     }
 
@@ -164,7 +164,7 @@ class MasterController extends Controller
                          $query->orderBy('appointment_date', 'desc')->limit(10);
                      }, 'masterAppointments.client'])
                      ->findOrFail($id);
-        
+
         return view('admin.masters.show', compact('master'));
     }
 
@@ -173,20 +173,20 @@ class MasterController extends Controller
         $master = User::where('role', 'master')
                      ->with('masterServices')
                      ->findOrFail($id);
-        
+
         $services = Service::where('is_active', true)->get();
-        
+
         return view('admin.masters.edit', compact('master', 'services'));
     }
 
     public function destroy($id)
     {
         $master = User::where('role', 'master')->findOrFail($id);
-        
+
         if ($master->photo) {
             Storage::disk('public')->delete($master->photo);
         }
-        
+
         $master->delete();
 
         return redirect()->route('admin.masters.index')

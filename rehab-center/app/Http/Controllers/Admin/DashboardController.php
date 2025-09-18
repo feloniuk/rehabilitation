@@ -40,7 +40,7 @@ class DashboardController extends Controller
 
         $query = Appointment::whereBetween('appointment_date', [$startDate, $endDate])
                            ->where('status', 'scheduled')
-                           ->with(['client', 'service']);
+                           ->with(['client', 'service', 'master']);
 
         if ($user->isMaster()) {
             $query->where('master_id', $user->id);
@@ -51,8 +51,18 @@ class DashboardController extends Controller
                 'title' => $appointment->service->name . ' - ' . $appointment->client->name,
                 'start' => $appointment->getStartDateTime()->toISOString(),
                 'end' => $appointment->getEndDateTime()->toISOString(),
-                'color' => '#3B82F6',
+                'color' => $this->getStatusColor($appointment->status),
+                'appointment_id' => $appointment->id, // Добавляем ID для попапа
             ];
         });
+    }
+
+    private function getStatusColor($status)
+    {
+        return [
+            'scheduled' => '#10B981', // green
+            'completed' => '#3B82F6', // blue
+            'cancelled' => '#EF4444', // red
+        ][$status] ?? '#6B7280'; // gray
     }
 }

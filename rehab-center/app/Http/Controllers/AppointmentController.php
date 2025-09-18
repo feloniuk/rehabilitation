@@ -70,20 +70,20 @@ class AppointmentController extends Controller
     {
         $appointmentId = session('appointment_id');
         $appointment = $appointmentId ? Appointment::with(['master', 'service'])->find($appointmentId) : null;
-        
+
         return view('appointments.success', compact('appointment'));
     }
 
     public function cancel($id)
     {
         $appointment = Appointment::findOrFail($id);
-        
+
         if (!$appointment->canBeCancelled()) {
             return back()->with('error', 'Неможливо скасувати запис менше ніж за 24 години до прийому');
         }
 
         $appointment->update(['status' => 'cancelled']);
-        
+
         return back()->with('success', 'Запис успішно скасовано');
     }
 }

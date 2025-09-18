@@ -24,6 +24,13 @@
                     Головна
                 </a>
                 
+                <!-- Записи - доступно для всех -->
+                <a href="{{ route('admin.appointments.index') }}" 
+                   class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.*') ? 'bg-gray-700 text-white' : '' }}">
+                    <i class="fas fa-calendar-check mr-3"></i>
+                    Записи
+                </a>
+                
                 @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.masters.index') }}" 
                        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.masters.*') ? 'bg-gray-700 text-white' : '' }}">

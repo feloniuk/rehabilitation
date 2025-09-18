@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\MasterController as AdminMasterController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -30,9 +31,15 @@ Route::get('/masters/{master}/available-slots/{date}/{service}', [MasterControll
 // Auth routes
 Auth::routes(['register' => false]);
 
-// Admin routes з middleware в маршрутах
+// Admin routes с middleware в маршрутах
 Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Записи - доступно для всех админов и мастеров
+    Route::get('appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
+    Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
+    Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
+    Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
     
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
