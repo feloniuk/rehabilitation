@@ -108,7 +108,7 @@
 </div>
 
 <!-- Таблиця записів -->
-<div class="mt-6">
+<?php /*<div class="mt-6">
     <div class="bg-white rounded-lg shadow overflow-hidden">
         <div class="px-6 py-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -212,7 +212,7 @@
             </div>
         @endif
     </div>
-</div>
+</div> */ ?>
 
 <!-- Модальне вікно з деталями запису -->
 <div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
