@@ -19,39 +19,45 @@
             
             <nav class="mt-8">
                 <a href="{{ route('admin.dashboard') }}" 
-                   class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.dashboard') ? 'bg-gray-700 text-white' : '' }}">
+                class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.dashboard') ? 'bg-gray-700 text-white' : '' }}">
                     <i class="fas fa-tachometer-alt mr-3"></i>
                     Головна
                 </a>
                 
-                <!-- Записи - доступно для всех -->
+                <!-- Записи - доступно для всіх -->
                 <a href="{{ route('admin.appointments.index') }}" 
-                   class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.*') ? 'bg-gray-700 text-white' : '' }}">
+                class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.*') ? 'bg-gray-700 text-white' : '' }}">
                     <i class="fas fa-calendar-check mr-3"></i>
                     Записи
                 </a>
                 
                 @if(auth()->user()->isAdmin())
                     <a href="{{ route('admin.masters.index') }}" 
-                       class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.masters.*') ? 'bg-gray-700 text-white' : '' }}">
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.masters.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-users mr-3"></i>
                         Майстри
                     </a>
                     
                     <a href="{{ route('admin.services.index') }}" 
-                       class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.services.*') ? 'bg-gray-700 text-white' : '' }}">
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.services.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-concierge-bell mr-3"></i>
                         Послуги
                     </a>
                     
                     <a href="{{ route('admin.pages.index') }}" 
-                       class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.pages.*') ? 'bg-gray-700 text-white' : '' }}">
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.pages.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-file-alt mr-3"></i>
                         Сторінки
                     </a>
                     
+                    <a href="{{ route('admin.text-blocks.index') }}" 
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.text-blocks.*') ? 'bg-gray-700 text-white' : '' }}">
+                        <i class="fas fa-align-left mr-3"></i>
+                        Текстові блоки
+                    </a>
+                    
                     <a href="{{ route('admin.settings.index') }}" 
-                       class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.settings.*') ? 'bg-gray-700 text-white' : '' }}">
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.settings.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-cog mr-3"></i>
                         Налаштування
                     </a>
@@ -59,7 +65,7 @@
                 
                 <div class="border-t border-gray-700 mt-4 pt-4">
                     <a href="{{ route('home') }}" 
-                       class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
                         <i class="fas fa-external-link-alt mr-3"></i>
                         На сайт
                     </a>

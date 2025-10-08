@@ -13,7 +13,8 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'phone', 'role', 'description',
-        'photo', 'work_schedule', 'is_active'
+        'photo', 'work_schedule', 'is_active',
+        'experience_years', 'clients_count', 'certificates_count'
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -22,6 +23,9 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'work_schedule' => 'array',
         'is_active' => 'boolean',
+        'experience_years' => 'integer',
+        'clients_count' => 'integer',
+        'certificates_count' => 'integer',
     ];
 
     // Relationship methods

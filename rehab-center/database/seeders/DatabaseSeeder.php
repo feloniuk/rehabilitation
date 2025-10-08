@@ -67,5 +67,9 @@ class DatabaseSeeder extends Seeder
         foreach ($settings as $key => $value) {
             Setting::create(['key' => $key, 'value' => $value]);
         }
+        
+        $this->call([
+            TextBlockSeeder::class,
+        ]);
     }
 }

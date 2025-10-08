@@ -86,14 +86,6 @@
                     </a>
 
                     @auth
-                        @if(auth()->user()->isAdmin() || auth()->user()->isMaster())
-                            <a href="{{ route('admin.dashboard') }}" 
-                               class="bg-emerald-600 text-white px-4 py-2 rounded-full font-medium hover:bg-emerald-700 transition-colors">
-                                <i class="fas fa-tachometer-alt mr-1"></i>
-                                Панель управління
-                            </a>
-                        @endif
-
                         <div class="relative group">
                             <button class="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 font-medium">
                                 <i class="fas fa-user"></i>
@@ -103,9 +95,14 @@
                             
                             <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                 <div class="py-2">
+                                    
+                                    <a href="{{ route('admin.dashboard') }}" type="submit" class="w-full text-left px-1 py-2 text-gray-700 hover:bg-gray-50">
+                                            <i class="fas fa-tachometer-alt mr-1"></i>
+                                                Панель управління
+                                    </a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-50">
+                                        <button type="submit" class="w-full text-left px-1 py-2 text-gray-700 hover:bg-gray-50">
                                             <i class="fas fa-sign-out-alt mr-2"></i>
                                             Вийти
                                         </button>
@@ -113,10 +110,6 @@
                                 </div>
                             </div>
                         </div>
-                    @else
-                        <a href="{{ route('login') }}" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
-                            Увійти
-                        </a>
                     @endauth
                 </div>
 
@@ -160,10 +153,6 @@
                             Вийти
                         </button>
                     </form>
-                @else
-                    <a href="{{ route('login') }}" class="block text-gray-700 hover:text-emerald-600 font-medium">
-                        Увійти
-                    </a>
                 @endauth
             </div>
         </div>

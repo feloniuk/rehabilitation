@@ -191,6 +191,7 @@
                 </div>
             </section>
 
+            
             <!-- Experience & Certifications -->
             <section class="mb-12">
                 <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-8">
@@ -202,7 +203,7 @@
                             <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-user-graduate text-2xl text-emerald-600"></i>
                             </div>
-                            <h4 class="font-bold text-xl text-gray-800 mb-2">5+</h4>
+                            <h4 class="font-bold text-xl text-gray-800 mb-2">{{ $master->experience_years ?? 5 }}+</h4>
                             <p class="text-gray-600">років досвіду</p>
                         </div>
                         
@@ -211,8 +212,8 @@
                             <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-users text-2xl text-blue-600"></i>
                             </div>
-                            <h4 class="font-bold text-xl text-gray-800 mb-2">200+</h4>
-                            <p class="text-gray-600">задovolених клієнтів</p>
+                            <h4 class="font-bold text-xl text-gray-800 mb-2">{{ $master->clients_count ?? 200 }}+</h4>
+                            <p class="text-gray-600">задоволених клієнтів</p>
                         </div>
                         
                         <!-- Certifications -->
@@ -220,7 +221,7 @@
                             <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <i class="fas fa-certificate text-2xl text-yellow-600"></i>
                             </div>
-                            <h4 class="font-bold text-xl text-gray-800 mb-2">3+</h4>
+                            <h4 class="font-bold text-xl text-gray-800 mb-2">{{ $master->certificates_count ?? 3 }}+</h4>
                             <p class="text-gray-600">сертифікатів</p>
                         </div>
                     </div>

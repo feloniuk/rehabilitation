@@ -4,11 +4,69 @@
 @section('page-title', 'Панель управління')
 
 @section('content')
+
+<!-- Статистичні картки -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600">Сьогодні</p>
+                <p class="text-2xl font-bold text-gray-800">{{ $stats['today'] }}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-calendar-day text-blue-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600">Цей тиждень</p>
+                <p class="text-2xl font-bold text-gray-800">{{ $stats['week'] }}</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-calendar-week text-green-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600">Цей місяць</p>
+                <p class="text-2xl font-bold text-gray-800">{{ $stats['month'] }}</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-calendar-alt text-purple-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600">Майбутні</p>
+                <p class="text-2xl font-bold text-gray-800">{{ $stats['upcoming'] }}</p>
+            </div>
+            <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-arrow-right text-orange-600 text-xl"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     <!-- Calendar -->
     <div class="lg:col-span-2">
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold mb-4">Календар записів</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Календар записів</h3>
+                <div class="text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Поточний місяць
+                </div>
+            </div>
             <div id="calendar" style="height: 500px;"></div>
         </div>
     </div>
@@ -16,7 +74,12 @@
     <!-- Recent Appointments -->
     <div>
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold mb-4">Найближчі записи</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold">Найближчі записи</h3>
+                <a href="{{ route('admin.appointments.index') }}" class="text-sm text-blue-600 hover:text-blue-800">
+                    Всі записи →
+                </a>
+            </div>
 
             @if($appointments->count() > 0)
                 <div class="space-y-3">
@@ -34,28 +97,51 @@
                         </div>
                     @endforeach
                 </div>
-
-                @if($appointments->count() > 5)
-                    <div class="mt-4 text-center">
-                        <a href="{{ route('admin.appointments.index') }}" class="text-blue-600 hover:text-blue-800 text-sm">
-                            Показати всі записи
-                        </a>
-                    </div>
-                @endif
             @else
-                <p class="text-gray-500">Немає найближчих записів</p>
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-calendar-times text-3xl mb-2"></i>
+                    <p>Немає записів на обраний період</p>
+                </div>
             @endif
         </div>
     </div>
 </div>
 
-@if(request('show_all'))
-    <div class="mt-6">
-        <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b">
-                <h3 class="text-lg font-semibold">Всі записи</h3>
+<!-- Таблиця записів -->
+<div class="mt-6">
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h3 class="text-lg font-semibold">{{ $periodTitle }}</h3>
+                <p class="text-sm text-gray-600">Всього записів: {{ $appointments->total() }}</p>
             </div>
 
+            <!-- Фільтри періоду -->
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('admin.dashboard', ['period' => 'today']) }}" 
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $period === 'today' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    <i class="fas fa-calendar-day mr-1"></i>
+                    Сьогодні
+                </a>
+                <a href="{{ route('admin.dashboard', ['period' => 'week']) }}" 
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $period === 'week' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    <i class="fas fa-calendar-week mr-1"></i>
+                    Тиждень
+                </a>
+                <a href="{{ route('admin.dashboard', ['period' => 'month']) }}" 
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $period === 'month' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    <i class="fas fa-calendar-alt mr-1"></i>
+                    Місяць
+                </a>
+                <a href="{{ route('admin.dashboard', ['period' => 'upcoming']) }}" 
+                   class="px-4 py-2 rounded-lg text-sm font-medium transition-colors {{ $period === 'upcoming' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">
+                    <i class="fas fa-arrow-right mr-1"></i>
+                    Майбутні
+                </a>
+            </div>
+        </div>
+
+        @if($appointments->count() > 0)
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -113,13 +199,22 @@
             </div>
 
             <div class="px-6 py-4 border-t">
-                {{ $appointments->appends(request()->query())->links() }}
+                {{ $appointments->appends(['period' => $period])->links() }}
             </div>
-        </div>
+        @else
+            <div class="text-center py-12">
+                <i class="fas fa-calendar-times text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg mb-4">Записів на обраний період не знайдено</p>
+                <a href="{{ route('admin.dashboard', ['period' => 'upcoming']) }}" 
+                   class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Переглянути майбутні записи
+                </a>
+            </div>
+        @endif
     </div>
-@endif
+</div>
 
-<!-- Модальное окно с деталями записи -->
+<!-- Модальне вікно з деталями запису -->
 <div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white rounded-lg max-w-md w-full mx-4">
         <div class="flex justify-between items-center p-6 border-b">
@@ -130,7 +225,7 @@
         </div>
         
         <div id="appointmentContent" class="p-6">
-            <!-- Содержимое будет загружено через AJAX -->
+            <!-- Завантаження через AJAX -->
         </div>
         
         <div class="flex justify-end space-x-3 p-6 border-t bg-gray-50">
@@ -147,7 +242,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
     var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
+        initialView: 'timeGridWeek',
         locale: 'uk',
         height: 500,
         headerToolbar: {
@@ -157,12 +252,9 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         events: @json($calendar),
         eventClick: function(info) {
-            // Извлечь ID записи из события (нужно добавить в контроллер)
             const appointmentId = info.event.extendedProps.appointment_id;
             if (appointmentId) {
                 showAppointmentDetails(appointmentId);
-            } else {
-                alert(info.event.title);
             }
         }
     });
@@ -170,11 +262,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showAppointmentDetails(appointmentId) {
-    // Показать модальное окно
     document.getElementById('appointmentModal').classList.remove('hidden');
     document.getElementById('appointmentModal').classList.add('flex');
     
-    // Показать загрузку
     document.getElementById('appointmentContent').innerHTML = `
         <div class="text-center py-8">
             <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
@@ -182,7 +272,6 @@ function showAppointmentDetails(appointmentId) {
         </div>
     `;
     
-    // Загрузить данные
     fetch(`/admin/appointments/${appointmentId}`)
         .then(response => response.json())
         .then(data => {
@@ -269,7 +358,6 @@ function getStatusClass(status) {
     }
 }
 
-// Закрытие модального окна по ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeModal();

@@ -82,6 +82,62 @@
                 @enderror
             </div>
 
+            <!-- Статистика майстра -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                    Статистика та досягнення
+                </h3>
+                <p class="text-sm text-gray-600 mb-4">Ця інформація відображається на сторінці майстра</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label for="experience_years" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-user-graduate mr-1"></i>
+                            Років досвіду
+                        </label>
+                        <input type="number" id="experience_years" name="experience_years" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value="{{ old('experience_years', $master->experience_years ?? 5) }}"
+                            placeholder="5">
+                        @error('experience_years')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-xs text-gray-500 mt-1">Скільки років працює майстром</p>
+                    </div>
+                    
+                    <div>
+                        <label for="clients_count" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-users mr-1"></i>
+                            Кількість клієнтів
+                        </label>
+                        <input type="number" id="clients_count" name="clients_count" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value="{{ old('clients_count', $master->clients_count ?? 200) }}"
+                            placeholder="200">
+                        @error('clients_count')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-xs text-gray-500 mt-1">Загальна кількість клієнтів</p>
+                    </div>
+                    
+                    <div>
+                        <label for="certificates_count" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-certificate mr-1"></i>
+                            Кількість сертифікатів
+                        </label>
+                        <input type="number" id="certificates_count" name="certificates_count" min="0"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value="{{ old('certificates_count', $master->certificates_count ?? 3) }}"
+                            placeholder="3">
+                        @error('certificates_count')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                        <p class="text-xs text-gray-500 mt-1">Професійних сертифікатів</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Work Schedule -->
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-4">Графік роботи</h3>

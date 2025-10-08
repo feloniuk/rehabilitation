@@ -173,143 +173,80 @@
 @if($page->slug === 'contacts')
 @push('scripts')
 <script>
-// Google Maps
-function initMap() {
+// Функція для створення Google Maps iframe без API ключа
+function initContactsMap() {
     const coordinates = '{{ \App\Models\Setting::get("center_coordinates", "50.4501,30.5234") }}';
-    const [lat, lng] = coordinates.split(',').map(Number);
-
-    const map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: { lat, lng },
-        styles: [
-            {
-                "featureType": "all",
-                "elementType": "geometry.fill",
-                "stylers": [{"weight": "2.00"}]
-            },
-            {
-                "featureType": "all",
-                "elementType": "geometry.stroke",
-                "stylers": [{"color": "#9c9c9c"}]
-            },
-            {
-                "featureType": "all",
-                "elementType": "labels.text",
-                "stylers": [{"visibility": "on"}]
-            },
-            {
-                "featureType": "landscape",
-                "elementType": "all",
-                "stylers": [{"color": "#f2f2f2"}]
-            },
-            {
-                "featureType": "landscape",
-                "elementType": "geometry.fill",
-                "stylers": [{"color": "#ffffff"}]
-            },
-            {
-                "featureType": "landscape.man_made",
-                "elementType": "geometry.fill",
-                "stylers": [{"color": "#ffffff"}]
-            },
-            {
-                "featureType": "poi",
-                "elementType": "all",
-                "stylers": [{"visibility": "off"}]
-            },
-            {
-                "featureType": "road",
-                "elementType": "all",
-                "stylers": [{"saturation": -100}, {"lightness": 45}]
-            },
-            {
-                "featureType": "road",
-                "elementType": "geometry.fill",
-                "stylers": [{"color": "#eeeeee"}]
-            },
-            {
-                "featureType": "road",
-                "elementType": "labels.text.fill",
-                "stylers": [{"color": "#7b7b7b"}]
-            },
-            {
-                "featureType": "road",
-                "elementType": "labels.text.stroke",
-                "stylers": [{"color": "#ffffff"}]
-            },
-            {
-                "featureType": "road.highway",
-                "elementType": "all",
-                "stylers": [{"visibility": "simplified"}]
-            },
-            {
-                "featureType": "road.arterial",
-                "elementType": "labels.icon",
-                "stylers": [{"visibility": "off"}]
-            },
-            {
-                "featureType": "transit",
-                "elementType": "all",
-                "stylers": [{"visibility": "off"}]
-            },
-            {
-                "featureType": "water",
-                "elementType": "all",
-                "stylers": [{"color": "#46bcec"}, {"visibility": "on"}]
-            },
-            {
-                "featureType": "water",
-                "elementType": "geometry.fill",
-                "stylers": [{"color": "#c8d7d4"}]
-            },
-            {
-                "featureType": "water",
-                "elementType": "labels.text.fill",
-                "stylers": [{"color": "#070707"}]
-            },
-            {
-                "featureType": "water",
-                "elementType": "labels.text.stroke",
-                "stylers": [{"color": "#ffffff"}]
-            }
-        ]
-    });
-
-    // Custom marker
-    const marker = new google.maps.Marker({
-        position: { lat, lng },
-        map: map,
-        title: '{{ \App\Models\Setting::get("center_name") }}',
-        icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 12,
-            fillColor: '#10B981',
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#ffffff'
-        }
-    });
-
-    // Info window
-    const infoWindow = new google.maps.InfoWindow({
-        content: `
-            <div class="p-3">
-                <h3 class="font-bold text-gray-800 mb-2">{{ \App\Models\Setting::get("center_name") }}</h3>
-                <p class="text-gray-600 text-sm mb-2">{{ \App\Models\Setting::get("center_address") }}</p>
-                <p class="text-gray-600 text-sm">{{ \App\Models\Setting::get("center_phone") }}</p>
-            </div>
-        `
-    });
-
-    marker.addListener('click', () => {
-        infoWindow.open(map, marker);
-    });
+    const address = encodeURIComponent('{{ \App\Models\Setting::get("center_address") }}');
+    const centerName = encodeURIComponent('{{ \App\Models\Setting::get("center_name") }}');
+    
+    // Створюємо iframe з Google Maps (не потрібен API ключ)
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.style.border = '0';
+        iframe.style.minHeight = '400px';
+        iframe.loading = 'lazy';
+        iframe.referrerPolicy = 'no-referrer-when-downgrade';
+        
+        // Використовуємо Google Maps Embed без API ключа через параметр query
+        iframe.src = `https://www.google.com/maps?q=${coordinates}&output=embed&z=16`;
+        
+        mapContainer.appendChild(iframe);
+    }
 }
 
-// Load map when page loads
-window.addEventListener('load', initMap);
+// Альтернативний варіант через OpenStreetMap (якщо Google не працює)
+function initOSMMap() {
+    const coordinates = '{{ \App\Models\Setting::get("center_coordinates", "50.4501,30.5234") }}';
+    const [lat, lng] = coordinates.split(',').map(Number);
+    
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        const iframe = document.createElement('iframe');
+        iframe.width = '100%';
+        iframe.height = '100%';
+        iframe.style.border = '0';
+        iframe.style.minHeight = '400px';
+        iframe.loading = 'lazy';
+        
+        // OpenStreetMap не потребує API ключа
+        iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${lng-0.01},${lat-0.01},${lng+0.01},${lat+0.01}&layer=mapnik&marker=${lat},${lng}`;
+        
+        mapContainer.appendChild(iframe);
+    }
+}
+
+// Завантажуємо карту після завантаження сторінки
+window.addEventListener('load', function() {
+    try {
+        initContactsMap();
+    } catch (error) {
+        console.log('Fallback to OSM map');
+        initOSMMap();
+    }
+});
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap"></script>
+@endpush
+
+@push('styles')
+<style>
+#map {
+    position: relative;
+    background: #f3f4f6;
+}
+
+#map iframe {
+    border-radius: 0 1rem 1rem 0;
+}
+
+@media (max-width: 1024px) {
+    #map iframe {
+        border-radius: 0 0 1rem 1rem;
+    }
+}
+</style>
 @endpush
 @endif
 

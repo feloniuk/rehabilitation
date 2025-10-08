@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
+use App\Http\Controllers\Admin\TextBlockController;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -31,11 +32,11 @@ Route::get('/masters/{master}/available-slots/{date}/{service}', [MasterControll
 // Auth routes
 Auth::routes(['register' => false]);
 
-// Admin routes с middleware в маршрутах
+// Admin routes
 Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Записи - доступно для всех админов и мастеров
+    // Записи - доступно для всіх админів і майстрів
     Route::get('appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
     Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
     Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
@@ -46,12 +47,16 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         Route::resource('masters', AdminMasterController::class);
         Route::resource('services', AdminServiceController::class);
         Route::resource('pages', PageController::class);
+        
+        // Текстові блоки
+        Route::resource('text-blocks', TextBlockController::class);
+        
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
     });
 });
 
-// Page routes - ВАЖЛИВО: має бути в кінці
+// Page routes - в кінці
 Route::get('/{slug}', function ($slug) {
     $page = \App\Models\Page::findBySlug($slug);
     if (!$page) {

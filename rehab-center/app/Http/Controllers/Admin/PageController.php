@@ -51,7 +51,6 @@ class PageController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:pages,slug,' . $id,
-            'content' => 'required|string',
         ]);
 
         $page->update([

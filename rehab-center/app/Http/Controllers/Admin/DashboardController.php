@@ -5,32 +5,86 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
         
-        if ($user->isAdmin()) {
-            $appointments = Appointment::with(['client', 'master', 'service'])
-                                      ->where('appointment_date', '>=', today())
-                                      ->orderBy('appointment_date')
-                                      ->orderBy('appointment_time')
-                                      ->paginate(20);
-        } else {
-            $appointments = Appointment::with(['client', 'service'])
-                                      ->where('master_id', $user->id)
-                                      ->where('appointment_date', '>=', today())
-                                      ->orderBy('appointment_date')
-                                      ->orderBy('appointment_time')
-                                      ->paginate(20);
+        // Визначаємо період для відображення
+        $period = $request->get('period', 'week'); // week, month, all
+        
+        // Базовий запит
+        $query = $user->isAdmin() 
+            ? Appointment::with(['client', 'master', 'service'])
+            : Appointment::with(['client', 'service'])->where('master_id', $user->id);
+        
+        // Фільтрація по періоду
+        switch ($period) {
+            case 'today':
+                $query->whereDate('appointment_date', today());
+                $periodTitle = 'Сьогодні';
+                break;
+            case 'week':
+                $query->whereBetween('appointment_date', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ]);
+                $periodTitle = 'Цей тиждень';
+                break;
+            case 'month':
+                $query->whereBetween('appointment_date', [
+                    now()->startOfMonth(),
+                    now()->endOfMonth()
+                ]);
+                $periodTitle = 'Цей місяць';
+                break;
+            case 'upcoming':
+                $query->where('appointment_date', '>=', today());
+                $periodTitle = 'Майбутні';
+                break;
+            default:
+                // По замовчуванню - тиждень
+                $query->whereBetween('appointment_date', [
+                    now()->startOfWeek(),
+                    now()->endOfWeek()
+                ]);
+                $periodTitle = 'Цей тиждень';
         }
 
+        $appointments = $query->orderBy('appointment_date')
+                             ->orderBy('appointment_time')
+                             ->paginate(20);
+
+        // Статистика для відображення
+        $stats = $this->getStats($user);
+        
+        // Календар для поточного місяця
         $calendar = $this->getCalendarData($user);
 
-        return view('admin.dashboard', compact('appointments', 'calendar'));
+        return view('admin.dashboard', compact('appointments', 'calendar', 'periodTitle', 'period', 'stats'));
+    }
+
+    private function getStats($user)
+    {
+        $baseQuery = $user->isAdmin() 
+            ? Appointment::query()
+            : Appointment::where('master_id', $user->id);
+
+        return [
+            'today' => (clone $baseQuery)->whereDate('appointment_date', today())->count(),
+            'week' => (clone $baseQuery)->whereBetween('appointment_date', [
+                now()->startOfWeek(),
+                now()->endOfWeek()
+            ])->count(),
+            'month' => (clone $baseQuery)->whereBetween('appointment_date', [
+                now()->startOfMonth(),
+                now()->endOfMonth()
+            ])->count(),
+            'upcoming' => (clone $baseQuery)->where('appointment_date', '>=', today())->count(),
+        ];
     }
 
     private function getCalendarData($user)
@@ -52,7 +106,7 @@ class DashboardController extends Controller
                 'start' => $appointment->getStartDateTime()->toISOString(),
                 'end' => $appointment->getEndDateTime()->toISOString(),
                 'color' => $this->getStatusColor($appointment->status),
-                'appointment_id' => $appointment->id, // Добавляем ID для попапа
+                'appointment_id' => $appointment->id,
             ];
         });
     }

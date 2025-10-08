@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/Admin/MasterController.php - ВИПРАВЛЕНА ВАЛІДАЦІЯ
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -22,10 +22,12 @@ class MasterController extends Controller
             'description' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'work_schedule' => 'required|array',
-            'services' => 'nullable|array', // ЗМІНЕНО: nullable замість required
+            'services' => 'nullable|array',
+            'experience_years' => 'nullable|integer|min:0',
+            'clients_count' => 'nullable|integer|min:0',
+            'certificates_count' => 'nullable|integer|min:0',
         ]);
 
-        // Додаткова валідація для послуг
         $selectedServices = [];
         if ($request->has('services')) {
             foreach ($request->services as $serviceId => $serviceData) {
@@ -35,7 +37,6 @@ class MasterController extends Controller
             }
         }
 
-        // Перевіряємо чи вибрано хоча б одну послугу
         if (empty($selectedServices)) {
             return back()->withErrors(['services' => 'Оберіть хоча б одну послугу та вкажіть ціну.'])
                         ->withInput();
@@ -50,6 +51,9 @@ class MasterController extends Controller
             'description' => $request->description,
             'work_schedule' => $request->work_schedule,
             'is_active' => true,
+            'experience_years' => $request->experience_years ?? 0,
+            'clients_count' => $request->clients_count ?? 0,
+            'certificates_count' => $request->certificates_count ?? 0,
         ]);
 
         if ($request->hasFile('photo')) {
@@ -57,7 +61,6 @@ class MasterController extends Controller
             $master->update(['photo' => $path]);
         }
 
-        // Створюємо тільки вибрані послуги
         foreach ($selectedServices as $serviceId => $serviceData) {
             MasterService::create([
                 'master_id' => $master->id,
@@ -83,10 +86,12 @@ class MasterController extends Controller
             'description' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'work_schedule' => 'required|array',
-            'services' => 'nullable|array', // ЗМІНЕНО: nullable замість required
+            'services' => 'nullable|array',
+            'experience_years' => 'nullable|integer|min:0',
+            'clients_count' => 'nullable|integer|min:0',
+            'certificates_count' => 'nullable|integer|min:0',
         ]);
 
-        // Додаткова валідація для послуг
         $selectedServices = [];
         if ($request->has('services')) {
             foreach ($request->services as $serviceId => $serviceData) {
@@ -96,7 +101,6 @@ class MasterController extends Controller
             }
         }
 
-        // Перевіряємо чи вибрано хоча б одну послугу
         if (empty($selectedServices)) {
             return back()->withErrors(['services' => 'Оберіть хоча б одну послугу та вкажіть ціну.'])
                         ->withInput();
@@ -109,6 +113,9 @@ class MasterController extends Controller
             'description' => $request->description,
             'work_schedule' => $request->work_schedule,
             'is_active' => $request->has('is_active'),
+            'experience_years' => $request->experience_years ?? 0,
+            'clients_count' => $request->clients_count ?? 0,
+            'certificates_count' => $request->certificates_count ?? 0,
         ];
 
         if ($request->filled('password')) {
@@ -124,7 +131,6 @@ class MasterController extends Controller
 
         $master->update($updateData);
 
-        // Оновлюємо послуги
         $master->masterServices()->delete();
         foreach ($selectedServices as $serviceId => $serviceData) {
             MasterService::create([
@@ -139,7 +145,6 @@ class MasterController extends Controller
                         ->with('success', 'Дані майстра оновлено');
     }
 
-    // Інші методи залишаються без змін...
     public function index()
     {
         $masters = User::where('role', 'master')
