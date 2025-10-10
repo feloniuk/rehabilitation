@@ -70,6 +70,7 @@ class DatabaseSeeder extends Seeder
         
         $this->call([
             TextBlockSeeder::class,
+            NotificationTemplatesSeeder::class,
         ]);
     }
 }

@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Admin\TextBlockController;
+use App\Http\Controllers\Admin\ManualAppointmentController;
+use App\Http\Controllers\Admin\NotificationController;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -38,10 +40,18 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     
     // Записи - доступно для всіх админів і майстрів
     Route::get('appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
+    
+    Route::get('appointments/create-manual', [ManualAppointmentController::class, 'create'])
+        ->name('appointments.manual.create');
+    Route::post('appointments/create-manual', [ManualAppointmentController::class, 'store'])
+        ->name('appointments.manual.store');
+    Route::get('appointments/get-service-price', [ManualAppointmentController::class, 'getServicePrice'])
+        ->name('appointments.get-service-price');
+        
     Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
     Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
     Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
-    
+
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         Route::resource('masters', AdminMasterController::class);
@@ -53,6 +63,30 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+
+        Route::get('notifications', [NotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::post('notifications/send', [NotificationController::class, 'send'])
+            ->name('notifications.send');
+        Route::get('notifications/logs', [NotificationController::class, 'logs'])
+            ->name('notifications.logs');
+        Route::post('notifications/preview', [NotificationController::class, 'previewTemplate'])
+            ->name('notifications.preview');
+        
+        // Управління шаблонами
+        Route::get('notifications/templates', [NotificationController::class, 'templates'])
+            ->name('notifications.templates');
+        Route::post('notifications/templates', [NotificationController::class, 'storeTemplate'])
+            ->name('notifications.templates.store');
+        Route::get('notifications/templates/{id}/edit', function($id) {
+            $template = \App\Models\NotificationTemplate::findOrFail($id);
+            return response()->json($template);
+        })->name('notifications.templates.edit');
+        Route::put('notifications/templates/{id}', [NotificationController::class, 'updateTemplate'])
+            ->name('notifications.templates.update');
+        Route::delete('notifications/templates/{id}', [NotificationController::class, 'deleteTemplate'])
+            ->name('notifications.templates.delete');
+        
     });
 });
 

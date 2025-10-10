@@ -24,14 +24,24 @@
                     Головна
                 </a>
                 
-                <!-- Записи - доступно для всіх -->
+                {{-- Записи - доступно для всіх --}}
                 <a href="{{ route('admin.appointments.index') }}" 
-                class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.*') ? 'bg-gray-700 text-white' : '' }}">
+                class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.index') ? 'bg-gray-700 text-white' : '' }}">
                     <i class="fas fa-calendar-check mr-3"></i>
                     Записи
                 </a>
                 
+                {{-- Ручне створення запису --}}
+                <a href="{{ route('admin.appointments.manual.create') }}" 
+                class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.manual.*') ? 'bg-gray-700 text-white' : '' }}">
+                    <i class="fas fa-plus-circle mr-3"></i>
+                    Створити запис
+                </a>
+                
                 @if(auth()->user()->isAdmin())
+                    {{-- Розділювач --}}
+                    <div class="border-t border-gray-700 my-2"></div>
+                    
                     <a href="{{ route('admin.masters.index') }}" 
                     class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.masters.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-users mr-3"></i>
@@ -56,6 +66,31 @@
                         Текстові блоки
                     </a>
                     
+                    {{-- Розділювач --}}
+                    <div class="border-t border-gray-700 my-2"></div>
+                    
+                    {{-- Модуль розсилок --}}
+                    <a href="{{ route('admin.notifications.index') }}" 
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.notifications.index') ? 'bg-gray-700 text-white' : '' }}">
+                        <i class="fas fa-paper-plane mr-3"></i>
+                        Розсилки
+                    </a>
+                    
+                    <a href="{{ route('admin.notifications.templates') }}" 
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.notifications.templates') ? 'bg-gray-700 text-white' : '' }}">
+                        <i class="fas fa-file-alt mr-3"></i>
+                        Шаблони
+                    </a>
+                    
+                    <a href="{{ route('admin.notifications.logs') }}" 
+                    class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.notifications.logs') ? 'bg-gray-700 text-white' : '' }}">
+                        <i class="fas fa-history mr-3"></i>
+                        Історія розсилок
+                    </a>
+                    
+                    {{-- Розділювач --}}
+                    <div class="border-t border-gray-700 my-2"></div>
+                    
                     <a href="{{ route('admin.settings.index') }}" 
                     class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.settings.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-cog mr-3"></i>
@@ -79,7 +114,7 @@
                         </button>
                     </form>
                 </div>
-            </nav>
+</nav>
         </div>
 
         <!-- Main Content -->
