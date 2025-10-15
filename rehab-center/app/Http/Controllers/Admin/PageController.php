@@ -3,15 +3,75 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Page;
+use App\Models\TextBlock;
 use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-
     public function index()
     {
         $pages = Page::paginate(10);
-        return view('admin.pages.index', compact('pages'));
+        
+        // Додаємо віртуальну "сторінку" для головної
+        $homePageBlocks = TextBlock::orderBy('order')->get();
+        
+        return view('admin.pages.index', compact('pages', 'homePageBlocks'));
+    }
+
+    // Метод для редагування головної сторінки (текстових блоків)
+    public function editHome()
+    {
+        $blocks = TextBlock::orderBy('order')->paginate(20);
+        return view('admin.pages.edit-home', compact('blocks'));
+    }
+
+    // Метод для оновлення текстового блоку
+    public function updateBlock(Request $request, $id)
+    {
+        $block = TextBlock::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required',
+            'type' => 'required|in:text,textarea,html',
+            'order' => 'nullable|integer',
+        ]);
+
+        $block->update($request->all());
+
+        return redirect()->route('admin.pages.edit-home')
+                        ->with('success', 'Текстовий блок оновлено');
+    }
+
+    // Метод для створення нового блоку
+    public function createBlock()
+    {
+        return view('admin.pages.create-block');
+    }
+
+    public function storeBlock(Request $request)
+    {
+        $request->validate([
+            'key' => 'required|string|max:255|unique:text_blocks',
+            'title' => 'required|string|max:255',
+            'content' => 'required',
+            'type' => 'required|in:text,textarea,html',
+            'order' => 'nullable|integer',
+        ]);
+
+        TextBlock::create($request->all());
+
+        return redirect()->route('admin.pages.edit-home')
+                        ->with('success', 'Текстовий блок створено');
+    }
+
+    public function destroyBlock($id)
+    {
+        $block = TextBlock::findOrFail($id);
+        $block->delete();
+
+        return redirect()->route('admin.pages.edit-home')
+                        ->with('success', 'Текстовий блок видалено');
     }
 
     public function create()

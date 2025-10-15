@@ -62,8 +62,14 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "patches": {
+            "danog/madelineproto": {
+                "Suppress Windows warning": "patches/madelineproto-windows-warning.patch"
+            }
         }
     },
+    
     "config": {
         "optimize-autoloader": true,
         "preferred-install": "dist",

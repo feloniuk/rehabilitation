@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\PageController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
-use App\Http\Controllers\Admin\TextBlockController;
 use App\Http\Controllers\Admin\ManualAppointmentController;
 use App\Http\Controllers\Admin\NotificationController;
 
@@ -56,10 +55,19 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     Route::middleware('role:admin')->group(function () {
         Route::resource('masters', AdminMasterController::class);
         Route::resource('services', AdminServiceController::class);
-        Route::resource('pages', PageController::class);
-        
-        // Текстові блоки
-        Route::resource('text-blocks', TextBlockController::class);
+
+        Route::get('pages', [PageController::class, 'index'])->name('pages.index');
+        Route::get('pages/home/edit', [PageController::class, 'editHome'])->name('pages.edit-home');
+        Route::get('pages/home/blocks/create', [PageController::class, 'createBlock'])->name('pages.blocks.create');
+        Route::post('pages/home/blocks', [PageController::class, 'storeBlock'])->name('pages.blocks.store');
+        Route::put('pages/home/blocks/{id}', [PageController::class, 'updateBlock'])->name('pages.blocks.update');
+        Route::delete('pages/home/blocks/{id}', [PageController::class, 'destroyBlock'])->name('pages.blocks.destroy');
+
+        Route::get('pages/create', [PageController::class, 'create'])->name('pages.create');
+        Route::post('pages', [PageController::class, 'store'])->name('pages.store');
+        Route::get('pages/{id}/edit', [PageController::class, 'edit'])->name('pages.edit');
+        Route::put('pages/{id}', [PageController::class, 'update'])->name('pages.update');
+        Route::delete('pages/{id}', [PageController::class, 'destroy'])->name('pages.destroy');
         
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');

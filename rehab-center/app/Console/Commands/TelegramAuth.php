@@ -4,16 +4,18 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use danog\MadelineProto\API;
-use danog\MadelineProto\Logger;
+use danog\MadelineProto\Settings;
+use danog\MadelineProto\Settings\AppInfo;
+use danog\MadelineProto\Settings\Logger;
 
 class TelegramAuth extends Command
 {
     protected $signature = 'telegram:auth';
-    protected $description = 'Авторизація Telegram для розсилок';
+    protected $description = 'Авторізація Telegram для розсилок';
 
     public function handle()
     {
-        $this->info('🔐 Авторизація Telegram для модуля розсилок');
+        $this->info('🔐 Авторізація Telegram для модуля розсилок');
         $this->info('');
 
         // Перевірка налаштувань
@@ -25,33 +27,40 @@ class TelegramAuth extends Command
         }
 
         try {
-            $settings = [
-                'app_info' => [
-                    'api_id' => config('services.telegram.api_id'),
-                    'api_hash' => config('services.telegram.api_hash'),
-                ],
-                'logger' => [
-                    'logger' => Logger::FILE_LOGGER,
-                    'logger_param' => storage_path('logs/telegram.log'),
-                    'logger_level' => Logger::NOTICE,
-                ],
-            ];
+            // Створюємо об'єкт налаштувань
+            $settings = new Settings;
+            
+            // Налаштування додатку
+            $appInfo = new AppInfo;
+            $appInfo->setApiId((int) config('services.telegram.api_id'));
+            $appInfo->setApiHash(config('services.telegram.api_hash'));
+            $settings->setAppInfo($appInfo);
+            
+            // Налаштування логування
+            $logger = new Logger;
+            $logger->setType(Logger::FILE_LOGGER);
+            $logger->setExtra(storage_path('logs/telegram.log'));
+            $logger->setLevel(Logger::ERROR);
+            $settings->setLogger($logger);
 
             $this->info('📱 Ініціалізація MadelineProto...');
             
-            $telegram = new API(storage_path('app/telegram_session.madeline'), $settings);
+            $telegram = new API(
+                storage_path('app/telegram_session.madeline'),
+                $settings
+            );
             
-            $this->info('✅ Запуск процесу авторизації...');
+            $this->info('✅ Запуск процесу авторізації...');
             $this->info('');
             
-            // Запуск інтерактивної авторизації
+            // Запуск інтерактивної авторізації
             $telegram->start();
             
-            // Перевірка авторизації
-            $me = $telegram->get_self();
+            // Перевірка авторізації
+            $me = $telegram->getSelf();
             
             $this->info('');
-            $this->info('✅ Авторизація успішна!');
+            $this->info('✅ Авторізація успішна!');
             $this->info('👤 Авторизовано як: ' . ($me['first_name'] ?? 'Unknown'));
             $this->info('📞 Телефон: ' . ($me['phone'] ?? 'Unknown'));
             $this->info('');
@@ -61,7 +70,7 @@ class TelegramAuth extends Command
             
         } catch (\Exception $e) {
             $this->error('');
-            $this->error('❌ Помилка авторизації: ' . $e->getMessage());
+            $this->error('❌ Помилка авторізації: ' . $e->getMessage());
             $this->error('');
             $this->info('💡 Спробуйте:');
             $this->info('  - Перевірити правильність API_ID та API_HASH');

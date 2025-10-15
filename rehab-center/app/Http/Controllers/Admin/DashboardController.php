@@ -93,7 +93,7 @@ class DashboardController extends Controller
         $endDate = now()->endOfMonth();
 
         $query = Appointment::whereBetween('appointment_date', [$startDate, $endDate])
-                           ->where('status', 'scheduled')
+                        //    ->where('status', 'scheduled')
                            ->with(['client', 'service', 'master']);
 
         if ($user->isMaster()) {

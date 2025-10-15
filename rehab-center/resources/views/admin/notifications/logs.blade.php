@@ -47,7 +47,7 @@
                             {{ $log->phone }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $log->template->name ?? 'Без шаблону' }}
+                            {{ $log->template ? $log->template->name : 'Без шаблону' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $log->appointment->appointment_date->format('d.m.Y') }}
@@ -130,14 +130,16 @@
 
 @push('scripts')
 <script>
-const logsData = @json($logs->map(function($log) {
-    return [
-        'id' => $log->id,
-        'message' => $log->message,
-        'error' => $log->error_message,
-        'status' => $log->status,
-    ];
-})->keyBy('id'));
+// Створюємо об'єкт з даними логів
+const logsData = {};
+@foreach($logs as $log)
+logsData[{{ $log->id }}] = {
+    id: {{ $log->id }},
+    message: {!! json_encode($log->message) !!},
+    error: {!! json_encode($log->error_message) !!},
+    status: "{{ $log->status }}"
+};
+@endforeach
 
 function showMessage(logId) {
     const log = logsData[logId];

@@ -6,7 +6,10 @@ use App\Models\Appointment;
 use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
 use danog\MadelineProto\API;
-use danog\MadelineProto\Logger;
+use danog\MadelineProto\Settings;
+use danog\MadelineProto\Settings\AppInfo;
+use danog\MadelineProto\Settings\Logger;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Сервіс для відправки повідомлень через Telegram (userbot)
@@ -14,25 +17,58 @@ use danog\MadelineProto\Logger;
  */
 class TelegramNotificationService
 {
-    private API $telegram;
+    private ?API $telegram = null;
+    private bool $isConfigured = false;
 
     public function __construct()
     {
-        // Ініціалізація MadelineProto
-        $settings = [
-            'app_info' => [
-                'api_id' => config('services.telegram.api_id'),
-                'api_hash' => config('services.telegram.api_hash'),
-            ],
-            'logger' => [
-                'logger' => Logger::FILE_LOGGER,
-                'logger_param' => storage_path('logs/telegram.log'),
-                'logger_level' => Logger::NOTICE,
-            ],
-        ];
+        // Перевіряємо чи налаштовано Telegram
+        $apiId = config('services.telegram.api_id');
+        $apiHash = config('services.telegram.api_hash');
 
-        $this->telegram = new API(storage_path('app/telegram_session.madeline'), $settings);
-        $this->telegram->start();
+        if (!$apiId || !$apiHash) {
+            Log::warning('Telegram API credentials not configured');
+            $this->isConfigured = false;
+            return;
+        }
+
+        try {
+            // Створюємо об'єкт налаштувань
+            $settings = new Settings;
+            
+            // Налаштування додатку
+            $appInfo = new AppInfo;
+            $appInfo->setApiId((int) $apiId);
+            $appInfo->setApiHash($apiHash);
+            $settings->setAppInfo($appInfo);
+            
+            // Налаштування логування
+            $logger = new Logger;
+            $logger->setType(Logger::FILE_LOGGER);
+            $logger->setExtra(storage_path('logs/telegram.log'));
+            $logger->setLevel(Logger::ERROR);
+            $settings->setLogger($logger);
+
+            // Ініціалізація API
+            $this->telegram = new API(
+                storage_path('app/telegram_session.madeline'),
+                $settings
+            );
+            
+            $this->telegram->start();
+            $this->isConfigured = true;
+        } catch (\Exception $e) {
+            Log::error('Telegram initialization error: ' . $e->getMessage());
+            $this->isConfigured = false;
+        }
+    }
+
+    /**
+     * Перевірка чи налаштовано Telegram
+     */
+    public function isConfigured(): bool
+    {
+        return $this->isConfigured;
     }
 
     /**
@@ -40,6 +76,11 @@ class TelegramNotificationService
      */
     public function sendMessage(string $phone, string $message): bool
     {
+        if (!$this->isConfigured) {
+            Log::warning('Telegram not configured, cannot send message');
+            return false;
+        }
+
         try {
             // Нормалізація номера телефону
             $phone = $this->normalizePhone($phone);
@@ -52,7 +93,7 @@ class TelegramNotificationService
 
             return true;
         } catch (\Exception $e) {
-            \Log::error('Telegram send error: ' . $e->getMessage(), [
+            Log::error('Telegram send error: ' . $e->getMessage(), [
                 'phone' => $phone,
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -79,6 +120,11 @@ class TelegramNotificationService
             'status' => 'pending',
         ]);
 
+        if (!$this->isConfigured) {
+            $log->markAsFailed('Telegram не налаштовано. Додайте TELEGRAM_API_ID та TELEGRAM_API_HASH в .env');
+            return $log;
+        }
+
         // Відправляємо повідомлення
         $success = $this->sendMessage($phone, $message);
 
@@ -103,6 +149,15 @@ class TelegramNotificationService
             'failed' => 0,
             'logs' => [],
         ];
+
+        if (!$this->isConfigured) {
+            return [
+                'success' => 0,
+                'failed' => count($appointmentIds),
+                'logs' => [],
+                'error' => 'Telegram не налаштовано'
+            ];
+        }
 
         $appointments = Appointment::with(['client', 'master', 'service'])
             ->whereIn('id', $appointmentIds)
@@ -146,8 +201,12 @@ class TelegramNotificationService
      */
     public function isAuthorized(): bool
     {
+        if (!$this->isConfigured) {
+            return false;
+        }
+
         try {
-            $this->telegram->get_self();
+            $this->telegram->getSelf();
             return true;
         } catch (\Exception $e) {
             return false;

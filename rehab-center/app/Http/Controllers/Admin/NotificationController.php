@@ -24,6 +24,19 @@ class NotificationController extends Controller
      */
     public function index()
     {
+
+        if (!$this->telegramService->isConfigured()) {
+            return view('admin.notifications.index')
+                ->with('error', 'Telegram не налаштовано. Додайте TELEGRAM_API_ID та TELEGRAM_API_HASH в .env файл.')
+                ->with('templates', [])
+                ->with('upcomingAppointments', collect())
+                ->with('stats', [
+                    'total_sent' => 0,
+                    'total_failed' => 0,
+                    'sent_today' => 0,
+                ]);
+        }
+
         $templates = NotificationTemplate::where('is_active', true)->get();
         
         // Майбутні записи для розсилки

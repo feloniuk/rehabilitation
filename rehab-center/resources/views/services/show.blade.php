@@ -228,7 +228,7 @@
                             <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span class="text-2xl font-bold text-white">1</span>
                             </div>
-                            <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-emerald-200"></div>
+                            <!-- <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-emerald-200"></div> -->
                         </div>
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Запис онлайн</h3>
                         <p class="text-gray-600 text-sm">Оберіть спеціаліста та зручний час</p>
@@ -240,7 +240,7 @@
                             <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span class="text-2xl font-bold text-white">2</span>
                             </div>
-                            <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-emerald-200"></div>
+                            <!-- <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-emerald-200"></div> -->
                         </div>
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Консультація</h3>
                         <p class="text-gray-600 text-sm">Обговорення ваших потреб та плану</p>

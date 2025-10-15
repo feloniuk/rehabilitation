@@ -1,14 +1,64 @@
 @extends('layouts.admin')
 
 @section('title', 'Сторінки')
-@section('page-title', 'Управління сторінками')
+@section('page-title', 'Управління контентом сайту')
 
 @section('content')
+<div class="bg-white rounded-lg shadow mb-6">
+    <div class="px-6 py-4 border-b flex justify-between items-center bg-gradient-to-r from-emerald-50 to-teal-50">
+        <div>
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class="fas fa-home text-emerald-600 mr-2"></i>
+                Головна сторінка
+            </h3>
+            <p class="text-sm text-gray-600">Текстові блоки та контент головної сторінки</p>
+        </div>
+        <a href="{{ route('admin.pages.edit-home') }}" 
+           class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition-colors">
+            <i class="fas fa-edit mr-2"></i>Редагувати головну
+        </a>
+    </div>
+    
+    <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white border-2 border-emerald-200 rounded-lg p-4">
+                <div class="text-emerald-600 text-3xl mb-2">
+                    <i class="fas fa-align-left"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-1">{{ $homePageBlocks->count() }}</h4>
+                <p class="text-sm text-gray-600">Текстових блоків</p>
+            </div>
+            
+            <div class="bg-white border-2 border-blue-200 rounded-lg p-4">
+                <div class="text-blue-600 text-3xl mb-2">
+                    <i class="fas fa-language"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-1">Українська</h4>
+                <p class="text-sm text-gray-600">Мова контенту</p>
+            </div>
+            
+            <div class="bg-white border-2 border-purple-200 rounded-lg p-4">
+                <div class="text-purple-600 text-3xl mb-2">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h4 class="font-semibold text-gray-800 mb-1">Онлайн</h4>
+                <p class="text-sm text-gray-600">Статус публікації</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white rounded-lg shadow">
     <div class="px-6 py-4 border-b flex justify-between items-center">
-        <h3 class="text-lg font-semibold">Список сторінок</h3>
+        <div>
+            <h3 class="text-lg font-semibold">
+                <i class="fas fa-file-alt text-blue-600 mr-2"></i>
+                Додаткові сторінки
+            </h3>
+            <p class="text-sm text-gray-600">Статичні сторінки сайту (Про нас, Контакти тощо)</p>
+        </div>
         <a href="{{ route('admin.pages.create') }}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Додати сторінку
         </a>
     </div>
@@ -25,20 +75,22 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($pages as $page)
-                    <tr>
+                    <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-medium text-gray-900">{{ $page->title }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $page->slug }}
+                            <code class="bg-gray-100 px-2 py-1 rounded">{{ $page->slug }}</code>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($page->is_active)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i>
                                     Активна
                                 </span>
                             @else
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i>
                                     Неактивна
                                 </span>
                             @endif
@@ -46,22 +98,29 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-2">
                                 <a href="{{ route('pages.show', $page->slug) }}" target="_blank"
-                                   class="text-green-600 hover:text-green-900">Переглянути</a>
+                                   class="text-green-600 hover:text-green-900" title="Переглянути">
+                                    <i class="fas fa-eye"></i>
+                                </a>
                                 <a href="{{ route('admin.pages.edit', $page->id) }}" 
-                                   class="text-indigo-600 hover:text-indigo-900">Редагувати</a>
+                                   class="text-indigo-600 hover:text-indigo-900" title="Редагувати">
+                                    <i class="fas fa-edit"></i>
+                                </a>
                                 <form method="POST" action="{{ route('admin.pages.destroy', $page->id) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Видалити</button>
+                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Видалити">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-4 text-center text-gray-500">
-                            Сторінок не знайдено
+                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-3xl mb-2"></i>
+                            <p>Додаткових сторінок ще немає</p>
                         </td>
                     </tr>
                 @endforelse
@@ -69,8 +128,10 @@
         </table>
     </div>
 
-    <div class="px-6 py-4 border-t">
-        {{ $pages->links() }}
-    </div>
+    @if($pages->hasPages())
+        <div class="px-6 py-4 border-t">
+            {{ $pages->links() }}
+        </div>
+    @endif
 </div>
 @endsection
