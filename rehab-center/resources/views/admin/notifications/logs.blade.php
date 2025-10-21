@@ -79,8 +79,9 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button onclick="showMessage({{ $log->id }})" 
-                                    class="text-blue-600 hover:text-blue-900">
-                                <i class="fas fa-eye"></i> Переглянути
+                                    class="text-blue-600 hover:text-blue-900 transition-colors"
+                                    title="Переглянути повідомлення">
+                                <i class="fas fa-eye text-lg"></i>
                             </button>
                         </td>
                     </tr>

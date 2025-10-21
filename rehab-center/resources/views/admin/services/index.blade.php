@@ -8,7 +8,7 @@
     <div class="px-6 py-4 border-b flex justify-between items-center">
         <h3 class="text-lg font-semibold">Список послуг</h3>
         <a href="{{ route('admin.services.create') }}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Додати послугу
         </a>
     </div>
@@ -26,47 +26,77 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($services as $service)
-                    <tr>
+                    <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-gray-900">{{ $service->name }}</div>
-                            @if($service->description)
-                                <div class="text-sm text-gray-500">{{ Str::limit($service->description, 50) }}</div>
-                            @endif
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-spa text-emerald-600"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ $service->name }}</div>
+                                    @if($service->description)
+                                        <div class="text-sm text-gray-500">{{ Str::limit($service->description, 50) }}</div>
+                                    @endif
+                                </div>
+                            </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $service->duration }} хв
+                            <span class="inline-flex items-center">
+                                <i class="fas fa-clock text-gray-400 mr-1"></i>
+                                {{ $service->duration }} хв
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $service->master_services_count }}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-users mr-1"></i>
+                                {{ $service->master_services_count }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($service->is_active)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1" style="
+                                    display: flex;
+                                    align-items: center;
+                                "></i>
                                     Активна
                                 </span>
                             @else
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i>
                                     Неактивна
                                 </span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
+                            <div class="flex items-center space-x-3">
                                 <a href="{{ route('admin.services.edit', $service->id) }}" 
-                                   class="text-indigo-600 hover:text-indigo-900">Редагувати</a>
+                                   class="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                   title="Редагувати">
+                                    <i class="fas fa-edit text-lg"></i>
+                                </a>
                                 <form method="POST" action="{{ route('admin.services.destroy', $service->id) }}" 
-                                      class="inline" onsubmit="return confirm('Ви впевнені?')">
+                                      class="inline" onsubmit="return confirm('Ви впевнені? Це видалить послугу та всі пов\'язані записи!')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Видалити</button>
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 transition-colors"
+                                            title="Видалити">
+                                        <i class="fas fa-trash text-lg"></i>
+                                    </button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                            Послуг не знайдено
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-spa text-4xl mb-3 text-gray-400"></i>
+                            <p>Послуг не знайдено</p>
+                            <a href="{{ route('admin.services.create') }}" 
+                               class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
+                                <i class="fas fa-plus mr-1"></i>Додати першу послугу
+                            </a>
                         </td>
                     </tr>
                 @endforelse
@@ -74,8 +104,10 @@
         </table>
     </div>
 
-    <div class="px-6 py-4 border-t">
-        {{ $services->links() }}
-    </div>
+    @if($services->hasPages())
+        <div class="px-6 py-4 border-t">
+            {{ $services->links() }}
+        </div>
+    @endif
 </div>
 @endsection

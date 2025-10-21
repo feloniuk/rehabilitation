@@ -8,7 +8,7 @@
     <div class="px-6 py-4 border-b flex justify-between items-center">
         <h3 class="text-lg font-semibold">Список майстрів</h3>
         <a href="{{ route('admin.masters.create') }}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Додати майстра
         </a>
     </div>
@@ -26,10 +26,10 @@
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($masters as $master)
-                    <tr>
+                    <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                                <div class="h-10 w-10 bg-gray-300 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
                                     @if($master->photo)
                                         <img src="{{ asset('storage/' . $master->photo) }}" 
                                              alt="{{ $master->name }}" 
@@ -48,38 +48,60 @@
                             {{ $master->email }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ $master->masterServices->count() }} послуг
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {{ $master->masterServices->count() }} послуг
+                            </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($master->is_active)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1" style="
+                                    display: flex;
+                                    align-items: center;
+                                "></i>
                                     Активний
                                 </span>
                             @else
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i>
                                     Неактивний
                                 </span>
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
+                            <div class="flex items-center space-x-3">
                                 <a href="{{ route('admin.masters.show', $master->id) }}" 
-                                   class="text-blue-600 hover:text-blue-900">Переглянути</a>
+                                   class="text-blue-600 hover:text-blue-900 transition-colors"
+                                   title="Переглянути">
+                                    <i class="fas fa-eye text-lg"></i>
+                                </a>
                                 <a href="{{ route('admin.masters.edit', $master->id) }}" 
-                                   class="text-indigo-600 hover:text-indigo-900">Редагувати</a>
+                                   class="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                   title="Редагувати">
+                                    <i class="fas fa-edit text-lg"></i>
+                                </a>
                                 <form method="POST" action="{{ route('admin.masters.destroy', $master->id) }}" 
-                                      class="inline" onsubmit="return confirm('Ви впевнені?')">
+                                      class="inline" onsubmit="return confirm('Ви впевнені? Це видалить майстра та всі його записи!')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">Видалити</button>
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 transition-colors"
+                                            title="Видалити">
+                                        <i class="fas fa-trash text-lg"></i>
+                                    </button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
-                            Майстрів не знайдено
+                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-user-slash text-4xl mb-3 text-gray-400"></i>
+                            <p>Майстрів не знайдено</p>
+                            <a href="{{ route('admin.masters.create') }}" 
+                               class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
+                                <i class="fas fa-plus mr-1"></i>Додати першого майстра
+                            </a>
                         </td>
                     </tr>
                 @endforelse
@@ -87,8 +109,10 @@
         </table>
     </div>
 
-    <div class="px-6 py-4 border-t">
-        {{ $masters->links() }}
-    </div>
+    @if($masters->hasPages())
+        <div class="px-6 py-4 border-t">
+            {{ $masters->links() }}
+        </div>
+    @endif
 </div>
 @endsection

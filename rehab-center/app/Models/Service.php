@@ -13,6 +13,7 @@ class Service extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'duration' => 'integer', // ДОБАВЛЯЕМ
     ];
 
     public function masters()

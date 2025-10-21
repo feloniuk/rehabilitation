@@ -85,7 +85,10 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($page->is_active)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    <i class="fas fa-check-circle mr-1"></i>
+                                    <i class="fas fa-check-circle mr-1" style="
+                                    display: flex;
+                                    align-items: center;
+                                "></i>
                                     Активна
                                 </span>
                             @else
@@ -96,21 +99,25 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
+                            <div class="flex items-center space-x-3">
                                 <a href="{{ route('pages.show', $page->slug) }}" target="_blank"
-                                   class="text-green-600 hover:text-green-900" title="Переглянути">
-                                    <i class="fas fa-eye"></i>
+                                   class="text-green-600 hover:text-green-900 transition-colors" 
+                                   title="Переглянути на сайті">
+                                    <i class="fas fa-external-link-alt text-lg"></i>
                                 </a>
                                 <a href="{{ route('admin.pages.edit', $page->id) }}" 
-                                   class="text-indigo-600 hover:text-indigo-900" title="Редагувати">
-                                    <i class="fas fa-edit"></i>
+                                   class="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                   title="Редагувати">
+                                    <i class="fas fa-edit text-lg"></i>
                                 </a>
                                 <form method="POST" action="{{ route('admin.pages.destroy', $page->id) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900" title="Видалити">
-                                        <i class="fas fa-trash"></i>
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 transition-colors"
+                                            title="Видалити">
+                                        <i class="fas fa-trash text-lg"></i>
                                     </button>
                                 </form>
                             </div>

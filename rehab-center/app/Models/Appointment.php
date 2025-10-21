@@ -18,6 +18,7 @@ class Appointment extends Model
     protected $casts = [
         'appointment_date' => 'date',
         'price' => 'decimal:2',
+        'duration' => 'integer', // ВАЖНО: приводим к integer
     ];
 
     public function client()
@@ -42,7 +43,8 @@ class Appointment extends Model
 
     public function getEndDateTime()
     {
-        return $this->getStartDateTime()->addMinutes($this->duration);
+        // ИСПРАВЛЕНИЕ: явно приводим duration к integer
+        return $this->getStartDateTime()->addMinutes((int) $this->duration);
     }
 
     public function isUpcoming()

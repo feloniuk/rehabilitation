@@ -93,7 +93,6 @@ class DashboardController extends Controller
         $endDate = now()->endOfMonth();
 
         $query = Appointment::whereBetween('appointment_date', [$startDate, $endDate])
-                        //    ->where('status', 'scheduled')
                            ->with(['client', 'service', 'master']);
 
         if ($user->isMaster()) {
@@ -101,10 +100,13 @@ class DashboardController extends Controller
         }
 
         return $query->get()->map(function ($appointment) {
+            // ИСПРАВЛЕНИЕ: явно приводим duration к integer
+            $duration = (int) $appointment->duration;
+            
             return [
                 'title' => $appointment->service->name . ' - ' . $appointment->client->name,
                 'start' => $appointment->getStartDateTime()->toISOString(),
-                'end' => $appointment->getEndDateTime()->toISOString(),
+                'end' => $appointment->getStartDateTime()->addMinutes($duration)->toISOString(),
                 'color' => $this->getStatusColor($appointment->status),
                 'appointment_id' => $appointment->id,
             ];

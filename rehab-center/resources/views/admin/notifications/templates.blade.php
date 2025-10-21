@@ -73,17 +73,20 @@
                             {{ $template->logs()->count() }} разів
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
+                            <div class="flex items-center space-x-3">
                                 <button onclick="editTemplate({{ $template->id }})" 
-                                        class="text-indigo-600 hover:text-indigo-900">
-                                    <i class="fas fa-edit"></i> Редагувати
+                                        class="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                        title="Редагувати">
+                                    <i class="fas fa-edit text-lg"></i>
                                 </button>
                                 <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash"></i> Видалити
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 transition-colors"
+                                            title="Видалити">
+                                        <i class="fas fa-trash text-lg"></i>
                                     </button>
                                 </form>
                             </div>

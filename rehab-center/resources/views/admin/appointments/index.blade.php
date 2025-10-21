@@ -148,17 +148,20 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2" onclick="event.stopPropagation()">
+                            <div class="flex items-center space-x-3" onclick="event.stopPropagation()">
                                 <button onclick="showAppointmentDetails({{ $appointment->id }})" 
-                                        class="text-blue-600 hover:text-blue-900">
-                                    <i class="fas fa-eye"></i>
+                                        class="text-blue-600 hover:text-blue-900 transition-colors"
+                                        title="Переглянути деталі">
+                                    <i class="fas fa-eye text-lg"></i>
                                 </button>
                                 <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}" 
-                                      class="inline" onsubmit="return confirm('Ви впевнені?')">
+                                      class="inline" onsubmit="return confirm('Ви впевнені що хочете видалити цей запис?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900">
-                                        <i class="fas fa-trash"></i>
+                                    <button type="submit" 
+                                            class="text-red-600 hover:text-red-900 transition-colors"
+                                            title="Видалити запис">
+                                        <i class="fas fa-trash text-lg"></i>
                                     </button>
                                 </form>
                             </div>

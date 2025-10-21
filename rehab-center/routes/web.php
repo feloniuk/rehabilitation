@@ -44,6 +44,11 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         ->name('appointments.manual.create');
     Route::post('appointments/create-manual', [ManualAppointmentController::class, 'store'])
         ->name('appointments.manual.store');
+    
+    // API для пошуку клієнтів (для Select2)
+    Route::get('appointments/search-clients', [ManualAppointmentController::class, 'searchClients'])
+        ->name('appointments.search-clients');
+    
     Route::get('appointments/get-service-price', [ManualAppointmentController::class, 'getServicePrice'])
         ->name('appointments.get-service-price');
         

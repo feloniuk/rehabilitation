@@ -23,13 +23,52 @@ class ManualAppointmentController extends Controller
 
         $services = Service::where('is_active', true)->get();
 
-        // Останні клієнти для швидкого вибору
-        $recentClients = User::where('role', 'client')
-            ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
+        return view('admin.appointments.create', compact('masters', 'services'));
+    }
 
-        return view('admin.appointments.create', compact('masters', 'services', 'recentClients'));
+    /**
+     * API для пошуку клієнтів (для Select2)
+     */
+    public function searchClients(Request $request)
+    {
+        $search = $request->get('q', '');
+        $page = $request->get('page', 1);
+        $perPage = 20;
+
+        $query = User::where('role', 'client')
+            ->orderBy('name', 'asc');
+
+        // Пошук по імені або телефону
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $total = $query->count();
+        $clients = $query->skip(($page - 1) * $perPage)
+                        ->take($perPage)
+                        ->get();
+
+        // Форматуємо результат для Select2
+        $results = $clients->map(function($client) {
+            return [
+                'id' => $client->id,
+                'text' => $client->name . ' - ' . $client->phone,
+                'name' => $client->name,
+                'phone' => $client->phone,
+                'email' => $client->email
+            ];
+        });
+
+        return response()->json([
+            'results' => $results,
+            'pagination' => [
+                'more' => ($page * $perPage) < $total
+            ]
+        ]);
     }
 
     /**

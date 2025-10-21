@@ -52,14 +52,18 @@ class AppointmentController extends Controller
                                      ->where('service_id', $request->service_id)
                                      ->firstOrFail();
 
+        // ИСПРАВЛЕНИЕ: явно приводим к integer
+        $duration = (int) $masterService->getDuration();
+        $price = (float) $masterService->price;
+
         $appointment = Appointment::create([
             'client_id' => $client->id,
             'master_id' => $request->master_id,
             'service_id' => $request->service_id,
             'appointment_date' => $request->appointment_date,
             'appointment_time' => $request->appointment_time,
-            'duration' => $masterService->getDuration(),
-            'price' => $masterService->price,
+            'duration' => $duration,
+            'price' => $price,
             'notes' => $request->notes,
         ]);
 

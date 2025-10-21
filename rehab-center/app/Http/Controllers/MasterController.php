@@ -36,7 +36,9 @@ class MasterController extends Controller
             return response()->json([]);
         }
 
-        $duration = $masterService->getDuration();
+        // ИСПРАВЛЕНИЕ: приводим duration к integer
+        $duration = (int) $masterService->getDuration();
+        
         $existingAppointments = Appointment::where('master_id', $id)
                                           ->where('appointment_date', $date)
                                           ->where('status', 'scheduled')
@@ -55,17 +57,22 @@ class MasterController extends Controller
     private function generateAvailableSlots($startTime, $endTime, $duration, $existingAppointments)
     {
         $slots = [];
+        
+        // ИСПРАВЛЕНИЕ: явно создаем Carbon объекты и используем integer для duration
         $current = Carbon::createFromFormat('H:i', $startTime);
         $end = Carbon::createFromFormat('H:i', $endTime);
+        
+        // Убедимся что duration это integer
+        $durationInt = (int) $duration;
 
-        while ($current->addMinutes($duration)->lte($end)) {
-            $slotStart = $current->copy()->subMinutes($duration);
-            $slotEnd = $current->copy();
+        while ($current->copy()->addMinutes($durationInt)->lte($end)) {
+            $slotStart = $current->copy();
+            $slotEnd = $current->copy()->addMinutes($durationInt);
 
             $isAvailable = true;
             foreach ($existingAppointments as $appointment) {
                 $appointmentStart = Carbon::parse($appointment->appointment_time);
-                $appointmentEnd = $appointmentStart->copy()->addMinutes($appointment->duration);
+                $appointmentEnd = $appointmentStart->copy()->addMinutes((int) $appointment->duration);
 
                 if ($slotStart->lt($appointmentEnd) && $slotEnd->gt($appointmentStart)) {
                     $isAvailable = false;
@@ -76,6 +83,9 @@ class MasterController extends Controller
             if ($isAvailable) {
                 $slots[] = $slotStart->format('H:i');
             }
+            
+            // ИСПРАВЛЕНИЕ: используем integer
+            $current->addMinutes($durationInt);
         }
 
         return $slots;
