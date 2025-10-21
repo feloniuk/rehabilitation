@@ -33,17 +33,18 @@ class ManualAppointmentController extends Controller
     {
         $search = $request->get('q', '');
         $page = $request->get('page', 1);
-        $perPage = 20;
+        $perPage = 15; // Зменшено для швидшої роботи
 
         $query = User::where('role', 'client')
+            ->select('id', 'name', 'phone', 'email') // Вибираємо тільки потрібні поля
             ->orderBy('name', 'asc');
 
-        // Пошук по імені або телефону
-        if ($search) {
+        // Пошук тільки якщо є мінімум 2 символи
+        if ($search && strlen($search) >= 2) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('phone', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -56,7 +57,7 @@ class ManualAppointmentController extends Controller
         $results = $clients->map(function($client) {
             return [
                 'id' => $client->id,
-                'text' => $client->name . ' - ' . $client->phone,
+                'text' => $client->name . ' (' . $client->phone . ')',
                 'name' => $client->name,
                 'phone' => $client->phone,
                 'email' => $client->email
