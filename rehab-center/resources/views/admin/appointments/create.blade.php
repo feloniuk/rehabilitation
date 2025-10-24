@@ -85,7 +85,7 @@
                         <i class="fas fa-hourglass-half text-teal-500 mr-1"></i>
                         Тривалість (хв) *
                     </label>
-                    <input type="number" id="duration" name="duration" required min="15" step="15" 
+                    <input type="number" id="duration" name="duration" required min="1"
                            value="{{ old('duration', 60) }}"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>

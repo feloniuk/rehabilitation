@@ -33,13 +33,12 @@ class ManualAppointmentController extends Controller
     {
         $search = $request->get('q', '');
         $page = $request->get('page', 1);
-        $perPage = 15; // Зменшено для швидшої роботи
+        $perPage = 15;
 
         $query = User::where('role', 'client')
-            ->select('id', 'name', 'phone', 'email') // Вибираємо тільки потрібні поля
+            ->select('id', 'name', 'phone', 'email')
             ->orderBy('name', 'asc');
 
-        // Пошук тільки якщо є мінімум 2 символи
         if ($search && strlen($search) >= 2) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -53,7 +52,6 @@ class ManualAppointmentController extends Controller
                         ->take($perPage)
                         ->get();
 
-        // Форматуємо результат для Select2
         $results = $clients->map(function($client) {
             return [
                 'id' => $client->id,
@@ -77,7 +75,6 @@ class ManualAppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        // Базова валідація
         $rules = [
             'master_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
@@ -90,7 +87,6 @@ class ManualAppointmentController extends Controller
             'client_type' => 'required|in:existing,new',
         ];
 
-        // Додаємо правила в залежності від типу клієнта
         if ($request->client_type === 'existing') {
             $rules['existing_client'] = 'required|exists:users,id';
         } else {
@@ -101,7 +97,7 @@ class ManualAppointmentController extends Controller
 
         $validated = $request->validate($rules);
 
-        // Перевірка на конфлікт часу (якщо не дозволено нахлест)
+        // Перевірка на конфлікт часу
         if (!$request->boolean('allow_overlap')) {
             $conflict = $this->checkTimeConflict(
                 $request->master_id,
@@ -150,23 +146,38 @@ class ManualAppointmentController extends Controller
             ->with('success', 'Запис успішно створено');
     }
 
+    /**
+     * Перевірка конфлікту часу
+     * 
+     * ВИПРАВЛЕНО: правильне парсування дати та часу
+     */
     private function checkTimeConflict(
         int $masterId,
         string $date,
         string $time,
         int $duration
     ): bool {
-        $startTime = Carbon::parse("$date $time");
+        // Створюємо Carbon об'єкт правильно
+        // $date може прийти як '2025-10-27' або '2025-10-27 00:00:00'
+        // $time приходить як '09:00' або '09:00:00'
+        
+        // Спочатку парсимо дату (відкидаємо час якщо він є)
+        $dateOnly = Carbon::parse($date)->format('Y-m-d');
+        
+        // Тепер створюємо повний datetime
+        $startTime = Carbon::createFromFormat('Y-m-d H:i', $dateOnly . ' ' . substr($time, 0, 5));
         $endTime = $startTime->copy()->addMinutes($duration);
 
+        // Шукаємо існуючі записи на цей день
         $existingAppointments = Appointment::where('master_id', $masterId)
-            ->where('appointment_date', $date)
+            ->whereDate('appointment_date', $dateOnly)
             ->where('status', 'scheduled')
             ->get();
 
         foreach ($existingAppointments as $appointment) {
-            $existingStart = Carbon::parse("{$appointment->appointment_date} {$appointment->appointment_time}");
-            $existingEnd = $existingStart->copy()->addMinutes($appointment->duration);
+            // Використовуємо методи з моделі
+            $existingStart = $appointment->getStartDateTime();
+            $existingEnd = $appointment->getEndDateTime();
 
             // Перевірка перетину часу
             if ($startTime->lt($existingEnd) && $endTime->gt($existingStart)) {

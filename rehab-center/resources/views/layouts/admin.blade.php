@@ -49,6 +49,155 @@
                 overflow-y: auto;
             }
         }
+
+        /* Основний контейнер пагінації */
+        nav[role="navigation"] {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+        }
+
+        /* Текст пагінації (Showing X to Y of Z results) */
+        nav[role="navigation"] p {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Контейнер кнопок пагінації */
+        nav[role="navigation"] > div:last-child {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        /* Всі посилання/кнопки пагінації */
+        nav[role="navigation"] a,
+        nav[role="navigation"] span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 2.5rem;
+            height: 2.5rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #e5e7eb;
+            background-color: #ffffff;
+            color: #374151;
+            text-decoration: none;
+            transition: all 0.2s;
+            border-radius: 0.375rem;
+        }
+
+        /* Ховер ефект для активних посилань */
+        nav[role="navigation"] a:hover {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            color: #1f2937;
+        }
+
+        /* Активна сторінка */
+        nav[role="navigation"] span[aria-current="page"] {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        /* Неактивні кнопки (disabled) */
+        nav[role="navigation"] span[aria-disabled="true"] {
+            background-color: #f9fafb;
+            border-color: #e5e7eb;
+            color: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        /* Три крапки (...) */
+        nav[role="navigation"] span[aria-disabled="true"]:not([aria-label]) {
+            border: none;
+            background-color: transparent;
+            cursor: default;
+        }
+
+        /* Кнопки Previous/Next */
+        nav[role="navigation"] a[rel="prev"],
+        nav[role="navigation"] a[rel="next"],
+        nav[role="navigation"] span[aria-disabled="true"][aria-label] {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        /* SVG іконки в кнопках Previous/Next */
+        nav[role="navigation"] svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        /* Адаптивність для мобільних */
+        @media (max-width: 640px) {
+            nav[role="navigation"] {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            nav[role="navigation"] p {
+                text-align: center;
+                width: 100%;
+            }
+            
+            nav[role="navigation"] > div:last-child {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            /* На мобільних показуємо менше кнопок */
+            nav[role="navigation"] a,
+            nav[role="navigation"] span {
+                min-width: 2rem;
+                height: 2rem;
+                padding: 0.25rem 0.5rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Альтернативний синій колір (якщо потрібен інший відтінок) */
+        .pagination-blue nav[role="navigation"] span[aria-current="page"] {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        /* Альтернативний зелений колір */
+        .pagination-green nav[role="navigation"] span[aria-current="page"] {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
+
+        /* Альтернативний фіолетовий колір */
+        .pagination-purple nav[role="navigation"] span[aria-current="page"] {
+            background-color: #8b5cf6;
+            border-color: #8b5cf6;
+        }
+
+        /* Компактний варіант (менші відступи) */
+        .pagination-compact nav[role="navigation"] a,
+        .pagination-compact nav[role="navigation"] span {
+            min-width: 2rem;
+            height: 2rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        /* Великий варіант (більші відступи) */
+        .pagination-large nav[role="navigation"] a,
+        .pagination-large nav[role="navigation"] span {
+            min-width: 3rem;
+            height: 3rem;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100">

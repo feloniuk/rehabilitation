@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 class TelegramNotificationService
 {
     private ?API $telegram = null;
-    private bool $isConfigured = false;
+    private bool $isConfigured = true;
 
     public function __construct()
     {
