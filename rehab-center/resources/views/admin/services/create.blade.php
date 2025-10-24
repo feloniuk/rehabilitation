@@ -31,7 +31,7 @@
 
             <div class="mb-6">
                 <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">Тривалість (хвилин) *</label>
-                <input type="number" id="duration" name="duration" required min="15" step="15"
+                <input type="number" id="duration" name="duration" required min="1" step="1"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                        value="{{ old('duration', 60) }}">
                 @error('duration')

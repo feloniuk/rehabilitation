@@ -77,7 +77,8 @@ class ManualAppointmentController extends Controller
      */
     public function store(Request $request)
     {
-        $request->validate([
+        // Базова валідація
+        $rules = [
             'master_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
             'appointment_date' => 'required|date',
@@ -85,16 +86,20 @@ class ManualAppointmentController extends Controller
             'price' => 'required|numeric|min:0',
             'duration' => 'required|integer|min:15',
             'notes' => 'nullable|string',
-            
-            // Дані клієнта
-            'existing_client' => 'nullable|exists:users,id',
-            'new_client_name' => 'required_without:existing_client|string|max:255',
-            'new_client_phone' => 'required_without:existing_client|string|max:20',
-            'new_client_email' => 'nullable|email',
-            
-            // Дозвіл на нахлест
             'allow_overlap' => 'nullable|boolean',
-        ]);
+            'client_type' => 'required|in:existing,new',
+        ];
+
+        // Додаємо правила в залежності від типу клієнта
+        if ($request->client_type === 'existing') {
+            $rules['existing_client'] = 'required|exists:users,id';
+        } else {
+            $rules['new_client_name'] = 'required|string|max:255';
+            $rules['new_client_phone'] = 'required|string|max:20';
+            $rules['new_client_email'] = 'nullable|email';
+        }
+
+        $validated = $request->validate($rules);
 
         // Перевірка на конфлікт часу (якщо не дозволено нахлест)
         if (!$request->boolean('allow_overlap')) {
@@ -113,7 +118,7 @@ class ManualAppointmentController extends Controller
         }
 
         // Отримання або створення клієнта
-        if ($request->filled('existing_client')) {
+        if ($request->client_type === 'existing') {
             $clientId = $request->existing_client;
         } else {
             $client = User::updateOrCreate(
@@ -145,9 +150,6 @@ class ManualAppointmentController extends Controller
             ->with('success', 'Запис успішно створено');
     }
 
-    /**
-     * Перевірка конфлікту часу
-     */
     private function checkTimeConflict(
         int $masterId,
         string $date,

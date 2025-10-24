@@ -176,12 +176,11 @@
 
                         <div class="mt-6">
                             <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                                Email адреса *
+                                Email (опціонально)
                             </label>
                             <input type="email" 
                                    id="email" 
-                                   name="email" 
-                                   required
+                                   name="email"
                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                                    placeholder="your@email.com"
                                    value="{{ old('email') }}">
@@ -194,7 +193,7 @@
                     <!-- Date & Time Selection -->
                     <div class="mb-8">
                         <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-calendar-alt text-emerald-600 mr-2"></i>
+                            <i class="fas fa-calendar-check text-emerald-600 mr-2"></i>
                             Дата та час
                         </h3>
 
@@ -207,9 +206,9 @@
                                        id="appointment_date" 
                                        name="appointment_date" 
                                        required
+                                       min="{{ date('Y-m-d') }}"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
-                                       min="{{ date('Y-m-d') }}" 
-                                       value="{{ old('appointment_date') }}">
+                                       value="{{ old('appointment_date', request('date')) }}">
                                 @error('appointment_date')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                                 @enderror
@@ -231,90 +230,69 @@
                             </div>
                         </div>
 
-                        <!-- Available slots preview -->
-                        <div id="slots-preview" class="mt-4 hidden">
-                            <p class="text-sm text-gray-600 mb-3">Доступні часи на обрану дату:</p>
-                            <div id="slots-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                                <!-- Slots will be populated via JavaScript -->
-                            </div>
+                        <!-- Available Slots Preview -->
+                        <div id="slots-preview" class="mt-6 hidden">
+                            <p class="text-sm font-medium text-gray-700 mb-3">Доступні часи:</p>
+                            <div id="slots-grid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3"></div>
                         </div>
                     </div>
 
                     <!-- Additional Notes -->
                     <div class="mb-8">
                         <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-sticky-note text-emerald-600 mr-2"></i>
+                            <i class="fas fa-clipboard text-emerald-600 mr-2"></i>
                             Додаткова інформація
                         </h3>
 
                         <div>
                             <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-                                Побажання або особливості
+                                Примітки (опціонально)
                             </label>
                             <textarea id="notes" 
                                       name="notes" 
                                       rows="4"
                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 resize-none"
-                                      placeholder="Опишіть ваші побажання, особливості стану здоров'я або інші важливі деталі...">{{ old('notes') }}</textarea>
-                            <p class="text-sm text-gray-500 mt-2">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Ця інформація допоможе спеціалісту краще підготуватися до сеансу
-                            </p>
-                        </div>
-                    </div>
-
-                    <!-- Terms & Privacy -->
-                    <div class="mb-8">
-                        <div class="bg-gray-50 rounded-xl p-6">
-                            <div class="flex items-start space-x-3">
-                                <input type="checkbox" 
-                                       id="terms" 
-                                       required
-                                       class="mt-1 w-5 h-5 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
-                                <label for="terms" class="text-sm text-gray-700 leading-relaxed">
-                                    Я погоджуюся з 
-                                    <a href="#" class="text-emerald-600 hover:text-emerald-700 underline">умовами надання послуг</a> 
-                                    та 
-                                    <a href="#" class="text-emerald-600 hover:text-emerald-700 underline">політикою конфіденційності</a>, 
-                                    а також надаю згоду на обробку персональних даних
-                                </label>
-                            </div>
+                                      placeholder="Опишіть ваші побажання або особливості, які важливо знати спеціалісту...">{{ old('notes') }}</textarea>
+                            @error('notes')
+                                <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
                     <!-- Submit Button -->
-                    <div class="text-center">
+                    <div class="flex items-center justify-between">
+                        <a href="{{ route('masters.show', $master->id) }}" 
+                           class="text-gray-600 hover:text-gray-800 font-medium flex items-center">
+                            <i class="fas fa-arrow-left mr-2"></i>
+                            Назад
+                        </a>
+                        
                         <button type="submit" 
                                 id="submit-btn"
-                                class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-8 py-4 rounded-xl font-bold text-lg hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
                             <span id="btn-text">
-                                <i class="fas fa-calendar-check mr-2"></i>
+                                <i class="fas fa-check-circle mr-2"></i>
                                 Підтвердити запис
                             </span>
                             <span id="btn-loading" class="hidden">
                                 <i class="fas fa-spinner fa-spin mr-2"></i>
-                                Обробка запиту...
+                                Обробка...
                             </span>
                         </button>
-                        
-                        <p class="text-sm text-gray-500 mt-4">
-                            <i class="fas fa-shield-alt mr-1"></i>
-                            Ваші дані захищені та використовуються тільки для запису на прийом
-                        </p>
                     </div>
                 </form>
             </div>
+
         </div>
     </div>
 
-    <!-- Help Section -->
-    <div class="mt-12 bg-white rounded-2xl shadow-xl p-8">
-        <div class="text-center mb-8">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Потрібна допомога?</h3>
-            <p class="text-gray-600">Наша команда готова відповісти на всі ваші питання</p>
-        </div>
+    <!-- Contact Section -->
+    <div class="mt-16 bg-gray-50 rounded-2xl p-8">
+        <h3 class="text-2xl font-bold text-gray-800 text-center mb-8">
+            Маєте питання? Зв'яжіться з нами
+        </h3>
         
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="text-center group">
                 <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-200 transition-colors">
                     <i class="fas fa-phone text-emerald-600"></i>
@@ -363,9 +341,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const masterId = {{ $master->id }};
     const serviceId = {{ $service->id }};
 
-    // Date selection handler
-    dateInput.addEventListener('change', function() {
-        const selectedDate = this.value;
+    // Функция загрузки доступных слотов
+    function loadAvailableSlots(selectedDate) {
         if (!selectedDate) return;
 
         // Show loading state
@@ -411,7 +388,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeSelect.innerHTML = '<option value="">Помилка завантаження</option>';
                 timeSelect.disabled = false;
             });
+    }
+
+    // Date selection handler
+    dateInput.addEventListener('change', function() {
+        loadAvailableSlots(this.value);
     });
+
+    // ИСПРАВЛЕНИЕ: Проверка предустановленной даты при загрузке страницы
+    if (dateInput.value) {
+        loadAvailableSlots(dateInput.value);
+    }
 
     // Time slot selection
     function selectTimeSlot(time) {

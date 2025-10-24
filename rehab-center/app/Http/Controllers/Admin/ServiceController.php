@@ -24,7 +24,7 @@ class ServiceController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'duration' => 'required|integer|min:15',
+            'duration' => 'required|integer|min:1',
         ]);
 
         Service::create([
