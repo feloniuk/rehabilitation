@@ -17,7 +17,7 @@ class TelegramAuth extends Command
     {
         $this->info('🔐 Авторізація Telegram для модуля розсилок');
         $this->info('');
-
+        
         // Перевірка налаштувань
         if (!config('services.telegram.api_id') || !config('services.telegram.api_hash')) {
             $this->error('❌ Не налаштовано TELEGRAM_API_ID або TELEGRAM_API_HASH в .env файлі');
@@ -25,7 +25,7 @@ class TelegramAuth extends Command
             $this->info('Отримати API credentials можна тут: https://my.telegram.org/apps');
             return 1;
         }
-
+        
         try {
             // Створюємо об'єкт налаштувань
             $settings = new Settings;
@@ -42,7 +42,7 @@ class TelegramAuth extends Command
             $logger->setExtra(storage_path('logs/telegram.log'));
             $logger->setLevel(Logger::ERROR);
             $settings->setLogger($logger);
-
+            
             $this->info('📱 Ініціалізація MadelineProto...');
             
             $telegram = new API(

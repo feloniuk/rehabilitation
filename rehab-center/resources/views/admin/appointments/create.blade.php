@@ -11,6 +11,8 @@
         <form method="POST" action="{{ route('admin.appointments.manual.store') }}" id="appointment-form">
             @csrf
 
+            <input type="hidden" name="client_type" id="client_type_hidden" value="{{ old('client_type', 'existing') }}">
+
             @if ($errors->any())
                 <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
                     <ul class="list-disc list-inside">
@@ -304,6 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.querySelectorAll('input[name="client_radio"]').forEach(radio => {
                         radio.addEventListener('change', function() {
                             hiddenInput.value = this.value;
+                            document.getElementById('client_type_hidden').value = this.value;
                             
                             // Візуальна індикація вибору
                             document.querySelectorAll('input[name="client_radio"]').forEach(r => {

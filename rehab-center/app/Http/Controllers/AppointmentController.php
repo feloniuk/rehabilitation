@@ -29,7 +29,7 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email',
+            'email' => 'nullable|email',
             'phone' => 'required|string|max:20',
             'master_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
@@ -39,7 +39,7 @@ class AppointmentController extends Controller
 
         // Создаем или находим клиента
         $client = User::updateOrCreate(
-            ['email' => $request->email],
+            ['phone' => $request->phone],
             [
                 'name' => $request->name,
                 'phone' => $request->phone,
