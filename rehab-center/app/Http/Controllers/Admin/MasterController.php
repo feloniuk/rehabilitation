@@ -9,6 +9,7 @@ use App\Models\MasterService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class MasterController extends Controller
 {
@@ -20,6 +21,7 @@ class MasterController extends Controller
             'password' => 'required|min:8',
             'phone' => 'nullable|string|max:20',
             'description' => 'nullable|string',
+            'specialty' => 'nullable|string|max:255',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'work_schedule' => 'required|array',
             'services' => 'nullable|array',
@@ -42,23 +44,35 @@ class MasterController extends Controller
                         ->withInput();
         }
 
-        $master = User::create([
+        $masterData = [
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'phone' => $request->phone,
             'role' => 'master',
             'description' => $request->description,
+            'specialty' => $request->specialty,
             'work_schedule' => $request->work_schedule,
             'is_active' => true,
             'experience_years' => $request->experience_years ?? 0,
             'clients_count' => $request->clients_count ?? 0,
             'certificates_count' => $request->certificates_count ?? 0,
-        ]);
+        ];
+
+        $master = User::create($masterData);
 
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('masters', 'public');
-            $master->update(['photo' => $path]);
+            try {
+                $path = $request->file('photo')->store('masters', 'public');
+                $master->update(['photo' => $path]);
+                
+                // Перевірка що файл дійсно збережено
+                if (!Storage::disk('public')->exists($path)) {
+                    Log::error("Photo not saved: {$path}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Error saving photo: " . $e->getMessage());
+            }
         }
 
         foreach ($selectedServices as $serviceId => $serviceData) {
@@ -84,6 +98,7 @@ class MasterController extends Controller
             'password' => 'nullable|min:8',
             'phone' => 'nullable|string|max:20',
             'description' => 'nullable|string',
+            'specialty' => 'nullable|string|max:255',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'work_schedule' => 'required|array',
             'services' => 'nullable|array',
@@ -111,6 +126,7 @@ class MasterController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'description' => $request->description,
+            'specialty' => $request->specialty,
             'work_schedule' => $request->work_schedule,
             'is_active' => $request->has('is_active'),
             'experience_years' => $request->experience_years ?? 0,
@@ -123,10 +139,23 @@ class MasterController extends Controller
         }
 
         if ($request->hasFile('photo')) {
-            if ($master->photo) {
-                Storage::disk('public')->delete($master->photo);
+            try {
+                // Видаляємо стару фотографію
+                if ($master->photo) {
+                    Storage::disk('public')->delete($master->photo);
+                }
+                
+                // Зберігаємо нову
+                $path = $request->file('photo')->store('masters', 'public');
+                $updateData['photo'] = $path;
+                
+                // Перевірка збереження
+                if (!Storage::disk('public')->exists($path)) {
+                    Log::error("Photo not saved: {$path}");
+                }
+            } catch (\Exception $e) {
+                Log::error("Error saving photo: " . $e->getMessage());
             }
-            $updateData['photo'] = $request->file('photo')->store('masters', 'public');
         }
 
         $master->update($updateData);

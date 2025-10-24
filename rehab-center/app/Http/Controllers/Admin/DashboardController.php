@@ -13,15 +13,12 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
         
-        // Визначаємо період для відображення
-        $period = $request->get('period', 'week'); // week, month, all
+        $period = $request->get('period', 'week');
         
-        // Базовий запит
         $query = $user->isAdmin() 
             ? Appointment::with(['client', 'master', 'service'])
             : Appointment::with(['client', 'service'])->where('master_id', $user->id);
         
-        // Фільтрація по періоду
         switch ($period) {
             case 'today':
                 $query->whereDate('appointment_date', today());
@@ -46,7 +43,6 @@ class DashboardController extends Controller
                 $periodTitle = 'Майбутні';
                 break;
             default:
-                // По замовчуванню - тиждень
                 $query->whereBetween('appointment_date', [
                     now()->startOfWeek(),
                     now()->endOfWeek()
@@ -58,10 +54,7 @@ class DashboardController extends Controller
                              ->orderBy('appointment_time')
                              ->paginate(20);
 
-        // Статистика для відображення
         $stats = $this->getStats($user);
-        
-        // Календар для поточного місяця
         $calendar = $this->getCalendarData($user);
 
         return view('admin.dashboard', compact('appointments', 'calendar', 'periodTitle', 'period', 'stats'));
@@ -93,24 +86,73 @@ class DashboardController extends Controller
         $endDate = now()->endOfMonth();
 
         $query = Appointment::whereBetween('appointment_date', [$startDate, $endDate])
-                           ->with(['client', 'service', 'master']);
+                           ->with(['client', 'service', 'master'])
+                           ->where('status', 'scheduled');
 
         if ($user->isMaster()) {
             $query->where('master_id', $user->id);
         }
 
-        return $query->get()->map(function ($appointment) {
-            // ИСПРАВЛЕНИЕ: явно приводим duration к integer
-            $duration = (int) $appointment->duration;
-            
-            return [
-                'title' => $appointment->service->name . ' - ' . $appointment->client->name,
-                'start' => $appointment->getStartDateTime()->toISOString(),
-                'end' => $appointment->getStartDateTime()->addMinutes($duration)->toISOString(),
-                'color' => $this->getStatusColor($appointment->status),
-                'appointment_id' => $appointment->id,
-            ];
+        $appointments = $query->get();
+        
+        // Групуємо записи по даті та часу для відображення накладення
+        $groupedAppointments = $appointments->groupBy(function($appointment) {
+            return $appointment->appointment_date->format('Y-m-d') . ' ' . $appointment->appointment_time;
         });
+
+        $events = [];
+        
+        foreach ($groupedAppointments as $datetime => $appointmentGroup) {
+            $count = $appointmentGroup->count();
+            
+            if ($count > 1) {
+                // Якщо кілька записів на один час - створюємо групову подію
+                $firstAppointment = $appointmentGroup->first();
+                $duration = (int) $firstAppointment->duration;
+                
+                $mastersList = $appointmentGroup->map(function($apt) {
+                    return $apt->master->name . ': ' . $apt->client->name;
+                })->join("\n");
+                
+                $events[] = [
+                    'title' => "📋 {$count} записів",
+                    'start' => $firstAppointment->getStartDateTime()->toISOString(),
+                    'end' => $firstAppointment->getStartDateTime()->addMinutes($duration)->toISOString(),
+                    'color' => '#F59E0B', // Orange для групових записів
+                    'extendedProps' => [
+                        'isGroup' => true,
+                        'count' => $count,
+                        'appointments' => $appointmentGroup->map(function($apt) {
+                            return [
+                                'id' => $apt->id,
+                                'master' => $apt->master->name,
+                                'client' => $apt->client->name,
+                                'service' => $apt->service->name,
+                            ];
+                        })->toArray(),
+                        'description' => $mastersList,
+                    ],
+                ];
+            } else {
+                // Одиночний запис
+                $appointment = $appointmentGroup->first();
+                $duration = (int) $appointment->duration;
+                
+                $events[] = [
+                    'title' => $appointment->service->name . ' - ' . $appointment->client->name,
+                    'start' => $appointment->getStartDateTime()->toISOString(),
+                    'end' => $appointment->getStartDateTime()->addMinutes($duration)->toISOString(),
+                    'color' => $this->getStatusColor($appointment->status),
+                    'extendedProps' => [
+                        'isGroup' => false,
+                        'appointment_id' => $appointment->id,
+                        'master' => $appointment->master->name,
+                    ],
+                ];
+            }
+        }
+
+        return $events;
     }
 
     private function getStatusColor($status)

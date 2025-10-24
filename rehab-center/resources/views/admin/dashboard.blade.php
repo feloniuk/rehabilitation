@@ -67,7 +67,23 @@
                     Поточний місяць
                 </div>
             </div>
-            <!-- Календар буде адаптуватися -->
+            
+            <!-- Легенда -->
+            <div class="flex flex-wrap gap-3 mb-4 text-xs">
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-green-500 rounded mr-1"></div>
+                    <span>Заплановано</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-orange-500 rounded mr-1"></div>
+                    <span>Кілька записів</span>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-3 h-3 bg-blue-500 rounded mr-1"></div>
+                    <span>Завершено</span>
+                </div>
+            </div>
+            
             <div id="calendar" class="calendar-container"></div>
         </div>
     </div>
@@ -90,7 +106,7 @@
                             <div class="font-semibold text-sm">{{ $appointment->service->name }}</div>
                             <div class="text-gray-600 text-sm">{{ $appointment->client->name }}</div>
                             @if(auth()->user()->isAdmin())
-                                <div class="text-gray-500 text-xs">{{ $appointment->master->name }}</div>
+                                <div class="text-gray-500 text-xs">👨‍⚕️ {{ $appointment->master->name }}</div>
                             @endif
                             <div class="text-gray-500 text-xs">
                                 {{ $appointment->appointment_date->format('d.m.Y') }} о {{ substr($appointment->appointment_time, 0, 5) }}
@@ -108,7 +124,7 @@
     </div>
 </div>
 
-<!-- Модальне вікно -->
+<!-- Модальне вікно для одиночного запису -->
 <div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 lg:p-6 border-b sticky top-0 bg-white">
@@ -118,12 +134,33 @@
             </button>
         </div>
         
-        <div id="appointmentContent" class="p-4 lg:p-6">
-            <!-- Завантаження через AJAX -->
-        </div>
+        <div id="appointmentContent" class="p-4 lg:p-6"></div>
         
         <div class="flex justify-end p-4 lg:p-6 border-t bg-gray-50 sticky bottom-0">
             <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm lg:text-base">
+                Закрити
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для групових записів -->
+<div id="groupModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 lg:p-6 border-b sticky top-0 bg-white">
+            <h3 class="text-lg font-semibold">
+                <i class="fas fa-users text-orange-500 mr-2"></i>
+                Групові записи
+            </h3>
+            <button onclick="closeGroupModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div id="groupContent" class="p-4 lg:p-6"></div>
+        
+        <div class="flex justify-end p-4 lg:p-6 border-t bg-gray-50 sticky bottom-0">
+            <button onclick="closeGroupModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
                 Закрити
             </button>
         </div>
@@ -135,14 +172,12 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
-    
-    // Визначаємо початковий вигляд в залежності від розміру екрану
     var initialView = window.innerWidth < 768 ? 'listWeek' : 'timeGridWeek';
     
     var calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: initialView,
         locale: 'uk',
-        height: 'auto', // Автоматична висота
+        height: 'auto',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -157,12 +192,25 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         events: @json($calendar),
         eventClick: function(info) {
-            const appointmentId = info.event.extendedProps.appointment_id;
-            if (appointmentId) {
-                showAppointmentDetails(appointmentId);
+            info.jsEvent.preventDefault();
+            
+            const extendedProps = info.event.extendedProps;
+            
+            if (extendedProps.isGroup) {
+                showGroupModal(extendedProps);
+            } else {
+                const appointmentId = extendedProps.appointment_id;
+                if (appointmentId) {
+                    showAppointmentDetails(appointmentId);
+                }
             }
         },
-        // Адаптивні налаштування
+        eventDidMount: function(info) {
+            // Додаємо підказку для групових записів
+            if (info.event.extendedProps.isGroup) {
+                info.el.title = info.event.extendedProps.description;
+            }
+        },
         windowResize: function(view) {
             if (window.innerWidth < 768) {
                 calendar.changeView('listWeek');
@@ -172,7 +220,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     calendar.render();
     
-    // Оновлюємо вигляд при зміні розміру вікна
     window.addEventListener('resize', function() {
         if (window.innerWidth < 768 && calendar.view.type !== 'listWeek') {
             calendar.changeView('listWeek');
@@ -180,7 +227,61 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+function showGroupModal(groupData) {
+    const appointments = groupData.appointments;
+    
+    let html = `
+        <div class="bg-orange-50 border-l-4 border-orange-500 p-4 mb-4">
+            <p class="font-semibold text-orange-800">
+                <i class="fas fa-info-circle mr-2"></i>
+                На цей час заплановано ${groupData.count} записів
+            </p>
+        </div>
+        <div class="space-y-3">
+    `;
+    
+    appointments.forEach((apt, index) => {
+        html += `
+            <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer transition"
+                 onclick="showAppointmentDetails(${apt.id})">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <div class="font-semibold text-gray-900 mb-1">
+                            ${index + 1}. ${apt.service}
+                        </div>
+                        <div class="text-sm text-gray-600 space-y-1">
+                            <div>
+                                <i class="fas fa-user-md text-blue-500 w-5"></i>
+                                Майстер: ${apt.master}
+                            </div>
+                            <div>
+                                <i class="fas fa-user text-green-500 w-5"></i>
+                                Клієнт: ${apt.client}
+                            </div>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400"></i>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    document.getElementById('groupContent').innerHTML = html;
+    document.getElementById('groupModal').classList.remove('hidden');
+    document.getElementById('groupModal').classList.add('flex');
+}
+
+function closeGroupModal() {
+    document.getElementById('groupModal').classList.add('hidden');
+    document.getElementById('groupModal').classList.remove('flex');
+}
+
 function showAppointmentDetails(appointmentId) {
+    // Закриваємо групове модальне вікно якщо воно відкрите
+    closeGroupModal();
+    
     document.getElementById('appointmentModal').classList.remove('hidden');
     document.getElementById('appointmentModal').classList.add('flex');
     
@@ -280,12 +381,12 @@ function getStatusClass(status) {
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeModal();
+        closeGroupModal();
     }
 });
 </script>
 
 <style>
-/* Додаткові стилі для календаря на мобільних */
 @media (max-width: 768px) {
     .fc .fc-toolbar {
         flex-direction: column;
@@ -307,13 +408,11 @@ document.addEventListener('keydown', function(e) {
         font-size: 1.1rem;
     }
     
-    /* Список подій на мобільному */
     .fc-list-event {
         font-size: 0.875rem;
     }
 }
 
-/* Покращена читабельність календаря */
 .fc {
     font-size: 0.9rem;
 }
@@ -325,6 +424,12 @@ document.addEventListener('keydown', function(e) {
 
 .fc-timegrid-event {
     font-size: 0.85rem;
+}
+
+/* Підсвітка групових записів */
+.fc-event.fc-event-start[style*="background-color: rgb(245, 158, 11)"] {
+    border: 2px solid #D97706 !important;
+    font-weight: bold;
 }
 </style>
 @endpush
