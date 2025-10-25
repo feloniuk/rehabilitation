@@ -125,17 +125,23 @@
                                     @foreach($calendar['weekDates'] as $date)
                                         <td class="border-r border-t last:border-r-0 border-gray-200 p-1 align-top {{ $date->isToday() ? 'bg-blue-50/30' : '' }}">
                                             @php
-                                                $key = $date->format('Y-m-d') . '_' . $timeSlot;
-                                                $appointment = $calendar['scheduleByMaster'][$master->id]['appointments_by_date_time'][$key] ?? null;
+                                                $dateKey = $date->format('Y-m-d');
+                                                $dayAppointments = $calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? [];
+                                                
+                                                // Фільтруємо записи для цього часового слоту
+                                                $slotAppointments = collect($dayAppointments)->filter(function($apt) use ($timeSlot) {
+                                                    return substr($apt['time'], 0, 5) === $timeSlot;
+                                                });
                                             @endphp
-                                            @if($appointment)
+
+                                            @foreach($slotAppointments as $appointment)
                                                 <div class="appointment-card cursor-pointer" onclick="showAppointmentDetails({{ $appointment['id'] }})">
                                                     <div class="text-xs font-bold mb-1">{{ substr($appointment['time'], 0, 5) }}</div>
                                                     <div class="text-xs font-semibold mb-0.5">{{ $appointment['client_name'] }}</div>
                                                     <div class="text-xs opacity-90 mb-1">{{ Str::limit($appointment['service_name'], 20) }}</div>
                                                     <div class="text-xs font-bold">{{ number_format($appointment['price'], 0) }} грн</div>
                                                 </div>
-                                            @endif
+                                            @endforeach
                                         </td>
                                     @endforeach
                                 </tr>
@@ -171,11 +177,10 @@
                     @foreach($calendar['masters'] as $master)
                         @php
                             $dateKey = $date->format('Y-m-d');
-                            $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date_time'] ?? [])
-                                ->filter(function($apt, $key) use ($dateKey) {
-                                    return str_starts_with($key, $dateKey);
-                                })
-                                ->sortKeys();
+                            $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? [])
+                                ->sortBy(function($apt) {
+                                    return $apt['time'];
+                                });
                         @endphp
                         @if($dayAppointments->count() > 0)
                             <div class="border-b last:border-b-0">
@@ -215,11 +220,9 @@
                     @php
                         $hasAppointments = false;
                         foreach($calendar['masters'] as $master) {
-                            $check = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date_time'] ?? [])
-                                ->filter(function($apt, $key) use ($dateKey) {
-                                    return str_starts_with($key, $dateKey);
-                                });
-                            if($check->count() > 0) {
+                            $dateKey = $date->format('Y-m-d');
+                            $check = $calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? [];
+                            if(count($check) > 0) {
                                 $hasAppointments = true;
                                 break;
                             }

@@ -79,21 +79,23 @@ class DashboardController extends Controller
                                          ->orderBy('appointment_time')
                                          ->get();
 
-        // Групуємо записи по майстрах, датах і часу
+        // Групуємо записи по майстрах і датах
         $scheduleByMaster = [];
         foreach ($masters as $master) {
             $scheduleByMaster[$master->id] = [
                 'master' => $master,
-                'appointments_by_date_time' => []
+                'appointments_by_date' => []
             ];
         }
 
         foreach ($appointments as $appointment) {
             $dateKey = $appointment->appointment_date->format('Y-m-d');
-            $timeKey = substr($appointment->appointment_time, 0, 5);
-            $key = $dateKey . '_' . $timeKey;
             
-            $scheduleByMaster[$appointment->master_id]['appointments_by_date_time'][$key] = [
+            if (!isset($scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey])) {
+                $scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey] = [];
+            }
+            
+            $scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey][] = [
                 'id' => $appointment->id,
                 'date' => $appointment->appointment_date,
                 'time' => $appointment->appointment_time,
@@ -105,34 +107,19 @@ class DashboardController extends Controller
             ];
         }
 
-        // Визначаємо мінімальний і максимальний час роботи
-        $minTime = '09:00';
-        $maxTime = '18:00';
-        
-        if ($appointments->count() > 0) {
-            $times = $appointments->pluck('appointment_time')->map(function($time) {
-                return substr($time, 0, 5);
-            });
-            $minTime = $times->min();
-            $maxTime = $times->max();
-            
-            // Додаємо буфер
-            $minTimeStamp = strtotime($minTime) - 3600;
-            $maxTimeStamp = strtotime($maxTime) + 3600;
-            
-            // Округлюємо до цілої години
-            $minTime = date('H:00', $minTimeStamp);
-            $maxTime = date('H:00', $maxTimeStamp);
+        // Збираємо всі унікальні часи з усіх записів і сортуємо
+        $allTimes = [];
+        foreach ($appointments as $appointment) {
+            $time = substr($appointment->appointment_time, 0, 5);
+            $allTimes[$time] = true;
         }
-
-        // Генеруємо слоти часу (кожну годину)
-        $timeSlots = [];
-        $current = strtotime($minTime);
-        $end = strtotime($maxTime);
         
-        while ($current <= $end) {
-            $timeSlots[] = date('H:i', $current);
-            $current += 3600; // +1 година
+        $timeSlots = array_keys($allTimes);
+        sort($timeSlots);
+        
+        // Якщо немає записів, показуємо стандартний робочий день
+        if (empty($timeSlots)) {
+            $timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
         }
 
         // Генеруємо дати тижня
