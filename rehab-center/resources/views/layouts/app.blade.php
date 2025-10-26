@@ -61,7 +61,7 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex items-center space-x-2">
-                    <a href="{{ route('home') }}" class="text-2xl font-bold text-emerald-600 hover:text-emerald-700 transition-colors">
+                    <a href="{{ route('home') }}" class="text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors">
                         <i class="fas fa-leaf mr-2"></i>
                         {{ \App\Models\Setting::get('center_name', 'Реабілітаційний центр') }}
                     </a>
@@ -69,25 +69,25 @@
 
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="{{ route('home') }}" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
+                    <a href="{{ route('home') }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Головна
                     </a>
-                    <a href="{{ route('home') }}#services" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
+                    <a href="{{ route('home') }}#services" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Послуги
                     </a>
-                    <a href="{{ route('home') }}#masters" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
+                    <a href="{{ route('home') }}#masters" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Спеціалісти
                     </a>
-                    <a href="{{ route('pages.show', 'about') }}" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
+                    <a href="{{ route('pages.show', 'about') }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Про нас
                     </a>
-                    <a href="{{ route('pages.show', 'contacts') }}" class="text-gray-700 hover:text-emerald-600 font-medium transition-colors">
+                    <a href="{{ route('pages.show', 'contacts') }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Контакти
                     </a>
 
                     @auth
                         <div class="relative group">
-                            <button class="flex items-center space-x-2 text-gray-700 hover:text-emerald-600 font-medium">
+                            <button class="flex items-center space-x-2 text-gray-700 hover:text-pink-600 font-medium">
                                 <i class="fas fa-user"></i>
                                 <span>{{ auth()->user()->name }}</span>
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -115,7 +115,7 @@
 
                 <!-- Mobile menu button -->
                 <div class="md:hidden">
-                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-emerald-600 p-2">
+                    <button id="mobile-menu-btn" class="text-gray-700 hover:text-pink-600 p-2">
                         <i class="fas fa-bars text-xl"></i>
                     </button>
                 </div>
@@ -125,31 +125,31 @@
         <!-- Mobile menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
             <div class="px-4 py-4 space-y-3">
-                <a href="{{ route('home') }}" class="block text-gray-700 hover:text-emerald-600 font-medium">
+                <a href="{{ route('home') }}" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Головна
                 </a>
-                <a href="{{ route('home') }}#services" class="block text-gray-700 hover:text-emerald-600 font-medium">
+                <a href="{{ route('home') }}#services" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Послуги
                 </a>
-                <a href="{{ route('home') }}#masters" class="block text-gray-700 hover:text-emerald-600 font-medium">
+                <a href="{{ route('home') }}#masters" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Спеціалісти
                 </a>
-                <a href="{{ route('pages.show', 'about') }}" class="block text-gray-700 hover:text-emerald-600 font-medium">
+                <a href="{{ route('pages.show', 'about') }}" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Про нас
                 </a>
-                <a href="{{ route('pages.show', 'contacts') }}" class="block text-gray-700 hover:text-emerald-600 font-medium">
+                <a href="{{ route('pages.show', 'contacts') }}" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Контакти
                 </a>
                 
                 @auth
                     @if(auth()->user()->isAdmin() || auth()->user()->isMaster())
-                        <a href="{{ route('admin.dashboard') }}" class="block bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <a href="{{ route('admin.dashboard') }}" class="block bg-pink-600 text-white px-4 py-2 rounded-lg font-medium">
                             Панель управління
                         </a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="w-full text-left text-gray-700 hover:text-emerald-600 font-medium">
+                        <button type="submit" class="w-full text-left text-gray-700 hover:text-pink-600 font-medium">
                             Вийти
                         </button>
                     </form>
@@ -184,7 +184,7 @@
     <!-- Floating Action Button -->
     <div class="fixed bottom-6 right-6 z-40">
         <a href="tel:{{ \App\Models\Setting::get('center_phone') }}" 
-           class="floating-btn bg-emerald-600 text-white p-4 rounded-full shadow-2xl hover:bg-emerald-700 transition-all duration-300 hover:scale-110">
+           class="floating-btn bg-pink-600 text-white p-4 rounded-full shadow-2xl hover:bg-pink-700 transition-all duration-300 hover:scale-110">
             <i class="fas fa-phone text-xl"></i>
         </a>
     </div>
@@ -196,7 +196,7 @@
                 <!-- Company Info -->
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center space-x-2 mb-6">
-                        <i class="fas fa-leaf text-emerald-400 text-2xl"></i>
+                        <i class="fas fa-leaf text-pink-400 text-2xl"></i>
                         <h3 class="text-2xl font-bold">{{ \App\Models\Setting::get('center_name') }}</h3>
                     </div>
                     <p class="text-gray-300 mb-6 leading-relaxed">
@@ -204,13 +204,13 @@
                         Допомагаємо відновити здоров'я та повернутися до активного життя.
                     </p>
                     <div class="flex space-x-4">
-                        <a href="#" class="text-gray-400 hover:text-emerald-400 transition-colors">
+                        <a href="#" class="text-gray-400 hover:text-pink-400 transition-colors">
                             <i class="fab fa-facebook-f text-xl"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-emerald-400 transition-colors">
+                        <a href="#" class="text-gray-400 hover:text-pink-400 transition-colors">
                             <i class="fab fa-instagram text-xl"></i>
                         </a>
-                        <a href="#" class="text-gray-400 hover:text-emerald-400 transition-colors">
+                        <a href="#" class="text-gray-400 hover:text-pink-400 transition-colors">
                             <i class="fab fa-telegram text-xl"></i>
                         </a>
                     </div>
@@ -220,11 +220,11 @@
                 <div>
                     <h4 class="text-lg font-semibold mb-6">Швидкі посилання</h4>
                     <ul class="space-y-3">
-                        <li><a href="{{ route('home') }}" class="text-gray-300 hover:text-emerald-400 transition-colors">Головна</a></li>
-                        <li><a href="{{ route('pages.show', 'about') }}" class="text-gray-300 hover:text-emerald-400 transition-colors">Про нас</a></li>
-                        <li><a href="{{ route('home') }}#services" class="text-gray-300 hover:text-emerald-400 transition-colors">Послуги</a></li>
-                        <li><a href="{{ route('home') }}#masters" class="text-gray-300 hover:text-emerald-400 transition-colors">Спеціалісти</a></li>
-                        <li><a href="{{ route('pages.show', 'contacts') }}" class="text-gray-300 hover:text-emerald-400 transition-colors">Контакти</a></li>
+                        <li><a href="{{ route('home') }}" class="text-gray-300 hover:text-pink-400 transition-colors">Головна</a></li>
+                        <li><a href="{{ route('pages.show', 'about') }}" class="text-gray-300 hover:text-pink-400 transition-colors">Про нас</a></li>
+                        <li><a href="{{ route('home') }}#services" class="text-gray-300 hover:text-pink-400 transition-colors">Послуги</a></li>
+                        <li><a href="{{ route('home') }}#masters" class="text-gray-300 hover:text-pink-400 transition-colors">Спеціалісти</a></li>
+                        <li><a href="{{ route('pages.show', 'contacts') }}" class="text-gray-300 hover:text-pink-400 transition-colors">Контакти</a></li>
                     </ul>
                 </div>
 
@@ -233,23 +233,23 @@
                     <h4 class="text-lg font-semibold mb-6">Контакти</h4>
                     <ul class="space-y-3">
                         <li class="flex items-center">
-                            <i class="fas fa-map-marker-alt text-emerald-400 mr-3"></i>
+                            <i class="fas fa-map-marker-alt text-pink-400 mr-3"></i>
                             <span class="text-gray-300">{{ \App\Models\Setting::get('center_address') }}</span>
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-phone text-emerald-400 mr-3"></i>
-                            <a href="tel:{{ \App\Models\Setting::get('center_phone') }}" class="text-gray-300 hover:text-emerald-400 transition-colors">
+                            <i class="fas fa-phone text-pink-400 mr-3"></i>
+                            <a href="tel:{{ \App\Models\Setting::get('center_phone') }}" class="text-gray-300 hover:text-pink-400 transition-colors">
                                 {{ \App\Models\Setting::get('center_phone') }}
                             </a>
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-envelope text-emerald-400 mr-3"></i>
-                            <a href="mailto:{{ \App\Models\Setting::get('center_email') }}" class="text-gray-300 hover:text-emerald-400 transition-colors">
+                            <i class="fas fa-envelope text-pink-400 mr-3"></i>
+                            <a href="mailto:{{ \App\Models\Setting::get('center_email') }}" class="text-gray-300 hover:text-pink-400 transition-colors">
                                 {{ \App\Models\Setting::get('center_email') }}
                             </a>
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-clock text-emerald-400 mr-3"></i>
+                            <i class="fas fa-clock text-pink-400 mr-3"></i>
                             <span class="text-gray-300">{{ \App\Models\Setting::get('working_hours') }}</span>
                         </li>
                     </ul>
@@ -265,8 +265,8 @@
                         © {{ date('Y') }} {{ \App\Models\Setting::get('center_name') }}. Всі права захищені.
                     </p>
                     <div class="flex space-x-6 mt-4 md:mt-0">
-                        <a href="#" class="text-gray-400 hover:text-emerald-400 text-sm transition-colors">Політика конфіденційності</a>
-                        <a href="#" class="text-gray-400 hover:text-emerald-400 text-sm transition-colors">Умови використання</a>
+                        <a href="#" class="text-gray-400 hover:text-pink-400 text-sm transition-colors">Політика конфіденційності</a>
+                        <a href="#" class="text-gray-400 hover:text-pink-400 text-sm transition-colors">Умови використання</a>
                     </div>
                 </div>
             </div>

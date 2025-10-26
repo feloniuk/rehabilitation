@@ -9,11 +9,11 @@ class Service extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'description', 'duration', 'is_active'];
+    protected $fillable = ['name', 'description', 'duration', 'photo', 'is_active'];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'duration' => 'integer', // ДОБАВЛЯЕМ
+        'duration' => 'integer',
     ];
 
     public function masters()
@@ -30,5 +30,16 @@ class Service extends Model
     public function appointments()
     {
         return $this->hasMany(Appointment::class);
+    }
+    
+    /**
+     * Отримати URL фото
+     */
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            return asset('storage/' . $this->photo);
+        }
+        return null;
     }
 }

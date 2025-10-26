@@ -12,17 +12,17 @@
     </a>
 </div>
 
-<div class="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg shadow-lg p-6 mb-6 text-white">
+<div class="bg-gradient-to-r from-pink-500 to-rose-600 rounded-lg shadow-lg p-6 mb-6 text-white">
     <div class="flex items-center justify-between">
         <div>
             <h2 class="text-2xl font-bold mb-2">
                 <i class="fas fa-home mr-2"></i>
                 Головна сторінка
             </h2>
-            <p class="text-emerald-100">Редагуйте текстові блоки що відображаються на головній сторінці сайту</p>
+            <p class="text-pink-100">Редагуйте текстові блоки що відображаються на головній сторінці сайту</p>
         </div>
         <a href="{{ route('home') }}" target="_blank"
-           class="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors">
+           class="bg-white text-pink-600 px-6 py-3 rounded-lg font-semibold hover:bg-pink-50 transition-colors">
             <i class="fas fa-external-link-alt mr-2"></i>
             Переглянути сайт
         </a>
@@ -36,7 +36,7 @@
             <p class="text-sm text-gray-600">Всього блоків: {{ $blocks->total() }}</p>
         </div>
         <a href="{{ route('admin.pages.blocks.create') }}" 
-           class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700 transition-colors">
+           class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Додати блок
         </a>
     </div>
@@ -140,7 +140,7 @@
                         Назва блоку *
                     </label>
                     <input type="text" id="edit-title" name="title" required 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
                 </div>
 
                 <div class="mb-4">
@@ -156,7 +156,7 @@
                         Тип поля *
                     </label>
                     <select id="edit-type" name="type" required onchange="updateEditContentField()"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
                         <option value="text">Текст (один рядок)</option>
                         <option value="textarea">Багаторядковий текст</option>
                         <option value="html">HTML</option>
@@ -168,7 +168,7 @@
                         Контент *
                     </label>
                     <textarea id="edit-content" name="content" rows="5" required 
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"></textarea>
                 </div>
 
                 <div class="mb-4">
@@ -176,7 +176,7 @@
                         Порядок сортування
                     </label>
                     <input type="number" id="edit-order" name="order"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500">
                 </div>
             </div>
 
@@ -186,7 +186,7 @@
                     Скасувати
                 </button>
                 <button type="submit" 
-                        class="bg-emerald-600 text-white px-4 py-2 rounded hover:bg-emerald-700">
+                        class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700">
                     <i class="fas fa-save mr-2"></i>
                     Зберегти
                 </button>
@@ -244,7 +244,7 @@ function updateEditContentField() {
         input.id = 'edit-content';
         input.name = 'content';
         input.required = true;
-        input.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500';
+        input.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500';
         input.value = content;
         container.appendChild(input);
     } else {
@@ -254,7 +254,7 @@ function updateEditContentField() {
         textarea.name = 'content';
         textarea.rows = rows;
         textarea.required = true;
-        textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500';
+        textarea.className = 'w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500';
         textarea.value = content;
         container.appendChild(textarea);
         

@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Hero Section -->
-<section class="relative bg-gradient-to-r from-emerald-400 via-teal-500 to-blue-600 text-white py-24 overflow-hidden">
+<section class="relative bg-gradient-to-r from-pink-400 via-rose-500 to-blue-600 text-white py-24 overflow-hidden">
     <div class="absolute inset-0 opacity-10">
         <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="white" fill-opacity="0.4"><circle cx="30" cy="30" r="2"/></g></g></svg>')"></div>
     </div>
@@ -21,10 +21,10 @@
                 {!! \App\Models\TextBlock::get('hero_title', 'Професійна реабілітація та відновлення здоров\'я з турботою про кожного пацієнта') !!}
             </p>
             <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
-                <a href="#services" class="bg-white text-emerald-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl">
+                <a href="#services" class="bg-white text-pink-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl">
                     Наші послуги
                 </a>
-                <a href="#masters" class="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-emerald-600 transition-all duration-300 transform hover:scale-105">
+                <a href="#masters" class="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-pink-600 transition-all duration-300 transform hover:scale-105">
                     Спеціалісти
                 </a>
             </div>
@@ -46,8 +46,8 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                    <i class="fas fa-user-md text-2xl text-emerald-600"></i>
+                <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <i class="fas fa-user-md text-2xl text-pink-600"></i>
                 </div>
                 <h3 class="text-xl font-bold text-center mb-4">
                     {!! \App\Models\TextBlock::get('feature_1_title', 'Досвідчені спеціалісти') !!}
@@ -70,8 +70,8 @@
             </div>
             
             <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-                <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-6 mx-auto">
-                    <i class="fas fa-award text-2xl text-teal-600"></i>
+                <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-6 mx-auto">
+                    <i class="fas fa-award text-2xl text-rose-600"></i>
                 </div>
                 <h3 class="text-xl font-bold text-center mb-4">
                     {!! \App\Models\TextBlock::get('feature_3_title', 'Гарантія результату') !!}
@@ -98,45 +98,97 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($services as $service)
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100">
-                    <div class="h-48 bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center relative overflow-hidden">
-                        <div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300"></div>
-                        <i class="fas fa-spa text-4xl text-white relative z-10 group-hover:scale-110 transition-transform duration-300"></i>
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-[480px]">
+                    <!-- Фото послуги - фіксована висота -->
+                    <div class="h-48 bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center relative overflow-hidden flex-shrink-0">
+                        @if($service->photo)
+                            <img src="{{ asset('storage/' . $service->photo) }}" 
+                                 alt="{{ $service->name }}"
+                                 class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        @else
+                            <!-- Дефолтна іконка якщо немає фото -->
+                            <div class="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all duration-300"></div>
+                            <i class="fas fa-spa text-4xl text-white relative z-10 group-hover:scale-110 transition-transform duration-300"></i>
+                        @endif
+                        
+                        <!-- Декоративні елементи -->
                         <div class="absolute top-4 right-4 w-6 h-6 bg-white/20 rounded-full"></div>
                         <div class="absolute bottom-6 left-6 w-4 h-4 bg-white/30 rounded-full"></div>
                     </div>
                     
-                    <div class="p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-3 group-hover:text-emerald-600 transition-colors">
-                            {{ $service->name }}
-                        </h3>
-                        <p class="text-gray-600 mb-4 leading-relaxed">{{ $service->description }}</p>
-                        
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="text-sm text-gray-500">
-                                <i class="fas fa-clock mr-1"></i>
-                                {{ $service->duration }} хв
-                            </span>
-                            @php
-                                $prices = $service->masterServices->pluck('price')->unique()->sort();
-                            @endphp
-                            @if($prices->count() > 0)
-                                <span class="text-lg font-bold text-emerald-600">
-                                    від {{ number_format($prices->first(), 0) }} грн
+                    <!-- Контент з скролом -->
+                    <div class="flex flex-col flex-1 min-h-0">
+                        <div class="p-6 flex-1 flex flex-col overflow-hidden">
+                            <!-- Заголовок - фіксований -->
+                            <h3 style="font-size: 1.2rem;" class="font-bold text-gray-800 mb-3 group-hover:text-pink-600 transition-colors flex-shrink-0">
+                                {{ $service->name }}
+                            </h3>
+                            
+                            <!-- Опис зі скролом -->
+                            <div class="flex-1 overflow-y-auto custom-scrollbar mb-4">
+                                <p class="text-gray-600 leading-relaxed">{{ $service->description }}</p>
+                            </div>
+                            
+                            <!-- Інформація - фіксована -->
+                            <div class="flex justify-between items-center mb-4 flex-shrink-0">
+                                <span class="text-sm text-gray-500">
+                                    <i class="fas fa-clock mr-1"></i>
+                                    {{ $service->duration }} хв
                                 </span>
-                            @endif
-                        </div>
+                                @php
+                                    $prices = $service->masterServices->pluck('price')->unique()->sort();
+                                @endphp
+                                @if($prices->count() > 0)
+                                    <span class="text-lg font-bold text-pink-600">
+                                        від {{ number_format($prices->first(), 0) }} грн
+                                    </span>
+                                @endif
+                            </div>
 
-                        <a href="{{ route('services.show', $service->id) }}"
-                           class="block w-full bg-emerald-600 text-white px-6 py-3 rounded-full font-semibold text-center hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105">
-                            Записатися
-                        </a>
+                            <!-- Кнопка - фіксована -->
+                            <a href="{{ route('services.show', $service->id) }}"
+                               class="block w-full bg-pink-600 text-white px-6 py-3 rounded-full font-semibold text-center hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 flex-shrink-0">
+                                Записатися
+                            </a>
+                        </div>
                     </div>
                 </div>
             @endforeach
         </div>
     </div>
 </section>
+
+@push('styles')
+<style>
+/* Кастомний скролбар для опису послуг */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #ec4899 #fce7f3;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #fce7f3;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #ec4899;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #db2777;
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+    display: none;
+}
+</style>
+@endpush
 
 <!-- Masters Section -->
 <section id="masters" class="py-20 bg-gradient-to-b from-gray-50 to-gray-100">
@@ -152,7 +204,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($masters as $master)
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
+                <div style="display: flex; flex-direction: column; justify-content: space-between;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
                     <div class="relative h-64 overflow-hidden">
                         @if($master->photo)
                             <img src="{{ asset('storage/' . $master->photo) }}"
@@ -182,11 +234,26 @@
                         <div class="mb-4">
                             <p class="text-sm text-gray-500 mb-2">Спеціалізації:</p>
                             <div class="flex flex-wrap gap-2">
-                                @foreach($master->masterServices->take(3) as $masterService)
-                                    <span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-medium">
+                                @php
+                                    // Отримуємо унікальні послуги за назвою
+                                    $uniqueServices = $master->masterServices
+                                        ->unique(function ($item) {
+                                            return $item->service->name;
+                                        })
+                                        ->take(3);
+                                @endphp
+                                
+                                @foreach($uniqueServices as $masterService)
+                                    <span class="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-xs font-medium">
                                         {{ $masterService->service->name }}
                                     </span>
                                 @endforeach
+                                
+                                @if($master->masterServices->count() > 3)
+                                    <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
+                                        +{{ $master->masterServices->count() - 3 }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -197,7 +264,7 @@
                         @endphp
                         @if($minPrice)
                             <div class="mb-4 text-center">
-                                <span class="text-lg font-bold text-emerald-600">
+                                <span class="text-lg font-bold text-pink-600">
                                     @if($minPrice == $maxPrice)
                                         {{ number_format($minPrice, 0) }} грн
                                     @else
@@ -213,7 +280,7 @@
                                 Детальніше
                             </a>
                             <a href="{{ route('masters.show', $master->id) }}#services"
-                               class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-full font-medium text-center hover:bg-emerald-700 transition-colors text-sm">
+                               class="flex-1 bg-pink-600 text-white px-4 py-2 rounded-full font-medium text-center hover:bg-pink-700 transition-colors text-sm">
                                 Записатися
                             </a>
                         </div>
@@ -225,7 +292,7 @@
 </section>
 
 <!-- CTA Section -->
-<section class="py-20 bg-gradient-to-r from-emerald-600 to-teal-700">
+<section class="py-20 bg-gradient-to-r from-pink-600 to-rose-700">
     <div class="max-w-4xl mx-auto px-4 text-center text-white">
         <h2 class="text-4xl font-bold mb-6">
             {!! \App\Models\TextBlock::get('cta_title', 'Готові почати шлях до здоров\'я?') !!}
@@ -235,12 +302,12 @@
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="tel:{{ \App\Models\Setting::get('center_phone') }}"
-               class="bg-white text-emerald-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors">
+               class="bg-white text-pink-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors">
                 <i class="fas fa-phone mr-2"></i>
                 {{ \App\Models\Setting::get('center_phone') }}
             </a>
             <a href="#services"
-               class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-emerald-600 transition-colors">
+               class="border-2 border-white text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-pink-600 transition-colors">
                 Переглянути послуги
             </a>
         </div>
@@ -252,7 +319,7 @@
     <div class="max-w-7xl mx-auto px-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div class="group">
-                <div class="text-4xl font-bold text-emerald-600 mb-2 group-hover:scale-110 transition-transform">
+                <div class="text-4xl font-bold text-pink-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_specialists_count', $masters->count() . '+') !!}
                 </div>
                 <div class="text-gray-600 font-medium">
@@ -268,7 +335,7 @@
                 </div>
             </div>
             <div class="group">
-                <div class="text-4xl font-bold text-teal-600 mb-2 group-hover:scale-110 transition-transform">
+                <div class="text-4xl font-bold text-rose-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_clients_count', '100+') !!}
                 </div>
                 <div class="text-gray-600 font-medium">

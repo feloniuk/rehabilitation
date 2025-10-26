@@ -7,7 +7,7 @@
     <!-- Breadcrumb -->
     <nav class="mb-8">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-            <li><a href="{{ route('home') }}" class="hover:text-emerald-600 transition-colors">Головна</a></li>
+            <li><a href="{{ route('home') }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
             <li class="text-gray-700">{{ $page->title }}</li>
         </ol>
@@ -15,17 +15,17 @@
 
     <!-- Page Header -->
     <div class="text-center mb-12">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-full mb-6">
             @if($page->slug === 'about')
-                <i class="fas fa-info-circle text-2xl text-emerald-600"></i>
+                <i class="fas fa-info-circle text-2xl text-pink-600"></i>
             @elseif($page->slug === 'contacts')
-                <i class="fas fa-map-marker-alt text-2xl text-emerald-600"></i>
+                <i class="fas fa-map-marker-alt text-2xl text-pink-600"></i>
             @else
-                <i class="fas fa-file-alt text-2xl text-emerald-600"></i>
+                <i class="fas fa-file-alt text-2xl text-pink-600"></i>
             @endif
         </div>
         <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">{{ $page->title }}</h1>
-        <div class="w-24 h-1 bg-gradient-to-r from-emerald-400 to-teal-500 mx-auto rounded-full"></div>
+        <div class="w-24 h-1 bg-gradient-to-r from-pink-400 to-rose-500 mx-auto rounded-full"></div>
     </div>
 
     <!-- Content -->
@@ -41,14 +41,14 @@
                     
                     <!-- Enhanced Contact Cards -->
                     <div class="mt-8 space-y-6">
-                        <div class="flex items-start space-x-4 p-6 bg-emerald-50 rounded-xl hover:bg-emerald-100 transition-colors">
-                            <div class="w-12 h-12 bg-emerald-200 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i class="fas fa-map-marker-alt text-emerald-600"></i>
+                        <div class="flex items-start space-x-4 p-6 bg-pink-50 rounded-xl hover:bg-pink-100 transition-colors">
+                            <div class="w-12 h-12 bg-pink-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-pink-600"></i>
                             </div>
                             <div>
                                 <h3 class="font-semibold text-gray-800 mb-1">Адреса</h3>
                                 <p class="text-gray-600">{{ \App\Models\Setting::get('center_address') }}</p>
-                                <a href="#" class="text-emerald-600 hover:text-emerald-700 text-sm mt-2 inline-flex items-center">
+                                <a href="#" class="text-pink-600 hover:text-pink-700 text-sm mt-2 inline-flex items-center">
                                     <i class="fas fa-directions mr-1"></i>
                                     Побудувати маршрут
                                 </a>
@@ -115,9 +115,9 @@
         <!-- About page additional sections -->
         <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
             <!-- Mission -->
-            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-8 text-center">
-                <div class="w-16 h-16 bg-emerald-200 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <i class="fas fa-bullseye text-2xl text-emerald-600"></i>
+            <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl p-8 text-center">
+                <div class="w-16 h-16 bg-pink-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-bullseye text-2xl text-pink-600"></i>
                 </div>
                 <h3 class="text-xl font-bold text-gray-800 mb-4">Наша місія</h3>
                 <p class="text-gray-600 leading-relaxed">
@@ -150,19 +150,19 @@
     @endif
 
     <!-- CTA Section -->
-    <div class="mt-12 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-2xl p-8 text-center text-white">
+    <div class="mt-12 bg-gradient-to-r from-pink-600 to-rose-600 rounded-2xl p-8 text-center text-white">
         <h3 class="text-2xl font-bold mb-4">Готові розпочати шлях до здоров'я?</h3>
-        <p class="text-emerald-100 mb-6 text-lg">
+        <p class="text-pink-100 mb-6 text-lg">
             Зв'яжіться з нами прямо зараз та отримайте професійну консультацію
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="tel:{{ \App\Models\Setting::get('center_phone') }}"
-               class="inline-flex items-center justify-center bg-white text-emerald-600 px-8 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors">
+               class="inline-flex items-center justify-center bg-white text-pink-600 px-8 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors">
                 <i class="fas fa-phone mr-2"></i>
                 Зателефонувати
             </a>
             <a href="{{ route('home') }}#services"
-               class="inline-flex items-center justify-center border-2 border-white text-white px-8 py-3 rounded-xl font-bold hover:bg-white hover:text-emerald-600 transition-colors">
+               class="inline-flex items-center justify-center border-2 border-white text-white px-8 py-3 rounded-xl font-bold hover:bg-white hover:text-pink-600 transition-colors">
                 <i class="fas fa-calendar-plus mr-2"></i>
                 Записатися онлайн
             </a>

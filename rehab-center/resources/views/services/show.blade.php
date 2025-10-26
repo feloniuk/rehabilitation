@@ -7,16 +7,16 @@
     <!-- Breadcrumb -->
     <nav class="mb-8">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-            <li><a href="{{ route('home') }}" class="hover:text-emerald-600 transition-colors">Головна</a></li>
+            <li><a href="{{ route('home') }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
-            <li><a href="{{ route('home') }}#services" class="hover:text-emerald-600 transition-colors">Послуги</a></li>
+            <li><a href="{{ route('home') }}#services" class="hover:text-pink-600 transition-colors">Послуги</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
             <li class="text-gray-700">{{ $service->name }}</li>
         </ol>
     </nav>
 
     <!-- Service Header -->
-    <div class="relative bg-gradient-to-r from-emerald-500 to-teal-600 rounded-3xl overflow-hidden mb-12">
+    <div class="relative bg-gradient-to-r from-pink-500 to-rose-600 rounded-3xl overflow-hidden mb-12">
         <div class="absolute inset-0 bg-black/10"></div>
         <div class="absolute inset-0 opacity-10">
             <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="white" fill-opacity="0.4"><circle cx="30" cy="30" r="2"/></g></g></svg>')"></div>
@@ -79,8 +79,8 @@
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div class="text-center group">
-                    <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-200 transition-colors">
-                        <i class="fas fa-user-md text-2xl text-emerald-600"></i>
+                    <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-pink-200 transition-colors">
+                        <i class="fas fa-user-md text-2xl text-pink-600"></i>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800 mb-3">Досвідчені спеціалісти</h3>
                     <p class="text-gray-600 leading-relaxed">Наші майстри мають багаторічний досвід та професійну підготовку</p>
@@ -95,8 +95,8 @@
                 </div>
                 
                 <div class="text-center group">
-                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-teal-200 transition-colors">
-                        <i class="fas fa-certificate text-2xl text-teal-600"></i>
+                    <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-rose-200 transition-colors">
+                        <i class="fas fa-certificate text-2xl text-rose-600"></i>
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800 mb-3">Гарантована якість</h3>
                     <p class="text-gray-600 leading-relaxed">Використовуємо сучасні методики та обладнання</p>
@@ -121,16 +121,16 @@
                         @php
                             $masterService = $master->masterServices->first();
                         @endphp
-                        <div class="group bg-gradient-to-br from-gray-50 to-white border-2 border-gray-100 rounded-2xl p-6 hover:border-emerald-300 hover:shadow-xl transition-all duration-300">
+                        <div class="group bg-gradient-to-br from-gray-50 to-white border-2 border-gray-100 rounded-2xl p-6 hover:border-pink-300 hover:shadow-xl transition-all duration-300">
                             <!-- Master Photo -->
                             <div class="relative mb-6">
-                                <div class="w-24 h-24 rounded-full overflow-hidden mx-auto border-4 border-emerald-100 group-hover:border-emerald-300 transition-colors">
+                                <div class="w-24 h-24 rounded-full overflow-hidden mx-auto border-4 border-pink-100 group-hover:border-pink-300 transition-colors">
                                     @if($master->photo)
                                         <img src="{{ asset('storage/' . $master->photo) }}"
                                              alt="{{ $master->name }}"
                                              class="w-full h-full object-cover">
                                     @else
-                                        <div class="w-full h-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                                        <div class="w-full h-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center">
                                             <i class="fas fa-user text-2xl text-white"></i>
                                         </div>
                                     @endif
@@ -142,7 +142,7 @@
 
                             <!-- Master Info -->
                             <div class="text-center mb-6">
-                                <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-emerald-600 transition-colors">
+                                <h3 class="text-xl font-bold text-gray-800 mb-2 group-hover:text-pink-600 transition-colors">
                                     {{ $master->name }}
                                 </h3>
                                 
@@ -165,7 +165,7 @@
                             <div class="bg-white rounded-lg p-4 mb-6 shadow-sm">
                                 <div class="flex justify-between items-center mb-3">
                                     <span class="text-sm text-gray-600">Ціна сеансу</span>
-                                    <span class="text-2xl font-bold text-emerald-600">
+                                    <span class="text-2xl font-bold text-pink-600">
                                         {{ number_format($masterService->price, 0) }} 
                                         <span class="text-sm text-gray-500">грн</span>
                                     </span>
@@ -181,13 +181,13 @@
                             <!-- Action Buttons -->
                             <div class="space-y-3">
                                 <a href="{{ route('appointment.create', ['master_id' => $master->id, 'service_id' => $service->id]) }}" 
-                                   class="block w-full bg-emerald-600 text-white text-center px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
+                                   class="block w-full bg-pink-600 text-white text-center px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                                     <i class="fas fa-calendar-plus mr-2"></i>
                                     Записатися
                                 </a>
                                 
                                 <a href="{{ route('masters.show', $master->id) }}" 
-                                   class="block w-full border-2 border-emerald-600 text-emerald-600 text-center px-6 py-3 rounded-xl font-semibold hover:bg-emerald-600 hover:text-white transition-all duration-300">
+                                   class="block w-full border-2 border-pink-600 text-pink-600 text-center px-6 py-3 rounded-xl font-semibold hover:bg-pink-600 hover:text-white transition-all duration-300">
                                     <i class="fas fa-user mr-2"></i>
                                     Детальніше
                                 </a>
@@ -203,7 +203,7 @@
                     <h3 class="text-xl font-semibold text-gray-800 mb-2">Спеціалісти недоступні</h3>
                     <p class="text-gray-600 mb-6">На даний момент немає доступних спеціалістів для цієї послуги</p>
                     <a href="{{ route('home') }}" 
-                       class="inline-flex items-center bg-emerald-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
+                       class="inline-flex items-center bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 transition-colors">
                         <i class="fas fa-arrow-left mr-2"></i>
                         Повернутися на головну
                     </a>
@@ -214,7 +214,7 @@
 
     <!-- Process Steps -->
     <section class="mb-12">
-        <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-8">
+        <div class="bg-gradient-to-r from-pink-50 to-rose-50 rounded-2xl p-8">
             <div class="text-center mb-8">
                 <h2 class="text-3xl font-bold text-gray-800 mb-4">Як проходить процедура</h2>
                 <p class="text-lg text-gray-600">Простий процес запису та проведення сеансу</p>
@@ -225,10 +225,10 @@
                     <!-- Step 1 -->
                     <div class="flex-1 text-center">
                         <div class="relative">
-                            <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div class="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span class="text-2xl font-bold text-white">1</span>
                             </div>
-                            <!-- <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-emerald-200"></div> -->
+                            <!-- <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-pink-200"></div> -->
                         </div>
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Запис онлайн</h3>
                         <p class="text-gray-600 text-sm">Оберіть спеціаліста та зручний час</p>
@@ -237,10 +237,10 @@
                     <!-- Step 2 -->
                     <div class="flex-1 text-center">
                         <div class="relative">
-                            <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div class="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span class="text-2xl font-bold text-white">2</span>
                             </div>
-                            <!-- <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-emerald-200"></div> -->
+                            <!-- <div class="hidden md:block absolute top-8 left-full w-full h-0.5 bg-pink-200"></div> -->
                         </div>
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Консультація</h3>
                         <p class="text-gray-600 text-sm">Обговорення ваших потреб та плану</p>
@@ -248,7 +248,7 @@
                     
                     <!-- Step 3 -->
                     <div class="flex-1 text-center">
-                        <div class="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <div class="w-16 h-16 bg-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
                             <span class="text-2xl font-bold text-white">3</span>
                         </div>
                         <h3 class="font-semibold text-lg text-gray-800 mb-2">Процедура</h3>

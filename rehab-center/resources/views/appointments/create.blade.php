@@ -7,9 +7,9 @@
     <!-- Breadcrumb -->
     <nav class="mb-8">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-            <li><a href="{{ route('home') }}" class="hover:text-emerald-600 transition-colors">Головна</a></li>
+            <li><a href="{{ route('home') }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
-            <li><a href="{{ route('masters.show', $master->id) }}" class="hover:text-emerald-600 transition-colors">{{ $master->name }}</a></li>
+            <li><a href="{{ route('masters.show', $master->id) }}" class="hover:text-pink-600 transition-colors">{{ $master->name }}</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
             <li class="text-gray-700">Запис на прийом</li>
         </ol>
@@ -17,8 +17,8 @@
 
     <!-- Header -->
     <div class="text-center mb-12">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
-            <i class="fas fa-calendar-plus text-2xl text-emerald-600"></i>
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-full mb-4">
+            <i class="fas fa-calendar-plus text-2xl text-pink-600"></i>
         </div>
         <h1 class="text-4xl font-bold text-gray-800 mb-4">Запис на прийом</h1>
         <p class="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -29,22 +29,22 @@
     <div class="grid grid-cols-1 lg:grid-cols-5 gap-12">
         <!-- Booking Details Sidebar -->
         <div class="lg:col-span-2">
-            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 sticky top-24">
+            <div class="bg-gradient-to-br from-pink-50 to-rose-50 rounded-2xl p-6 sticky top-24">
                 <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                    <i class="fas fa-info-circle text-emerald-600 mr-2"></i>
+                    <i class="fas fa-info-circle text-pink-600 mr-2"></i>
                     Деталі запису
                 </h3>
 
                 <!-- Master Info -->
-                <div class="mb-6 pb-6 border-b border-emerald-200">
+                <div class="mb-6 pb-6 border-b border-pink-200">
                     <div class="flex items-center space-x-4">
-                        <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-200">
+                        <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-pink-200">
                             @if($master->photo)
                                 <img src="{{ asset('storage/' . $master->photo) }}"
                                      alt="{{ $master->name }}"
                                      class="w-full h-full object-cover">
                             @else
-                                <div class="w-full h-full bg-emerald-400 flex items-center justify-center">
+                                <div class="w-full h-full bg-pink-400 flex items-center justify-center">
                                     <i class="fas fa-user text-white"></i>
                                 </div>
                             @endif
@@ -70,8 +70,8 @@
                             <p class="text-sm text-gray-600">Послуга</p>
                             <p class="font-semibold text-gray-800">{{ $service->name }}</p>
                         </div>
-                        <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-spa text-emerald-600"></i>
+                        <div class="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-spa text-pink-600"></i>
                         </div>
                     </div>
 
@@ -89,35 +89,35 @@
                     <div class="flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-600">Вартість</p>
-                            <p class="font-bold text-2xl text-emerald-600">
+                            <p class="font-bold text-2xl text-pink-600">
                                 {{ number_format($masterService->price, 0) }} 
                                 <span class="text-lg text-gray-500">грн</span>
                             </p>
                         </div>
-                        <div class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-sm font-medium">
+                        <div class="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-sm font-medium">
                             Найкраща ціна
                         </div>
                     </div>
                 </div>
 
                 <!-- Benefits -->
-                <div class="mt-6 pt-6 border-t border-emerald-200">
+                <div class="mt-6 pt-6 border-t border-pink-200">
                     <h4 class="font-semibold text-gray-800 mb-3">Що входить:</h4>
                     <ul class="space-y-2 text-sm text-gray-600">
                         <li class="flex items-center">
-                            <i class="fas fa-check text-emerald-500 mr-2"></i>
+                            <i class="fas fa-check text-pink-500 mr-2"></i>
                             Первинна консультація
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-check text-emerald-500 mr-2"></i>
+                            <i class="fas fa-check text-pink-500 mr-2"></i>
                             Професійний сеанс
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-check text-emerald-500 mr-2"></i>
+                            <i class="fas fa-check text-pink-500 mr-2"></i>
                             Рекомендації спеціаліста
                         </li>
                         <li class="flex items-center">
-                            <i class="fas fa-check text-emerald-500 mr-2"></i>
+                            <i class="fas fa-check text-pink-500 mr-2"></i>
                             Індивідуальний підхід
                         </li>
                     </ul>
@@ -136,7 +136,7 @@
                     <!-- Personal Information -->
                     <div class="mb-8">
                         <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-user text-emerald-600 mr-2"></i>
+                            <i class="fas fa-user text-pink-600 mr-2"></i>
                             Особисті дані
                         </h3>
 
@@ -149,7 +149,7 @@
                                        id="name" 
                                        name="name" 
                                        required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
                                        placeholder="Введіть ваше ім'я"
                                        value="{{ old('name') }}">
                                 @error('name')
@@ -165,7 +165,7 @@
                                        id="phone" 
                                        name="phone" 
                                        required
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
                                        placeholder="+380 XX XXX XX XX"
                                        value="{{ old('phone') }}">
                                 @error('phone')
@@ -181,7 +181,7 @@
                             <input type="email" 
                                    id="email" 
                                    name="email"
-                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
                                    placeholder="your@email.com"
                                    value="{{ old('email') }}">
                             @error('email')
@@ -193,7 +193,7 @@
                     <!-- Date & Time Selection -->
                     <div class="mb-8">
                         <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-calendar-check text-emerald-600 mr-2"></i>
+                            <i class="fas fa-calendar-check text-pink-600 mr-2"></i>
                             Дата та час
                         </h3>
 
@@ -207,7 +207,7 @@
                                        name="appointment_date" 
                                        required
                                        min="{{ date('Y-m-d') }}"
-                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
+                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
                                        value="{{ old('appointment_date', request('date')) }}">
                                 @error('appointment_date')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -221,7 +221,7 @@
                                 <select id="appointment_time" 
                                         name="appointment_time" 
                                         required
-                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200">
+                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200">
                                     <option value="">Спочатку оберіть дату</option>
                                 </select>
                                 @error('appointment_time')
@@ -240,7 +240,7 @@
                     <!-- Additional Notes -->
                     <div class="mb-8">
                         <h3 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-clipboard text-emerald-600 mr-2"></i>
+                            <i class="fas fa-clipboard text-pink-600 mr-2"></i>
                             Додаткова інформація
                         </h3>
 
@@ -251,7 +251,7 @@
                             <textarea id="notes" 
                                       name="notes" 
                                       rows="4"
-                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200 resize-none"
+                                      class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 resize-none"
                                       placeholder="Опишіть ваші побажання або особливості, які важливо знати спеціалісту...">{{ old('notes') }}</textarea>
                             @error('notes')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -269,7 +269,7 @@
                         
                         <button type="submit" 
                                 id="submit-btn"
-                                class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-emerald-600 hover:to-teal-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
+                                class="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-pink-600 hover:to-rose-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
                             <span id="btn-text">
                                 <i class="fas fa-check-circle mr-2"></i>
                                 Підтвердити запис
@@ -294,12 +294,12 @@
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div class="text-center group">
-                <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-emerald-200 transition-colors">
-                    <i class="fas fa-phone text-emerald-600"></i>
+                <div class="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-pink-200 transition-colors">
+                    <i class="fas fa-phone text-pink-600"></i>
                 </div>
                 <h4 class="font-semibold text-gray-800 mb-2">Телефонуйте</h4>
                 <a href="tel:{{ \App\Models\Setting::get('center_phone') }}" 
-                   class="text-emerald-600 hover:text-emerald-700 font-medium">
+                   class="text-pink-600 hover:text-pink-700 font-medium">
                     {{ \App\Models\Setting::get('center_phone') }}
                 </a>
             </div>
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     slots.forEach(slot => {
                         const slotBtn = document.createElement('button');
                         slotBtn.type = 'button';
-                        slotBtn.className = 'px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-emerald-500 hover:bg-emerald-50 transition-colors';
+                        slotBtn.className = 'px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-colors';
                         slotBtn.textContent = slot;
                         slotBtn.onclick = () => selectTimeSlot(slot);
                         slotsGrid.appendChild(slotBtn);
@@ -405,10 +405,10 @@ document.addEventListener('DOMContentLoaded', function() {
         timeSelect.value = time;
         // Update visual selection
         slotsGrid.querySelectorAll('button').forEach(btn => {
-            btn.classList.remove('border-emerald-500', 'bg-emerald-50', 'text-emerald-700');
+            btn.classList.remove('border-pink-500', 'bg-pink-50', 'text-pink-700');
             btn.classList.add('border-gray-300');
             if (btn.textContent === time) {
-                btn.classList.add('border-emerald-500', 'bg-emerald-100', 'text-emerald-700');
+                btn.classList.add('border-pink-500', 'bg-pink-100', 'text-pink-700');
                 btn.classList.remove('border-gray-300');
             }
         });

@@ -29,8 +29,8 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10 bg-emerald-100 rounded-full flex items-center justify-center mr-3">
-                                    <i class="fas fa-spa text-emerald-600"></i>
+                                <div class="flex-shrink-0 h-10 w-10 bg-pink-100 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-spa text-pink-600"></i>
                                 </div>
                                 <div>
                                     <div class="font-medium text-gray-900">{{ $service->name }}</div>

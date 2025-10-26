@@ -82,7 +82,7 @@
 
                 <div>
                     <label for="duration" class="block text-sm font-medium text-gray-700 mb-2">
-                        <i class="fas fa-hourglass-half text-teal-500 mr-1"></i>
+                        <i class="fas fa-hourglass-half text-rose-500 mr-1"></i>
                         Тривалість (хв) *
                     </label>
                     <input type="number" id="duration" name="duration" required min="1"
