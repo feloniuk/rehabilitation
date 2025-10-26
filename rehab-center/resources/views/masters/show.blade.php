@@ -38,7 +38,7 @@
                     </div>
                     
                     <h1 class="text-2xl font-bold text-gray-800 mb-2">{{ $master->name }}</h1>
-                    <p class="text-emerald-600 font-medium mb-4">Спеціаліст з реабілітації</p>
+                    <p class="text-emerald-600 font-medium mb-4">{{ $master->specialty ?: 'Спеціаліст з реабілітації' }}</p>
                     
                     <!-- Rating Stars -->
                     <div class="flex justify-center mb-6">

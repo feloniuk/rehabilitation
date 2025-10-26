@@ -82,6 +82,18 @@
                 @enderror
             </div>
 
+            <div class="mb-6">
+                <label for="specialty" class="block text-sm font-medium text-gray-700 mb-2">Спеціалізація</label>
+                <input type="text" id="specialty" name="specialty" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Наприклад, Спеціаліст з реабілітації"
+                       value="{{ old('specialty') }}">
+                @error('specialty')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+                <p class="text-xs text-gray-500 mt-1">Короткий опис спеціалізації майстра</p>
+            </div>
+
             <!-- Статистика майстра -->
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-4 text-gray-800">
