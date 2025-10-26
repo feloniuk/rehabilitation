@@ -339,33 +339,59 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Автозаповнення ціни
     let priceTimeout;
-    ['master_id', 'service_id'].forEach(id => {
-        document.getElementById(id).addEventListener('change', function() {
-            clearTimeout(priceTimeout);
-            
-            const masterId = document.getElementById('master_id').value;
-            const serviceId = document.getElementById('service_id').value;
-            const priceInput = document.getElementById('price');
+    // Загрузка услуг мастера
+    document.getElementById('master_id').addEventListener('change', function() {
+        const masterId = this.value;
+        const serviceSelect = document.getElementById('service_id');
+        const priceInput = document.getElementById('price');
 
-            if (masterId && serviceId) {
-                priceInput.disabled = true;
-                priceInput.placeholder = 'Завантаження...';
+        if (!masterId) {
+            serviceSelect.innerHTML = '<option value="">Оберіть послугу</option>';
+            priceInput.value = '';
+            priceInput.placeholder = 'Спочатку виберіть майстра';
+            return;
+        }
+
+        serviceSelect.disabled = true;
+        serviceSelect.innerHTML = '<option value="">Завантаження послуг...</option>';
+
+        fetch(`{{ route('appointments.get-master-services') }}?master_id=${masterId}`)
+            .then(response => response.json())
+            .then(services => {
+                serviceSelect.disabled = false;
+                serviceSelect.innerHTML = '<option value="">Оберіть послугу</option>';
                 
-                priceTimeout = setTimeout(() => {
-                    fetch(`{{ route('admin.appointments.get-service-price') }}?master_id=${masterId}&service_id=${serviceId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            priceInput.disabled = false;
-                            priceInput.value = data.price;
-                            document.getElementById('duration').value = data.duration;
-                        })
-                        .catch(() => {
-                            priceInput.disabled = false;
-                            priceInput.placeholder = 'Помилка завантаження';
-                        });
-                }, 300);
-            }
-        });
+                services.forEach(service => {
+                    const option = document.createElement('option');
+                    option.value = service.id;
+                    option.textContent = `${service.name} (${service.duration} хв)`;
+                    option.dataset.price = service.price;
+                    option.dataset.duration = service.duration;
+                    serviceSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                serviceSelect.disabled = false;
+                serviceSelect.innerHTML = '<option value="">Помилка завантаження</option>';
+                console.error('Error:', error);
+            });
+        
+        priceInput.value = '';
+    });
+
+    // Автозаполнення ціни та тривалості при виборі послуги
+    document.getElementById('service_id').addEventListener('change', function() {
+        const option = this.options[this.selectedIndex];
+        const priceInput = document.getElementById('price');
+        const durationInput = document.getElementById('duration');
+
+        if (option.value) {
+            priceInput.value = option.dataset.price;
+            durationInput.value = option.dataset.duration;
+        } else {
+            priceInput.value = '';
+            durationInput.value = '';
+        }
     });
 
     // Форматування телефону

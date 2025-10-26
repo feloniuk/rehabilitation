@@ -209,4 +209,31 @@ class ManualAppointmentController extends Controller
             'duration' => $masterService->getDuration(),
         ]);
     }
+
+    public function getMasterServices(Request $request)
+    {
+        $masterId = $request->input('master_id');
+
+        $masterServices = MasterService::where('master_id', $masterId)
+            ->with('service')
+            ->get();
+
+        if ($masterServices->isEmpty()) {
+            return response()->json([
+                'error' => 'Послуг не знайдено для цього майстра'
+            ], 404);
+        }
+
+        $services = $masterServices->map(function($masterService) {
+            return [
+                'id' => $masterService->service->id,
+                'name' => $masterService->service->name,
+                'duration' => $masterService->getDuration(),
+                'price' => $masterService->price,
+                'master_service_id' => $masterService->id,
+            ];
+        });
+
+        return response()->json($services);
+    }
 }

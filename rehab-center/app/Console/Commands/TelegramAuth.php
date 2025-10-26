@@ -4,9 +4,10 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use danog\MadelineProto\API;
+use danog\MadelineProto\Logger;
 use danog\MadelineProto\Settings;
 use danog\MadelineProto\Settings\AppInfo;
-use danog\MadelineProto\Settings\Logger;
+use danog\MadelineProto\Settings\Logger as LoggerSettings;
 
 class TelegramAuth extends Command
 {
@@ -37,8 +38,9 @@ class TelegramAuth extends Command
             $settings->setAppInfo($appInfo);
             
             // Налаштування логування
-            $logger = new Logger;
-            $logger->setType(Logger::FILE_LOGGER);
+            // ВАЖНО: використовуємо Logger::FILE_LOGGER з danog\MadelineProto\Logger
+            $logger = new LoggerSettings;
+            $logger->setType(Logger::FILE_LOGGER); // Константа int з danog\MadelineProto\Logger
             $logger->setExtra(storage_path('logs/telegram.log'));
             $logger->setLevel(Logger::ERROR);
             $settings->setLogger($logger);

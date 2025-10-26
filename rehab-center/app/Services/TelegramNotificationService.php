@@ -6,9 +6,10 @@ use App\Models\Appointment;
 use App\Models\NotificationLog;
 use App\Models\NotificationTemplate;
 use danog\MadelineProto\API;
+use danog\MadelineProto\Logger;
 use danog\MadelineProto\Settings;
 use danog\MadelineProto\Settings\AppInfo;
-use danog\MadelineProto\Settings\Logger;
+use danog\MadelineProto\Settings\Logger as LoggerSettings;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -26,6 +27,7 @@ class TelegramNotificationService
 
         if (!$apiId || !$apiHash) {
             Log::warning('Telegram API credentials not configured.');
+            $this->isConfigured = false;
             return;
         }
 
@@ -39,10 +41,11 @@ class TelegramNotificationService
             $settings->setAppInfo($appInfo);
 
             // Налаштування логування
-            $logger = new Logger;
-            $logger->setType(Logger::FILE_LOGGER);
+            // ВАЖНО: Logger::FILE_LOGGER та Logger::ERROR - це int константи з danog\MadelineProto\Logger
+            $logger = new LoggerSettings;
+            $logger->setType(Logger::FILE_LOGGER); // int constant
             $logger->setExtra(storage_path('logs/telegram.log'));
-            $logger->setLevel(Logger::ERROR);
+            $logger->setLevel(Logger::ERROR); // int constant
             $settings->setLogger($logger);
 
             // Ініціалізація сесії (без повторного start)
@@ -52,6 +55,7 @@ class TelegramNotificationService
             $this->isConfigured = true;
         } catch (\Exception $e) {
             Log::error('Telegram initialization error: ' . $e->getMessage());
+            $this->isConfigured = false;
         }
     }
 

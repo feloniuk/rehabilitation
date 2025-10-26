@@ -49,12 +49,16 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     Route::get('appointments/search-clients', [ManualAppointmentController::class, 'searchClients'])
         ->name('appointments.search-clients');
     
+    Route::get('appointments/master-services', [ManualAppointmentController::class, 'getMasterServices'])
+        ->name('appointments.get-master-services');
+    
     Route::get('appointments/get-service-price', [ManualAppointmentController::class, 'getServicePrice'])
         ->name('appointments.get-service-price');
         
     Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
     Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
     Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
+
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
