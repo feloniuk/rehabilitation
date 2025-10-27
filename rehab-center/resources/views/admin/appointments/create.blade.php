@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
         serviceSelect.disabled = true;
         serviceSelect.innerHTML = '<option value="">Завантаження послуг...</option>';
 
-        fetch(`{{ route('appointments.get-master-services') }}?master_id=${masterId}`)
+        fetch(`{{ route('admin.appointments.get-master-services') }}?master_id=${masterId}`)
             .then(response => response.json())
             .then(services => {
                 serviceSelect.disabled = false;

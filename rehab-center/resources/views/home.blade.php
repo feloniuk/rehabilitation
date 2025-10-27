@@ -4,7 +4,7 @@
 
 @section('content')
 <!-- Hero Section -->
-<section class="relative bg-gradient-to-r from-pink-400 via-rose-500 to-blue-600 text-white py-24 overflow-hidden">
+<section class="relative bg-gradient-to-r  text-white py-24 overflow-hidden">
     <div class="absolute inset-0 opacity-10">
         <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="white" fill-opacity="0.4"><circle cx="30" cy="30" r="2"/></g></g></svg>')"></div>
     </div>
@@ -14,17 +14,24 @@
             <div class="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full blur-xl animate-pulse"></div>
             <div class="absolute bottom-20 right-20 w-32 h-32 bg-white/5 rounded-full blur-2xl animate-bounce"></div>
             
-            <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight">
+            <!-- Логотип -->
+            <div class="mb-8 flex justify-center">
+                <img src="{{ asset('logo.png') }}" 
+                     alt="{{ \App\Models\Setting::get('center_name', 'Реабілітаційний центр') }}"
+                     class="max-w-md w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300">
+            </div>
+
+            {{-- <h1 class="text-5xl md:text-7xl font-bold mb-8 leading-tight">
                 {{ \App\Models\Setting::get('center_name', 'Реабілітаційний центр') }}
             </h1>
             <p class="text-xl md:text-3xl mb-12 opacity-90 max-w-4xl mx-auto leading-relaxed">
                 {!! \App\Models\TextBlock::get('hero_title', 'Професійна реабілітація та відновлення здоров\'я з турботою про кожного пацієнта') !!}
-            </p>
+            </p> --}}
             <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
                 <a href="#services" class="bg-white text-pink-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl">
                     Наші послуги
                 </a>
-                <a href="#masters" class="border-2 border-white text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-white hover:text-pink-600 transition-all duration-300 transform hover:scale-105">
+                <a href="#masters" class="bg-white text-pink-600 px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-all duration-300 transform hover:scale-105 shadow-2xl">
                     Спеціалісти
                 </a>
             </div>
@@ -204,7 +211,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($masters as $master)
-                <div style="display: flex; flex-direction: column; justify-content: space-between;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
+                <div style="display: flex; flex-direction: column;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
                     <div class="relative h-64 overflow-hidden">
                         @if($master->photo)
                             <img src="{{ asset('storage/' . $master->photo) }}"
@@ -215,18 +222,18 @@
                                 <i class="fas fa-user text-4xl text-gray-600"></i>
                             </div>
                         @endif
-                        
+
                         <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        
+
                         <div class="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
                             <i class="fas fa-check mr-1"></i>
                             Доступний
                         </div>
                     </div>
 
-                    <div class="p-6">
+                    <div class="p-6" style="height: 60%; display: flex; flex-direction: column; justify-content: space-between;">
                         <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $master->name }}</h3>
-                        
+
                         @if($master->description)
                             <p class="text-gray-600 mb-4 leading-relaxed">{{ Str::limit($master->description, 80) }}</p>
                         @endif

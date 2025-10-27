@@ -62,7 +62,7 @@
                 <!-- Logo -->
                 <div class="flex items-center space-x-2">
                     <a href="{{ route('home') }}" class="text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors">
-                        <i class="fas fa-leaf mr-2"></i>
+                        {{-- <i class="fas fa-leaf mr-2"></i> --}}
                         {{ \App\Models\Setting::get('center_name', 'Реабілітаційний центр') }}
                     </a>
                 </div>
