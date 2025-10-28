@@ -42,7 +42,7 @@
 <!-- Features Section -->
 <section class="py-20 bg-gradient-to-b from-gray-50 to-white">
     <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-16">
+        <div class="text-center mb-16 fade-in-up">
             <h2 class="text-4xl font-bold text-gray-800 mb-6">
                 {!! \App\Models\TextBlock::get('features_title', 'Чому обирають нас?') !!}
             </h2>
@@ -52,7 +52,7 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up delay-100">
                 <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <i class="fas fa-user-md text-2xl text-pink-600"></i>
                 </div>
@@ -64,7 +64,7 @@
                 </p>
             </div>
             
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up delay-300">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <i class="fas fa-heart text-2xl text-blue-600"></i>
                 </div>
@@ -76,7 +76,7 @@
                 </p>
             </div>
             
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up delay-500">
                 <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <i class="fas fa-award text-2xl text-rose-600"></i>
                 </div>
@@ -94,7 +94,7 @@
 <!-- Services Section -->
 <section id="services" class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-16">
+        <div class="text-center mb-16 fade-in-up">
             <h2 class="text-4xl font-bold text-gray-800 mb-6">
                 {!! \App\Models\TextBlock::get('services_title', 'Наші послуги') !!}
             </h2>
@@ -104,8 +104,8 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            @foreach($services as $service)
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-[480px]">
+            @foreach($services as $index => $service)
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-[480px] scale-in" style="transition-delay: {{ $index * 0.1 }}s;">
                     <!-- Фото послуги - фіксована висота -->
                     <div class="h-48 bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center relative overflow-hidden flex-shrink-0">
                         @if($service->photo)
@@ -165,42 +165,10 @@
     </div>
 </section>
 
-@push('styles')
-<style>
-/* Кастомний скролбар для опису послуг */
-.custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #ec4899 #fce7f3;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: #fce7f3;
-    border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #ec4899;
-    border-radius: 3px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #db2777;
-}
-
-.custom-scrollbar::-webkit-scrollbar-button {
-    display: none;
-}
-</style>
-@endpush
-
 <!-- Masters Section -->
 <section id="masters" class="py-20 bg-gradient-to-b from-gray-50 to-gray-100">
     <div class="max-w-7xl mx-auto px-4">
-        <div class="text-center mb-16">
+        <div class="text-center mb-16 fade-in-up">
             <h2 class="text-4xl font-bold text-gray-800 mb-6">
                 {!! \App\Models\TextBlock::get('masters_title', 'Наші спеціалісти') !!}
             </h2>
@@ -210,8 +178,8 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            @foreach($masters as $master)
-                <div style="display: flex; flex-direction: column;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden">
+            @foreach($masters as $index => $master)
+                <div style="display: flex; flex-direction: column; transition-delay: {{ $index * 0.1 }}s;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden fade-in-up">
                     <div class="relative h-64 overflow-hidden">
                         @if($master->photo)
                             <img src="{{ asset('storage/' . $master->photo) }}"
@@ -301,13 +269,13 @@
 <!-- CTA Section -->
 <section class="py-20 bg-gradient-to-r from-pink-600 to-rose-700">
     <div class="max-w-4xl mx-auto px-4 text-center text-white">
-        <h2 class="text-4xl font-bold mb-6">
+        <h2 class="text-4xl font-bold mb-6 fade-in-up">
             {!! \App\Models\TextBlock::get('cta_title', 'Готові почати шлях до здоров\'я?') !!}
         </h2>
-        <p class="text-xl mb-8 opacity-90">
+        <p class="text-xl mb-8 opacity-90 fade-in-up delay-200">
             {!! \App\Models\TextBlock::get('cta_subtitle', 'Зв\'яжіться з нами прямо зараз та отримайте професійну консультацію') !!}
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in-up delay-400">
             <a href="tel:{{ \App\Models\Setting::get('center_phone') }}"
                class="bg-white text-pink-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors">
                 <i class="fas fa-phone mr-2"></i>
@@ -325,7 +293,7 @@
 <section class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div class="group">
+            <div class="group fade-in-up delay-100">
                 <div class="text-4xl font-bold text-pink-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_specialists_count', $masters->count() . '+') !!}
                 </div>
@@ -333,7 +301,7 @@
                     {!! \App\Models\TextBlock::get('stats_specialists_label', 'Спеціалістів') !!}
                 </div>
             </div>
-            <div class="group">
+            <div class="group fade-in-up delay-200">
                 <div class="text-4xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform">
                     {{ $services->count() }}+
                 </div>
@@ -341,7 +309,7 @@
                     {!! \App\Models\TextBlock::get('stats_services_label', 'Видів послуг') !!}
                 </div>
             </div>
-            <div class="group">
+            <div class="group fade-in-up delay-300">
                 <div class="text-4xl font-bold text-rose-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_clients_count', '100+') !!}
                 </div>
@@ -349,7 +317,7 @@
                     {!! \App\Models\TextBlock::get('stats_clients_label', 'Задоволених клієнтів') !!}
                 </div>
             </div>
-            <div class="group">
+            <div class="group fade-in-up delay-400">
                 <div class="text-4xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_experience_count', '5+') !!}
                 </div>
@@ -364,13 +332,121 @@
 
 @push('styles')
 <style>
-    .animate-float {
-        animation: float 6s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-    }
+/* Кастомний скролбар для опису послуг */
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #ec4899 #fce7f3;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #fce7f3;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #ec4899;
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #db2777;
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+    display: none;
+}
+
+/* Анімація float */
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Анімації появи */
+.fade-in-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fade-in-left {
+    opacity: 0;
+    transform: translateX(-30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.fade-in-right {
+    opacity: 0;
+    transform: translateX(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.fade-in-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.scale-in {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.scale-in.visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Затримки для послідовної появи */
+.delay-100 { transition-delay: 0.1s; }
+.delay-200 { transition-delay: 0.2s; }
+.delay-300 { transition-delay: 0.3s; }
+.delay-400 { transition-delay: 0.4s; }
+.delay-500 { transition-delay: 0.5s; }
+.delay-600 { transition-delay: 0.6s; }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Налаштування Intersection Observer
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                // Можна відключити спостереження після появи для оптимізації
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    // Спостерігаємо за всіма елементами з анімацією
+    const animatedElements = document.querySelectorAll('.fade-in-up, .fade-in-left, .fade-in-right, .scale-in');
+    animatedElements.forEach(el => observer.observe(el));
+});
+</script>
 @endpush
