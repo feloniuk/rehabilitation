@@ -7,30 +7,37 @@ use App\Models\Appointment;
 use App\Models\User;
 use App\Models\Service;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class AppointmentController extends Controller
 {
     public function index(Request $request)
     {
+        $user = auth()->user();
+        
+        // Базовий запит з фільтрацією по ролі
         $query = Appointment::with(['client', 'master', 'service']);
+        
+        // КРИТИЧНО: Якщо майстер - показуємо тільки його записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
 
-        // Фильтрация по статусу
+        // Фільтрація по статусу
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
-        // Фильтрация по мастеру
-        if ($request->filled('master_id')) {
+        // Фільтрація по мастеру (тільки для адміна)
+        if ($request->filled('master_id') && $user->isAdmin()) {
             $query->where('master_id', $request->master_id);
         }
 
-        // Фильтрация по услуге
+        // Фільтрація по послузі
         if ($request->filled('service_id')) {
             $query->where('service_id', $request->service_id);
         }
 
-        // Фильтрация по дате
+        // Фільтрація по даті
         if ($request->filled('date_from')) {
             $query->where('appointment_date', '>=', $request->date_from);
         }
@@ -39,7 +46,7 @@ class AppointmentController extends Controller
             $query->where('appointment_date', '<=', $request->date_to);
         }
 
-        // Фильтрация по клиенту
+        // Фільтрація по клієнту
         if ($request->filled('client_name')) {
             $query->whereHas('client', function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->client_name . '%')
@@ -52,8 +59,11 @@ class AppointmentController extends Controller
                              ->orderBy('appointment_time', 'desc')
                              ->paginate(20);
 
-        // Данные для фильтров
-        $masters = User::where('role', 'master')->where('is_active', true)->get();
+        // Дані для фільтрів
+        $masters = $user->isAdmin() 
+            ? User::where('role', 'master')->where('is_active', true)->get()
+            : collect(); // Майстру не потрібен список майстрів
+
         $services = Service::where('is_active', true)->get();
         $statuses = [
             'scheduled' => 'Заплановано',
@@ -66,7 +76,16 @@ class AppointmentController extends Controller
 
     public function show($id)
     {
-        $appointment = Appointment::with(['client', 'master', 'service'])->findOrFail($id);
+        $user = auth()->user();
+        
+        $query = Appointment::with(['client', 'master', 'service']);
+        
+        // Майстер може бачити тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+        
+        $appointment = $query->findOrFail($id);
         
         return response()->json([
             'id' => $appointment->id,
@@ -95,11 +114,20 @@ class AppointmentController extends Controller
 
     public function updateStatus(Request $request, $id)
     {
+        $user = auth()->user();
+        
         $request->validate([
             'status' => 'required|in:scheduled,completed,cancelled'
         ]);
 
-        $appointment = Appointment::findOrFail($id);
+        $query = Appointment::query();
+        
+        // Майстер може змінювати тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+        
+        $appointment = $query->findOrFail($id);
         $appointment->update(['status' => $request->status]);
 
         return response()->json([
@@ -112,7 +140,16 @@ class AppointmentController extends Controller
 
     public function destroy($id)
     {
-        $appointment = Appointment::findOrFail($id);
+        $user = auth()->user();
+        
+        $query = Appointment::query();
+        
+        // Майстер може видаляти тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+        
+        $appointment = $query->findOrFail($id);
         $appointment->delete();
 
         return redirect()->route('admin.appointments.index')

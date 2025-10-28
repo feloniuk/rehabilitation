@@ -18,7 +18,8 @@
                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
-            <!-- Мастер -->
+            <!-- Мастер - только для админа -->
+            @if(auth()->user()->isAdmin())
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Майстер</label>
                 <select name="master_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -30,6 +31,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
 
             <!-- Услуга -->
             <div>
@@ -93,7 +95,12 @@
     <div class="px-6 py-4 border-b flex justify-between items-center">
         <div>
             <h3 class="text-lg font-semibold">Список записів</h3>
-            <p class="text-sm text-gray-600">Знайдено записів: {{ $appointments->total() }}</p>
+            <p class="text-sm text-gray-600">
+                Знайдено записів: {{ $appointments->total() }}
+                @if(auth()->user()->isMaster())
+                    <span class="ml-2 text-blue-600">(тільки ваші записи)</span>
+                @endif
+            </p>
         </div>
     </div>
 
@@ -103,7 +110,9 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Клієнт</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Майстер</th>
+                    @if(auth()->user()->isAdmin())
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Майстер</th>
+                    @endif
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Послуга</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата/Час</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ціна</th>
@@ -118,9 +127,11 @@
                             <div class="font-medium text-gray-900">{{ $appointment->client->name }}</div>
                             <div class="text-sm text-gray-500">{{ $appointment->client->phone }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ $appointment->master->name }}
-                        </td>
+                        @if(auth()->user()->isAdmin())
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ $appointment->master->name }}
+                            </td>
+                        @endif
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $appointment->service->name }}</div>
                             <div class="text-xs text-gray-500">{{ $appointment->duration }} хв</div>
@@ -169,7 +180,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="{{ auth()->user()->isAdmin() ? '7' : '6' }}" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-calendar-times text-3xl mb-2"></i>
                             <p>Записів не знайдено</p>
                         </td>

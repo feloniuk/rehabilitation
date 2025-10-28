@@ -1,257 +1,188 @@
 @extends('layouts.admin')
 
 @section('title', 'Панель управління')
-@section('page-title', 'Панель управління')
+@section('page-title', 'Розклад')
 
 @section('content')
 
-<!-- Статистичні картки -->
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6 mb-6">
-    <div class="bg-white rounded-lg shadow p-4 lg:p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs lg:text-sm text-gray-600">Сьогодні</p>
-                <p class="text-xl lg:text-2xl font-bold text-gray-800">{{ $stats['today'] }}</p>
-            </div>
-            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-calendar-day text-blue-600 text-lg lg:text-xl"></i>
-            </div>
+<!-- Верхня панель: дата + навігація -->
+<div class="bg-white rounded-lg shadow-sm mb-3 p-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+        <a href="?week=previous" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chevron-left text-gray-600"></i>
+        </a>
+        
+        <div class="flex items-center gap-2">
+            <i class="fas fa-calendar text-blue-600"></i>
+            <span class="font-semibold text-lg">{{ now()->addWeeks(session('week_offset', 0))->format('d.m') }}</span>
         </div>
+        
+        <a href="?week=next" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chevron-right text-gray-600"></i>
+        </a>
     </div>
+    
+    <a href="{{ route('admin.dashboard') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium">
+        Сьогодні
+    </a>
+</div>
 
-    <div class="bg-white rounded-lg shadow p-4 lg:p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs lg:text-sm text-gray-600">Тиждень</p>
-                <p class="text-xl lg:text-2xl font-bold text-gray-800">{{ $stats['week'] }}</p>
-            </div>
-            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-calendar-week text-green-600 text-lg lg:text-xl"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow p-4 lg:p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs lg:text-sm text-gray-600">Місяць</p>
-                <p class="text-xl lg:text-2xl font-bold text-gray-800">{{ $stats['month'] }}</p>
-            </div>
-            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-calendar-alt text-purple-600 text-lg lg:text-xl"></i>
-            </div>
-        </div>
-    </div>
-
-    <div class="bg-white rounded-lg shadow p-4 lg:p-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs lg:text-sm text-gray-600">Майбутні</p>
-                <p class="text-xl lg:text-2xl font-bold text-gray-800">{{ $stats['upcoming'] }}</p>
-            </div>
-            <div class="w-10 h-10 lg:w-12 lg:h-12 bg-orange-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-arrow-right text-orange-600 text-lg lg:text-xl"></i>
-            </div>
-        </div>
+<!-- Горизонтальні табі днів -->
+<div class="bg-white rounded-lg shadow-sm mb-3 overflow-hidden">
+    <div class="flex overflow-x-auto hide-scrollbar">
+        @foreach($calendar['weekDates'] as $index => $date)
+            <button onclick="selectDay({{ $index }})" 
+                    data-day-index="{{ $index }}"
+                    class="day-tab flex-shrink-0 flex flex-col items-center justify-center px-6 py-3 border-r last:border-r-0 transition-colors {{ $date->isToday() ? 'bg-blue-500 text-white' : 'hover:bg-gray-50' }}">
+                <div class="text-xs font-medium {{ $date->isToday() ? 'text-blue-100' : 'text-gray-500' }}">
+                    {{ $date->isoFormat('dd') }}
+                </div>
+                <div class="text-xl font-bold mt-1">
+                    {{ $date->format('d') }}
+                </div>
+            </button>
+        @endforeach
     </div>
 </div>
 
-<!-- Календар розкладу -->
-<div class="bg-white rounded-lg shadow mb-6">
-    <div class="p-4 lg:p-6 border-b">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-            <div>
-                <h3 class="text-lg lg:text-xl font-semibold">Розклад записів</h3>
-                <p class="text-xs lg:text-sm text-gray-500 mt-1">
-                    {{ $calendar['startDate']->format('d.m.Y') }} - {{ $calendar['endDate']->format('d.m.Y') }}
-                </p>
-            </div>
-            <div class="flex gap-2">
-                <a href="?week=previous" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition">
-                    <i class="fas fa-chevron-left"></i>
-                    <span class="hidden lg:inline ml-1">Попередній</span>
-                </a>
-                <a href="{{ route('admin.dashboard') }}" class="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-sm transition">
-                    <i class="fas fa-calendar"></i>
-                    <span class="hidden lg:inline ml-1">Сьогодні</span>
-                </a>
-                <a href="?week=next" class="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded text-sm transition">
-                    <span class="hidden lg:inline mr-1">Наступний</span>
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
+<!-- Контент по днях -->
+@foreach($calendar['weekDates'] as $dayIndex => $date)
+    <div class="day-content {{ $dayIndex === 0 ? '' : 'hidden' }}" data-day-index="{{ $dayIndex }}">
+        
+        @php
+            $dateKey = $date->format('Y-m-d');
+            $hasMasters = false;
+        @endphp
 
-    <!-- Десктоп версія -->
-    <div class="hidden lg:block overflow-x-auto p-4">
-        @foreach($calendar['masters'] as $master)
-            <div class="master-section mb-6 last:mb-0">
-                <div class="master-header bg-gradient-to-r from-blue-50 to-purple-50 border border-gray-200 rounded-t-lg px-4 py-3">
-                    <div class="flex items-center gap-3">
-                        @if($master->photo)
-                            <img src="{{ asset('storage/' . $master->photo) }}" alt="{{ $master->name }}" class="w-10 h-10 rounded-full object-cover border-2 border-white">
-                        @else
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm border-2 border-white">
-                                {{ substr($master->name, 0, 2) }}
-                            </div>
-                        @endif
-                        <div>
-                            <div class="font-semibold text-gray-800">{{ $master->name }}</div>
-                            @if($master->specialty)
-                                <div class="text-xs text-gray-500">{{ $master->specialty }}</div>
+        <!-- Горизонтальний скрол майстрів -->
+        <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-3">
+            @foreach($calendar['masters'] as $master)
+                @php
+                    $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
+                    if ($dayAppointments->count() > 0) $hasMasters = true;
+                @endphp
+                
+                <div class="flex-shrink-0 w-80 bg-white rounded-lg shadow-sm overflow-hidden">
+                    <!-- Заголовок майстра -->
+                    <div class="bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-3 border-b">
+                        <div class="flex items-center gap-3">
+                            @if($master->photo)
+                                <img src="{{ asset('storage/' . $master->photo) }}" 
+                                     class="w-10 h-10 rounded-full object-cover">
+                            @else
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                                    {{ substr($master->name, 0, 2) }}
+                                </div>
                             @endif
+                            <div class="flex-1 min-w-0">
+                                <div class="font-semibold text-gray-900 truncate">{{ $master->name }}</div>
+                                @if($master->specialty)
+                                    <div class="text-xs text-gray-500 truncate">{{ $master->specialty }}</div>
+                                @endif
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="border border-t-0 border-gray-200 rounded-b-lg overflow-hidden">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="bg-gray-50">
-                                <th class="border-r border-gray-200 px-3 py-2 text-center text-xs font-semibold text-gray-600" style="width: 70px;">Час</th>
-                                @foreach($calendar['weekDates'] as $date)
-                                    <th class="border-r last:border-r-0 border-gray-200 px-2 py-2 text-center text-xs font-semibold {{ $date->isToday() ? 'bg-blue-50' : '' }}">
-                                        <div class="{{ $date->isToday() ? 'text-blue-600' : 'text-gray-700' }}">{{ $date->isoFormat('dd') }}</div>
-                                        <div class="text-xs {{ $date->isToday() ? 'text-blue-500' : 'text-gray-500' }} font-normal">{{ $date->format('d.m') }}</div>
-                                    </th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($calendar['timeSlots'] as $timeSlot)
-                                <tr class="hover:bg-gray-50 transition">
-                                    <td class="border-r border-t border-gray-200 px-2 py-3 text-xs font-medium text-gray-600 text-center bg-gray-50">{{ $timeSlot }}</td>
-                                    @foreach($calendar['weekDates'] as $date)
-                                        <td class="border-r border-t last:border-r-0 border-gray-200 p-1 align-top {{ $date->isToday() ? 'bg-blue-50/30' : '' }}">
-                                            @php
-                                                $dateKey = $date->format('Y-m-d');
-                                                $dayAppointments = $calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? [];
-                                                
-                                                // Фільтруємо записи для цього часового слоту
-                                                $slotAppointments = collect($dayAppointments)->filter(function($apt) use ($timeSlot) {
-                                                    return substr($apt['time'], 0, 5) === $timeSlot;
-                                                });
-                                            @endphp
-
-                                            @foreach($slotAppointments as $appointment)
-                                                <div class="appointment-card cursor-pointer" onclick="showAppointmentDetails({{ $appointment['id'] }})">
-                                                    <div class="text-xs font-bold mb-1">{{ substr($appointment['time'], 0, 5) }}</div>
-                                                    <div class="text-xs font-semibold mb-0.5">{{ $appointment['client_name'] }}</div>
-                                                    <div class="text-xs opacity-90 mb-1">{{ Str::limit($appointment['service_name'], 20) }}</div>
-                                                    <div class="text-xs font-bold">{{ number_format($appointment['price'], 0) }} грн</div>
-                                                </div>
-                                            @endforeach
-                                        </td>
-                                    @endforeach
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endforeach
-
-        @if($calendar['masters']->count() === 0)
-            <div class="text-center py-12 text-gray-500">
-                <i class="fas fa-user-slash text-4xl mb-3"></i>
-                <p>Немає активних майстрів</p>
-            </div>
-        @endif
-    </div>
-
-    <!-- Мобільна версія -->
-    <div class="lg:hidden">
-        <div class="flex overflow-x-auto gap-2 p-4 border-b">
-            @foreach($calendar['weekDates'] as $index => $date)
-                <button onclick="selectMobileDate({{ $index }})" class="mobile-date-btn flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition {{ $date->isToday() ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700' }}" data-date-index="{{ $index }}">
-                    <div>{{ $date->isoFormat('dd') }}</div>
-                    <div class="text-xs">{{ $date->format('d.m') }}</div>
-                </button>
-            @endforeach
-        </div>
-
-        <div id="mobile-schedule-container">
-            @foreach($calendar['weekDates'] as $dayIndex => $date)
-                <div class="mobile-date-schedule {{ $dayIndex === 0 ? '' : 'hidden' }}" data-date-index="{{ $dayIndex }}">
-                    @foreach($calendar['masters'] as $master)
+                    <!-- Часова сітка -->
+                    <div class="p-2 space-y-1 max-h-[calc(100vh-300px)] overflow-y-auto">
                         @php
-                            $dateKey = $date->format('Y-m-d');
-                            $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? [])
-                                ->sortBy(function($apt) {
-                                    return $apt['time'];
-                                });
+                            // Визначаємо всі слоти для цього майстра
+                            $masterSlots = [];
+                            foreach($dayAppointments as $apt) {
+                                $time = substr($apt['time'], 0, 5);
+                                if (!isset($masterSlots[$time])) {
+                                    $masterSlots[$time] = [];
+                                }
+                                $masterSlots[$time][] = $apt;
+                            }
+                            ksort($masterSlots);
                         @endphp
-                        @if($dayAppointments->count() > 0)
-                            <div class="border-b last:border-b-0">
-                                <div class="bg-gradient-to-r from-blue-50 to-purple-50 px-4 py-3">
-                                    <div class="flex items-center gap-3">
-                                        @if($master->photo)
-                                            <img src="{{ asset('storage/' . $master->photo) }}" alt="{{ $master->name }}" class="w-10 h-10 rounded-full object-cover">
-                                        @else
-                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                                                {{ substr($master->name, 0, 2) }}
-                                            </div>
-                                        @endif
-                                        <div>
-                                            <div class="font-semibold text-gray-800">{{ $master->name }}</div>
-                                            @if($master->specialty)
-                                                <div class="text-xs text-gray-500">{{ $master->specialty }}</div>
-                                            @endif
+
+                        @if(count($masterSlots) > 0)
+                            @foreach($masterSlots as $timeSlot => $appointments)
+                                <div class="border-l-4 border-blue-500 bg-gray-50 rounded">
+                                    <!-- Час -->
+                                    <div class="px-3 py-2 bg-white border-b">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-gray-700">{{ $timeSlot }}</span>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="p-3 space-y-2">
-                                    @foreach($dayAppointments as $appointment)
-                                        <div class="appointment-card-mobile cursor-pointer" onclick="showAppointmentDetails({{ $appointment['id'] }})">
+                                    
+                                    <!-- Записи в цей час -->
+                                    @foreach($appointments as $apt)
+                                        <div class="px-3 py-3 cursor-pointer hover:bg-blue-50 transition-colors"
+                                             onclick="showAppointmentDetails({{ $apt['id'] }})">
                                             <div class="flex items-start justify-between mb-2">
-                                                <div class="text-sm font-bold text-white">{{ substr($appointment['time'], 0, 5) }}</div>
-                                                <div class="text-sm font-bold">{{ number_format($appointment['price'], 0) }} грн</div>
+                                                <div class="font-semibold text-gray-900">
+                                                    {{ $apt['client_name'] }}
+                                                </div>
+                                                <div class="text-sm font-bold text-green-600 ml-2">
+                                                    {{ number_format($apt['price'], 0) }}₴
+                                                </div>
                                             </div>
-                                            <div class="text-sm font-semibold mb-1">{{ $appointment['client_name'] }}</div>
-                                            <div class="text-xs opacity-90 mb-1">{{ $appointment['service_name'] }}</div>
-                                            <div class="text-xs opacity-75"><i class="far fa-clock"></i> {{ $appointment['duration'] }} хв</div>
+                                            <div class="text-sm text-gray-600 mb-1">
+                                                {{ $apt['service_name'] }}
+                                            </div>
+                                            <div class="text-xs text-gray-500">
+                                                <i class="far fa-clock mr-1"></i>{{ $apt['duration'] }} хв
+                                            </div>
                                         </div>
                                     @endforeach
                                 </div>
+                            @endforeach
+                        @else
+                            <div class="text-center py-12 text-gray-400">
+                                <i class="fas fa-calendar-times text-3xl mb-2"></i>
+                                <p class="text-sm">Немає записів</p>
                             </div>
                         @endif
-                    @endforeach
-                    @php
-                        $hasAppointments = false;
-                        foreach($calendar['masters'] as $master) {
-                            $dateKey = $date->format('Y-m-d');
-                            $check = $calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? [];
-                            if(count($check) > 0) {
-                                $hasAppointments = true;
-                                break;
-                            }
-                        }
-                    @endphp
-                    @if(!$hasAppointments)
-                        <div class="text-center py-12 text-gray-500">
-                            <i class="fas fa-calendar-times text-4xl mb-3"></i>
-                            <p class="text-sm">Немає записів на цей день</p>
-                        </div>
-                    @endif
+                    </div>
                 </div>
             @endforeach
         </div>
+
+        @if(!$hasMasters)
+            <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+                <i class="fas fa-calendar-times text-5xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg font-medium">Немає записів на цей день</p>
+            </div>
+        @endif
+
+    </div>
+@endforeach
+
+<!-- Статистика -->
+<div class="grid grid-cols-4 gap-2 mt-3">
+    <div class="bg-white rounded-lg shadow-sm p-3 text-center">
+        <div class="text-2xl font-bold text-blue-600">{{ $stats['today'] }}</div>
+        <div class="text-xs text-gray-500 mt-1">Сьогодні</div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm p-3 text-center">
+        <div class="text-2xl font-bold text-green-600">{{ $stats['week'] }}</div>
+        <div class="text-xs text-gray-500 mt-1">Тиждень</div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm p-3 text-center">
+        <div class="text-2xl font-bold text-purple-600">{{ $stats['month'] }}</div>
+        <div class="text-xs text-gray-500 mt-1">Місяць</div>
+    </div>
+    <div class="bg-white rounded-lg shadow-sm p-3 text-center">
+        <div class="text-2xl font-bold text-orange-600">{{ $stats['upcoming'] }}</div>
+        <div class="text-xs text-gray-500 mt-1">Майбутні</div>
     </div>
 </div>
 
-<!-- Модальне вікно -->
+<!-- Модалка -->
 <div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div class="flex justify-between items-center p-4 lg:p-6 border-b sticky top-0 bg-white z-10">
+        <div class="flex justify-between items-center p-4 border-b sticky top-0 bg-white">
             <h3 class="text-lg font-semibold">Деталі запису</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition">
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times text-xl"></i>
             </button>
         </div>
-        <div id="appointmentContent" class="p-4 lg:p-6"></div>
-        <div class="flex justify-end gap-2 p-4 lg:p-6 border-t bg-gray-50 sticky bottom-0">
-            <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition text-sm lg:text-base">
+        <div id="appointmentContent" class="p-4"></div>
+        <div class="p-4 border-t bg-gray-50 sticky bottom-0">
+            <button onclick="closeModal()" class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
                 Закрити
             </button>
         </div>
@@ -260,150 +191,109 @@
 
 @push('styles')
 <style>
-.appointment-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 0.5rem;
-    border-radius: 0.375rem;
-    transition: all 0.2s;
-    min-height: 80px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
-
-.appointment-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
 }
-
-.appointment-card-mobile {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 0.75rem;
-    border-radius: 0.5rem;
-    transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.day-tab.active {
+    background-color: #3b82f6 !important;
+    color: white !important;
 }
-
-.appointment-card-mobile:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.mobile-date-btn.active {
-    background-color: #3b82f6;
-    color: white;
+.day-tab.active .text-gray-500 {
+    color: rgba(255,255,255,0.8) !important;
 }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-function selectMobileDate(index) {
-    document.querySelectorAll('.mobile-date-btn').forEach(function(btn, i) {
+function selectDay(index) {
+    document.querySelectorAll('.day-tab').forEach((tab, i) => {
         if (i === index) {
-            btn.classList.add('active', 'bg-blue-500', 'text-white');
-            btn.classList.remove('bg-gray-100', 'text-gray-700');
+            tab.classList.add('active');
         } else {
-            btn.classList.remove('active', 'bg-blue-500', 'text-white');
-            btn.classList.add('bg-gray-100', 'text-gray-700');
+            tab.classList.remove('active');
         }
     });
-
-    document.querySelectorAll('.mobile-date-schedule').forEach(function(schedule, i) {
-        if (i === index) {
-            schedule.classList.remove('hidden');
-        } else {
-            schedule.classList.add('hidden');
-        }
+    
+    document.querySelectorAll('.day-content').forEach((content, i) => {
+        content.classList.toggle('hidden', i !== index);
     });
 }
 
-function showAppointmentDetails(appointmentId) {
-    var modal = document.getElementById('appointmentModal');
+function showAppointmentDetails(id) {
+    const modal = document.getElementById('appointmentModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
-    document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><p class="text-gray-500 mt-2 text-sm">Завантаження...</p></div>';
+    document.getElementById('appointmentContent').innerHTML = `
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
+        </div>
+    `;
     
-    fetch('/admin/appointments/' + appointmentId)
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            var statusClasses = {
-                'scheduled': 'bg-green-100 text-green-800',
-                'completed': 'bg-blue-100 text-blue-800',
-                'cancelled': 'bg-red-100 text-red-800'
-            };
-            var statusClass = statusClasses[data.status] || 'bg-gray-100 text-gray-800';
-            
-            var html = '<div class="space-y-4">';
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Клієнт</h4>';
-            html += '<p class="text-base font-medium">' + data.client.name + '</p>';
-            html += '<p class="text-sm text-gray-600">' + data.client.phone + '</p>';
-            if (data.client.email) {
-                html += '<p class="text-sm text-gray-600">' + data.client.email + '</p>';
-            }
-            html += '</div>';
-            
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Майстер</h4>';
-            html += '<p class="text-base font-medium">' + data.master.name + '</p>';
-            if (data.master.phone) {
-                html += '<p class="text-sm text-gray-600">' + data.master.phone + '</p>';
-            }
-            html += '</div>';
-            
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Послуга</h4>';
-            html += '<p class="text-base font-medium">' + data.service.name + '</p>';
-            html += '<p class="text-sm text-gray-600">Тривалість: ' + data.service.duration + ' хв</p>';
-            html += '</div>';
-            
-            html += '<div class="grid grid-cols-2 gap-4">';
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Дата</h4>';
-            html += '<p class="font-medium">' + data.appointment_date + '</p></div>';
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Час</h4>';
-            html += '<p class="font-medium">' + data.appointment_time + '</p></div>';
-            html += '</div>';
-            
-            html += '<div class="grid grid-cols-2 gap-4">';
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Ціна</h4>';
-            html += '<p class="text-lg font-bold text-green-600">' + data.price + ' грн</p></div>';
-            html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Статус</h4>';
-            html += '<span class="px-2 py-1 text-xs font-semibold rounded-full ' + statusClass + '">' + data.status_text + '</span></div>';
-            html += '</div>';
-            
-            if (data.notes) {
-                html += '<div><h4 class="font-semibold text-gray-700 mb-2 text-sm">Примітки</h4>';
-                html += '<p class="text-sm text-gray-600 bg-gray-50 p-3 rounded">' + data.notes + '</p></div>';
-            }
-            
-            html += '</div>';
-            
-            document.getElementById('appointmentContent').innerHTML = html;
+    fetch('/admin/appointments/' + id)
+        .then(r => r.json())
+        .then(d => {
+            const sc = {'scheduled':'bg-green-100 text-green-800','completed':'bg-blue-100 text-blue-800','cancelled':'bg-red-100 text-red-800'}[d.status];
+            document.getElementById('appointmentContent').innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">Клієнт</div>
+                        <div class="text-lg font-semibold">${d.client.name}</div>
+                        <div class="text-sm text-gray-600">${d.client.phone}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">Майстер</div>
+                        <div class="font-medium">${d.master.name}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 mb-1">Послуга</div>
+                        <div class="font-medium">${d.service.name}</div>
+                        <div class="text-sm text-gray-600">${d.service.duration} хв</div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Дата</div>
+                            <div class="font-medium">${d.appointment_date}</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Час</div>
+                            <div class="font-medium">${d.appointment_time}</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Ціна</div>
+                            <div class="text-xl font-bold text-green-600">${d.price}₴</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Статус</div>
+                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full ${sc}">${d.status_text}</span>
+                        </div>
+                    </div>
+                    ${d.notes ? `<div><div class="text-xs text-gray-500 mb-1">Примітки</div><div class="text-sm bg-gray-50 p-3 rounded">${d.notes}</div></div>` : ''}
+                </div>
+            `;
         })
-        .catch(function() {
-            document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-exclamation-triangle text-2xl text-red-400"></i><p class="text-red-500 mt-2 text-sm">Помилка завантаження</p></div>';
+        .catch(() => {
+            document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8 text-red-500">Помилка</div>';
         });
 }
 
 function closeModal() {
-    var modal = document.getElementById('appointmentModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
+    document.getElementById('appointmentModal').classList.add('hidden');
+    document.getElementById('appointmentModal').classList.remove('flex');
 }
 
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeModal();
-    }
-});
+document.addEventListener('keydown', e => e.key === 'Escape' && closeModal());
 
-document.addEventListener('DOMContentLoaded', function() {
-    if (window.innerWidth < 1024) {
-        var todayBtn = document.querySelector('.mobile-date-btn.bg-blue-500');
-        if (todayBtn) {
-            var index = parseInt(todayBtn.dataset.dateIndex);
-            selectMobileDate(index);
-        }
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    const today = document.querySelector('.day-tab.active');
+    today?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
 });
 </script>
 @endpush
