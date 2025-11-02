@@ -63,7 +63,7 @@ class AppointmentController extends Controller
         $masters = $user->isAdmin() 
             ? User::where('role', 'master')->where('is_active', true)->get()
             : collect(); // Майстру не потрібен список майстрів
-
+            
         $services = Service::where('is_active', true)->get();
         $statuses = [
             'scheduled' => 'Заплановано',
