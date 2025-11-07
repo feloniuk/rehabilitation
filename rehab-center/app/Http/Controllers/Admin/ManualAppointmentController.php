@@ -81,7 +81,7 @@ class ManualAppointmentController extends Controller
             'appointment_date' => 'required|date',
             'appointment_time' => 'required',
             'price' => 'required|numeric|min:0',
-            'duration' => 'required|integer|min:15',
+            'duration' => 'required|integer|min:1',
             'notes' => 'nullable|string',
             'allow_overlap' => 'nullable|boolean',
             'client_type' => 'required|in:existing,new',

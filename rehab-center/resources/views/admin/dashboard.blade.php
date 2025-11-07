@@ -12,18 +12,37 @@
     <div class="flex items-center justify-between px-4 py-3 border-b bg-white sticky top-0 z-20">
         <div class="flex items-center gap-2">
             <i class="fas fa-calendar text-blue-600 text-lg"></i>
-            <span class="font-bold text-lg" id="current-date">28.10</span>
+            <span class="font-bold text-lg" id="current-date">
+                {{ $calendar['weekDates'][0]->format('d.m') }}
+            </span>
         </div>
-        <button class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
-            <i class="fas fa-filter text-gray-600"></i>
-        </button>
+        <div class="flex gap-2">
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="inline">
+                <input type="hidden" name="week" value="previous">
+                <button type="submit" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+                    <i class="fas fa-chevron-left text-gray-600"></i>
+                </button>
+            </form>
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="inline">
+                <input type="hidden" name="week" value="0">
+                <button type="submit" class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
+                    Сьогодні
+                </button>
+            </form>
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="inline">
+                <input type="hidden" name="week" value="next">
+                <button type="submit" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+                    <i class="fas fa-chevron-right text-gray-600"></i>
+                </button>
+            </form>
+        </div>
     </div>
 
     <!-- 👥 Блок співробітників (фіксований при скролі) -->
     <div class="staff-header bg-white border-b sticky z-10" style="top: 57px;">
         <div class="flex overflow-x-auto hide-scrollbar">
             <!-- Колонка часу (ліва) -->
-            <div class="flex-shrink-0 w-16 border-r"></div>
+            <div class="flex-shrink-0 w-16 border-r bg-gray-50"></div>
             
             <!-- Майстри -->
             @foreach($calendar['masters'] as $master)
@@ -48,7 +67,7 @@
     </div>
 
     <!-- 🕐 Таблиця часу (Timeline Grid) -->
-    <div class="timeline-container" style="height: calc(100vh - 280px); overflow-y: auto;">
+    <div class="timeline-container" style="height: calc(100vh - 340px); overflow-y: auto;">
         <div class="flex">
             <!-- Колонка часу -->
             <div class="flex-shrink-0 w-16 border-r bg-gray-50">
@@ -61,17 +80,16 @@
 
             <!-- Колонки майстрів -->
             @foreach($calendar['masters'] as $masterIndex => $master)
-                <div class="flex-1 staff-column border-r last:border-r-0 relative">
+                <div class="flex-1 staff-column border-r last:border-r-0 relative" data-master-id="{{ $master->id }}">
                     @php
-                        $dateKey = $calendar['weekDates'][0]->format('Y-m-d'); // Поточний день
+                        $dateKey = $calendar['weekDates'][0]->format('Y-m-d');
                         $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
                     @endphp
 
                     <!-- Сітка часових слотів -->
                     @foreach($calendar['timeSlots'] as $slotIndex => $timeSlot)
-                        <div class="time-slot h-20 border-b border-dashed border-gray-200 relative">
+                        <div class="time-slot h-20 border-b border-dashed border-gray-200 relative" data-time-slot="{{ $timeSlot }}">
                             @php
-                                // Знаходимо записи для цього слоту
                                 $slotAppointments = $dayAppointments->filter(function($apt) use ($timeSlot) {
                                     return substr($apt['time'], 0, 5) === $timeSlot;
                                 });
@@ -79,42 +97,37 @@
 
                             @foreach($slotAppointments as $apt)
                                 @php
-                                    // Розрахунок висоти блоку (1 хвилина = 1.33px при слоті 30хв = 40px)
                                     $heightPx = ($apt['duration'] / 30) * 80;
                                     $colors = [
-                                        ['from' => '#8B5CF6', 'to' => '#6366F1'], // фіолетовий
-                                        ['from' => '#3B82F6', 'to' => '#2563EB'], // синій
-                                        ['from' => '#10B981', 'to' => '#059669'], // зелений
+                                        ['from' => '#8B5CF6', 'to' => '#6366F1'],
+                                        ['from' => '#3B82F6', 'to' => '#2563EB'],
+                                        ['from' => '#10B981', 'to' => '#059669'],
                                     ];
                                     $color = $colors[$masterIndex % 3];
+                                    $endTime = \Carbon\Carbon::parse($apt['time'])->addMinutes($apt['duration']);
                                 @endphp
                                 
-                                <!-- 📦 Блок запису -->
                                 <div class="appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
                                      style="height: {{ $heightPx }}px; background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); z-index: 5;"
                                      onclick="showAppointmentDetails({{ $apt['id'] }})">
                                     
-                                    <!-- Час -->
                                     <div class="text-white text-xs font-bold mb-1">
-                                        {{ substr($apt['time'], 0, 5) }} – {{ \Carbon\Carbon::parse($apt['time'])->addMinutes($apt['duration'])->format('H:i') }}
+                                        {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
                                     </div>
                                     
-                                    <!-- Ім'я клієнта -->
                                     <div class="text-white text-sm font-semibold mb-1 truncate">
                                         {{ $apt['client_name'] }}
                                     </div>
                                     
-                                    <!-- Послуга -->
                                     <div class="text-white text-xs opacity-90 truncate">
                                         {{ $apt['service_name'] }}
                                     </div>
 
-                                    <!-- Іконки статусів -->
-                                    <div class="absolute top-2 right-2">
-                                        @if($apt['status'] === 'scheduled')
-                                            <span class="text-white text-xs">⚠️</span>
-                                        @endif
-                                    </div>
+                                    @if($apt['status'] === 'scheduled')
+                                        <div class="absolute top-2 right-2">
+                                            <span class="text-white text-xs">⏰</span>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -130,8 +143,8 @@
             @foreach($calendar['weekDates'] as $index => $date)
                 <button onclick="selectDate({{ $index }})"
                         data-date-index="{{ $index }}"
-                        class="date-btn flex-1 min-w-[60px] py-3 text-center border-r last:border-r-0 transition-colors {{ $date->isToday() ? 'bg-purple-500 text-white' : 'hover:bg-gray-50' }}">
-                    <div class="text-[10px] font-medium {{ $date->isToday() ? 'text-purple-100' : 'text-gray-500' }}">
+                        class="date-btn flex-1 min-w-[60px] py-3 text-center border-r last:border-r-0 transition-colors {{ $index === $calendar['todayIndex'] ? 'bg-purple-500 text-white active' : 'hover:bg-gray-50' }}">
+                    <div class="text-[10px] font-medium {{ $index === $calendar['todayIndex'] ? 'text-purple-100' : 'text-gray-500' }}">
                         {{ strtoupper($date->isoFormat('dd')) }}
                     </div>
                     <div class="text-lg font-bold mt-1">
@@ -192,8 +205,8 @@
 }
 
 .staff-column {
-    min-width: 140px;
-    width: 140px;
+    min-width: 160px;
+    width: 160px;
 }
 
 .time-slot {
@@ -202,7 +215,6 @@
 
 .appointment-card {
     overflow: hidden;
-    font-size: 11px;
 }
 
 .date-btn.active {
@@ -213,93 +225,60 @@
 .date-btn.active .text-gray-500 {
     color: rgba(255,255,255,0.8) !important;
 }
-
-/* Поточний час лінія */
-.current-time-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #EF4444;
-    z-index: 10;
-}
-
-.current-time-line::before {
-    content: '';
-    position: absolute;
-    left: -6px;
-    top: -4px;
-    width: 10px;
-    height: 10px;
-    background: #EF4444;
-    border-radius: 50%;
-}
 </style>
 @endpush
 
 @push('scripts')
 <script>
-// Завантаження даних для інших днів
-const calendarData = {
-    scheduleByMaster: {
-        @foreach($calendar['scheduleByMaster'] as $masterId => $masterData)
-            {{ $masterId }}: {
-                appointments_by_date: {
-                    @foreach($masterData['appointments_by_date'] as $date => $appointments)
-                        '{{ $date }}': [
-                            @foreach($appointments as $apt)
-                                {
-                                    id: {{ $apt['id'] }},
-                                    time: '{{ $apt['time'] }}',
-                                    duration: {{ $apt['duration'] }},
-                                    client_name: '{{ addslashes($apt['client_name']) }}',
-                                    service_name: '{{ addslashes($apt['service_name']) }}',
-                                    price: {{ $apt['price'] }},
-                                    status: '{{ $apt['status'] }}'
-                                },
-                            @endforeach
-                        ],
-                    @endforeach
-                }
-            },
-        @endforeach
-    },
-    weekDates: [
-        @foreach($calendar['weekDates'] as $d)
-            '{{ $d->format('Y-m-d') }}',
-        @endforeach
-    ],
+var calendarData = {
+    scheduleByMaster: @json($calendar['scheduleByMaster']),
+    weekDates: @json(collect($calendar['weekDates'])->map(fn($d) => $d->format('Y-m-d'))->values()),
     masters: [
-        @foreach($calendar['masters'] as $m)
-            {
-                id: {{ $m->id }},
-                name: '{{ addslashes($m->name) }}',
-                photo: '{{ $m->photo }}',
-                specialty: '{{ addslashes($m->specialty ?? '') }}'
-            },
+        @foreach($calendar['masters'] as $master)
+        {
+            id: {{ $master->id }},
+            name: "{{ addslashes($master->name) }}",
+            photo: "{{ $master->photo ?? '' }}",
+            specialty: "{{ addslashes($master->specialty ?? '') }}"
+        }@if(!$loop->last),@endif
         @endforeach
     ],
-    timeSlots: @json($calendar['timeSlots'])
+    timeSlots: @json($calendar['timeSlots']),
+    todayIndex: {{ $calendar['todayIndex'] }}
 };
 
-console.log('Calendar data loaded:', calendarData);
+// Ініціалізація - показуємо сьогоднішній день
+var currentDayIndex = calendarData.todayIndex;
 
-let currentDayIndex = 0;
+// При завантаженні сторінки показуємо сьогодні
+document.addEventListener('DOMContentLoaded', function() {
+    selectDate(currentDayIndex);
+});
 
 function selectDate(index) {
     currentDayIndex = index;
     
     // Оновлюємо кнопки
-    document.querySelectorAll('.date-btn').forEach((btn, i) => {
+    document.querySelectorAll('.date-btn').forEach(function(btn, i) {
         if (i === index) {
             btn.classList.add('active', 'bg-purple-500', 'text-white');
+            var smallText = btn.querySelector('.text-\\[10px\\]');
+            if (smallText) {
+                smallText.classList.remove('text-gray-500');
+                smallText.classList.add('text-purple-100');
+            }
         } else {
             btn.classList.remove('active', 'bg-purple-500', 'text-white');
+            var smallText = btn.querySelector('.text-\\[10px\\]');
+            if (smallText) {
+                smallText.classList.remove('text-purple-100');
+                smallText.classList.add('text-gray-500');
+            }
         }
     });
 
     // Оновлюємо дату у хедері
-    const date = new Date(calendarData.weekDates[index]);
+    var date = new Date(calendarData.weekDates[index]);
     document.getElementById('current-date').textContent = 
         date.getDate().toString().padStart(2, '0') + '.' + 
         (date.getMonth() + 1).toString().padStart(2, '0');
@@ -309,50 +288,55 @@ function selectDate(index) {
 }
 
 function reloadTimeline(dayIndex) {
-    const dateKey = calendarData.weekDates[dayIndex];
-    const staffColumns = document.querySelectorAll('.staff-column');
+    var dateKey = calendarData.weekDates[dayIndex];
     
-    // Пропускаємо першу колонку (це час)
-    const masterColumns = Array.from(staffColumns).slice(1);
+    // Отримуємо всі колонки майстрів (пропускаємо першу - це колонка часу)
+    var masterColumns = document.querySelectorAll('.staff-column:not(.w-16)');
     
-    masterColumns.forEach((col, masterIdx) => {
-        const masterId = calendarData.masters[masterIdx].id;
-        const slots = col.querySelectorAll('.time-slot');
+    masterColumns.forEach(function(col, masterIdx) {
+        var masterId = parseInt(col.dataset.masterId);
+        var slots = col.querySelectorAll('.time-slot');
         
-        slots.forEach((slot, slotIdx) => {
+        slots.forEach(function(slot) {
             // Очищаємо попередні картки
-            slot.querySelectorAll('.appointment-card').forEach(card => card.remove());
+            slot.querySelectorAll('.appointment-card').forEach(function(card) {
+                card.remove();
+            });
             
-            const timeSlot = calendarData.timeSlots[slotIdx];
-            const appointments = calendarData.scheduleByMaster[masterId]?.appointments_by_date?.[dateKey] || [];
+            var timeSlot = slot.dataset.timeSlot;
+            var masterData = calendarData.scheduleByMaster[masterId];
             
-            console.log('Loading for date:', dateKey, 'master:', masterId, 'slot:', timeSlot, 'appointments:', appointments);
+            if (!masterData || !masterData.appointments_by_date || !masterData.appointments_by_date[dateKey]) {
+                return;
+            }
             
-            appointments.forEach(apt => {
-                const aptTime = apt.time.substring(0, 5);
+            var appointments = masterData.appointments_by_date[dateKey];
+            
+            appointments.forEach(function(apt) {
+                var aptTime = apt.time.substring(0, 5);
+                
                 if (aptTime === timeSlot) {
-                    const heightPx = (apt.duration / 30) * 80;
-                    const colors = [
+                    var heightPx = (apt.duration / 30) * 80;
+                    var colors = [
                         {from: '#8B5CF6', to: '#6366F1'},
                         {from: '#3B82F6', to: '#2563EB'},
                         {from: '#10B981', to: '#059669'}
                     ];
-                    const color = colors[masterIdx % 3];
+                    var color = colors[masterIdx % 3];
                     
-                    const endTime = new Date('2000-01-01 ' + apt.time);
+                    var endTime = new Date('2000-01-01 ' + apt.time);
                     endTime.setMinutes(endTime.getMinutes() + parseInt(apt.duration));
-                    const endTimeStr = endTime.toTimeString().substring(0, 5);
+                    var endTimeStr = endTime.toTimeString().substring(0, 5);
                     
-                    const card = document.createElement('div');
+                    var card = document.createElement('div');
                     card.className = 'appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
-                    card.style.cssText = `height: ${heightPx}px; background: linear-gradient(135deg, ${color.from}, ${color.to}); z-index: 5;`;
-                    card.onclick = () => showAppointmentDetails(apt.id);
-                    card.innerHTML = `
-                        <div class="text-white text-xs font-bold mb-1">${aptTime} – ${endTimeStr}</div>
-                        <div class="text-white text-sm font-semibold mb-1 truncate">${apt.client_name}</div>
-                        <div class="text-white text-xs opacity-90 truncate">${apt.service_name}</div>
-                        ${apt.status === 'scheduled' ? '<div class="absolute top-2 right-2 text-white text-xs">⚠️</div>' : ''}
-                    `;
+                    card.style.cssText = 'height: ' + heightPx + 'px; background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); z-index: 5;';
+                    card.onclick = function() { showAppointmentDetails(apt.id); };
+                    card.innerHTML = '<div class="text-white text-xs font-bold mb-1">' + aptTime + ' – ' + endTimeStr + '</div>' +
+                        '<div class="text-white text-sm font-semibold mb-1 truncate">' + apt.client_name + '</div>' +
+                        '<div class="text-white text-xs opacity-90 truncate">' + apt.service_name + '</div>' +
+                        (apt.status === 'scheduled' ? '<div class="absolute top-2 right-2 text-white text-xs">⏰</div>' : '');
+                    
                     slot.appendChild(card);
                 }
             });
@@ -361,29 +345,34 @@ function reloadTimeline(dayIndex) {
 }
 
 function showAppointmentDetails(id) {
-    const modal = document.getElementById('appointmentModal');
+    var modal = document.getElementById('appointmentModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
     document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i></div>';
     
     fetch('/admin/appointments/' + id)
-        .then(r => r.json())
-        .then(d => {
-            const sc = {'scheduled':'bg-green-100 text-green-800','completed':'bg-blue-100 text-blue-800','cancelled':'bg-red-100 text-red-800'}[d.status];
-            document.getElementById('appointmentContent').innerHTML = `
-                <div class="space-y-3">
-                    <div><div class="text-xs text-gray-500 mb-1">Клієнт</div><div class="font-semibold">${d.client.name}</div><div class="text-sm text-gray-600">${d.client.phone}</div></div>
-                    <div><div class="text-xs text-gray-500 mb-1">Майстер</div><div class="font-medium">${d.master.name}</div></div>
-                    <div><div class="text-xs text-gray-500 mb-1">Послуга</div><div class="font-medium">${d.service.name}</div><div class="text-sm text-gray-600">${d.service.duration} хв</div></div>
-                    <div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Дата</div><div class="font-medium">${d.appointment_date}</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Час</div><div class="font-medium">${d.appointment_time}</div></div></div>
-                    <div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Ціна</div><div class="text-lg font-bold text-green-600">${d.price}₴</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Статус</div><span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ${sc}">${d.status_text}</span></div></div>
-                    ${d.notes ? `<div><div class="text-xs text-gray-500 mb-1">Примітки</div><div class="text-sm bg-gray-50 p-2 rounded">${d.notes}</div></div>` : ''}
-                </div>
-            `;
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+            var statusClasses = {
+                'scheduled': 'bg-green-100 text-green-800',
+                'completed': 'bg-blue-100 text-blue-800',
+                'cancelled': 'bg-red-100 text-red-800'
+            };
+            var sc = statusClasses[d.status];
+            
+            document.getElementById('appointmentContent').innerHTML = 
+                '<div class="space-y-3">' +
+                    '<div><div class="text-xs text-gray-500 mb-1">Клієнт</div><div class="font-semibold">' + d.client.name + '</div><div class="text-sm text-gray-600">' + d.client.phone + '</div></div>' +
+                    '<div><div class="text-xs text-gray-500 mb-1">Майстер</div><div class="font-medium">' + d.master.name + '</div></div>' +
+                    '<div><div class="text-xs text-gray-500 mb-1">Послуга</div><div class="font-medium">' + d.service.name + '</div><div class="text-sm text-gray-600">' + d.service.duration + ' хв</div></div>' +
+                    '<div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Дата</div><div class="font-medium">' + d.appointment_date + '</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Час</div><div class="font-medium">' + d.appointment_time + '</div></div></div>' +
+                    '<div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Ціна</div><div class="text-lg font-bold text-green-600">' + d.price + '₴</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Статус</div><span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ' + sc + '">' + d.status_text + '</span></div></div>' +
+                    (d.notes ? '<div><div class="text-xs text-gray-500 mb-1">Примітки</div><div class="text-sm bg-gray-50 p-2 rounded">' + d.notes + '</div></div>' : '') +
+                '</div>';
         })
-        .catch(() => {
-            document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8 text-red-500">Помилка</div>';
+        .catch(function() {
+            document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8 text-red-500">Помилка завантаження</div>';
         });
 }
 
@@ -392,7 +381,11 @@ function closeModal() {
     document.getElementById('appointmentModal').classList.remove('flex');
 }
 
-document.addEventListener('keydown', e => e.key === 'Escape' && closeModal());
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+    }
+});
 </script>
 @endpush
 @endsection

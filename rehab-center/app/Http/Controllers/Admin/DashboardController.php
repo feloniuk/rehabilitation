@@ -14,14 +14,18 @@ class DashboardController extends Controller
         $user = auth()->user();
         
         // Обробка навігації по тижнях
-        $weekOffset = $request->get('week', 0);
-        if ($request->has('week') && $request->week === 'previous') {
-            $weekOffset = $request->session()->get('week_offset', 0) - 1;
-        } elseif ($request->has('week') && $request->week === 'next') {
-            $weekOffset = $request->session()->get('week_offset', 0) + 1;
-        } else {
-            $weekOffset = (int) $weekOffset;
+        $weekOffset = 0;
+        
+        if ($request->has('week')) {
+            if ($request->week === 'previous') {
+                $weekOffset = $request->session()->get('week_offset', 0) - 1;
+            } elseif ($request->week === 'next') {
+                $weekOffset = $request->session()->get('week_offset', 0) + 1;
+            } else {
+                $weekOffset = (int) $request->week;
+            }
         }
+        
         $request->session()->put('week_offset', $weekOffset);
 
         $stats = $this->getStats($user);
@@ -125,9 +129,16 @@ class DashboardController extends Controller
         // Генеруємо дати тижня
         $weekDates = [];
         $currentDate = $startDate->copy();
+        $todayIndex = null; // Індекс сьогоднішнього дня
         
         while ($currentDate <= $endDate) {
             $weekDates[] = $currentDate->copy();
+            
+            // Знаходимо індекс сьогоднішнього дня
+            if ($currentDate->isToday()) {
+                $todayIndex = count($weekDates) - 1;
+            }
+            
             $currentDate->addDay();
         }
 
@@ -138,15 +149,7 @@ class DashboardController extends Controller
             'weekDates' => $weekDates,
             'startDate' => $startDate,
             'endDate' => $endDate,
+            'todayIndex' => $todayIndex ?? 0, // Індекс сьогодні або 0
         ];
-    }
-
-    private function getStatusColor($status)
-    {
-        return [
-            'scheduled' => '#10B981',
-            'completed' => '#3B82F6',
-            'cancelled' => '#EF4444',
-        ][$status] ?? '#6B7280';
     }
 }
