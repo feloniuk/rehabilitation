@@ -111,30 +111,17 @@ class DashboardController extends Controller
             ];
         }
 
-        // Збираємо всі унікальні часи з усіх записів і сортуємо
-        $allTimes = [];
-        foreach ($appointments as $appointment) {
-            $time = substr($appointment->appointment_time, 0, 5);
-            $allTimes[$time] = true;
-        }
-        
-        $timeSlots = array_keys($allTimes);
-        sort($timeSlots);
-        
-        // Якщо немає записів, показуємо стандартний робочий день
-        if (empty($timeSlots)) {
-            $timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
-        }
+        // Генеруємо фіксовані часові слоти з 8:00 до 22:00 з кроком 30 хвилин
+        $timeSlots = $this->generateTimeSlots('08:00', '22:00', 30);
 
         // Генеруємо дати тижня
         $weekDates = [];
         $currentDate = $startDate->copy();
-        $todayIndex = null; // Індекс сьогоднішнього дня
+        $todayIndex = null;
         
         while ($currentDate <= $endDate) {
             $weekDates[] = $currentDate->copy();
             
-            // Знаходимо індекс сьогоднішнього дня
             if ($currentDate->isToday()) {
                 $todayIndex = count($weekDates) - 1;
             }
@@ -149,7 +136,29 @@ class DashboardController extends Controller
             'weekDates' => $weekDates,
             'startDate' => $startDate,
             'endDate' => $endDate,
-            'todayIndex' => $todayIndex ?? 0, // Індекс сьогодні або 0
+            'todayIndex' => $todayIndex ?? 0,
         ];
+    }
+
+    /**
+     * Генерує часові слоти з заданим кроком
+     * 
+     * @param string $startTime Початковий час (формат H:i)
+     * @param string $endTime Кінцевий час (формат H:i)
+     * @param int $stepMinutes Крок у хвилинах
+     * @return array
+     */
+    private function generateTimeSlots(string $startTime, string $endTime, int $stepMinutes): array
+    {
+        $slots = [];
+        $current = Carbon::createFromFormat('H:i', $startTime);
+        $end = Carbon::createFromFormat('H:i', $endTime);
+        
+        while ($current->lte($end)) {
+            $slots[] = $current->format('H:i');
+            $current->addMinutes($stepMinutes);
+        }
+        
+        return $slots;
     }
 }

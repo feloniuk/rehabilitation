@@ -38,7 +38,7 @@
         </div>
     </div>
 
-<!-- 👥 Блок співробітників + таблиця часу (єдиний flex-контейнер) -->
+<!-- 👥 Блок співробітників + таблиця часу -->
 <div class="timeline-wrapper" style="height: calc(100vh - 340px);">
     <div class="flex flex-col" style="height: inherit;">
         
@@ -50,7 +50,7 @@
                 
                 <!-- Майстри -->
                 @foreach($calendar['masters'] as $master)
-                    <div class="flex-1 staff-column border-r last:border-r-0">
+                    <div class="flex-1 staff-column border-r last:border-r-0" style="margin-right: 8px;">
                         <div class="p-3 text-center">
                             @if($master->photo)
                                 <img src="{{ asset('storage/' . $master->photo) }}" 
@@ -84,7 +84,9 @@
 
                 <!-- Колонки майстрів -->
                 @foreach($calendar['masters'] as $masterIndex => $master)
-                    <div class="flex-1 staff-column border-r last:border-r-0 relative" data-master-id="{{ $master->id }}">
+                    <div class="flex-1 staff-column border-r last:border-r-0 relative" 
+                         data-master-id="{{ $master->id }}"
+                         data-master-index="{{ $masterIndex }}">
                         @php
                             $dateKey = $calendar['weekDates'][0]->format('Y-m-d');
                             $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
@@ -92,48 +94,95 @@
 
                         <!-- Сітка часових слотів -->
                         @foreach($calendar['timeSlots'] as $slotIndex => $timeSlot)
-                            <div class="time-slot h-20 border-b border-dashed border-gray-200 relative" data-time-slot="{{ $timeSlot }}">
-                                @php
-                                    $slotAppointments = $dayAppointments->filter(function($apt) use ($timeSlot) {
-                                        return substr($apt['time'], 0, 5) === $timeSlot;
-                                    });
-                                @endphp
+                            <div class="time-slot h-20 border-b border-dashed border-gray-200 relative" 
+                                 data-time-slot="{{ $timeSlot }}"
+                                 data-slot-index="{{ $slotIndex }}">
+                            </div>
+                        @endforeach
 
-                                @foreach($slotAppointments as $apt)
-                                    @php
-                                        $heightPx = ($apt['duration'] / 30) * 80;
-                                        $colors = [
-                                            ['from' => '#8B5CF6', 'to' => '#6366F1'],
-                                            ['from' => '#3B82F6', 'to' => '#2563EB'],
-                                            ['from' => '#10B981', 'to' => '#059669'],
-                                        ];
-                                        $color = $colors[$masterIndex % 3];
-                                        $endTime = \Carbon\Carbon::parse($apt['time'])->addMinutes($apt['duration']);
-                                    @endphp
+                        <!-- ОКРЕМО: рендеримо всі записи цього майстра в абсолютному позиціонуванні -->
+                        @foreach($dayAppointments as $aptIndex => $apt)
+                            @php
+                                // Обчислюємо позицію картки
+                                $startTime = \Carbon\Carbon::parse($apt['time']);
+                                $endTime = $startTime->copy()->addMinutes($apt['duration']);
+                                
+                                // Знаходимо початковий слот (перший слот >= startTime)
+                                $slotStartMinutes = null;
+                                foreach($calendar['timeSlots'] as $idx => $slot) {
+                                    $slotTime = \Carbon\Carbon::createFromFormat('H:i', $slot);
+                                    if ($slotTime->lte($startTime)) {
+                                        $slotStartMinutes = $slotTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
+                                    }
+                                }
+                                
+                                // Початок дня (перший слот)
+                                $dayStartTime = \Carbon\Carbon::createFromFormat('H:i', $calendar['timeSlots'][0]);
+                                $dayStartMinutes = $dayStartTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
+                                
+                                // Початок запису в хвилинах від початку дня
+                                $aptStartMinutes = $startTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
+                                
+                                // Offset від початку дня
+                                $minutesFromDayStart = $aptStartMinutes - $dayStartMinutes;
+                                
+                                // Висота одного слота = 80px (h-20)
+                                // Один слот = 30 хвилин
+                                $pixelsPerMinute = 80 / 30; // 2.666px per minute
+                                
+                                $topPx = $minutesFromDayStart * $pixelsPerMinute;
+                                $heightPx = $apt['duration'] * $pixelsPerMinute;
+                                
+                                $colors = [
+                                    ['from' => '#8B5CF6', 'to' => '#6366F1'],
+                                    ['from' => '#3B82F6', 'to' => '#2563EB'],
+                                    ['from' => '#10B981', 'to' => '#059669'],
+                                    ['from' => '#F59E0B', 'to' => '#D97706'],
+                                    ['from' => '#EF4444', 'to' => '#DC2626'],
+                                ];
+                                $color = $colors[($masterIndex + $aptIndex) % count($colors)];
+                                
+                                // Виявляємо нахлести з іншими записами
+                                $overlappingCount = 0;
+                                $positionInOverlap = 0;
+                                
+                                foreach($dayAppointments as $otherIndex => $otherApt) {
+                                    $otherStart = \Carbon\Carbon::parse($otherApt['time']);
+                                    $otherEnd = $otherStart->copy()->addMinutes($otherApt['duration']);
                                     
-                                    <div class="appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
-                                         style="height: {{ $heightPx }}px; background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); z-index: 5;"
-                                         onclick="showAppointmentDetails({{ $apt['id'] }})">
-                                        
-                                        <div class="text-white text-xs font-bold mb-1">
-                                            {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
-                                        </div>
-                                        
-                                        <div class="text-white text-sm font-semibold mb-1 truncate">
-                                            {{ $apt['client_name'] }}
-                                        </div>
-                                        
-                                        <div class="text-white text-xs opacity-90 truncate">
-                                            {{ $apt['service_name'] }}
-                                        </div>
-
-                                        @if($apt['status'] === 'scheduled')
-                                            <div class="absolute top-2 right-2">
-                                                <span class="text-white text-xs">⏰</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                @endforeach
+                                    // Перевірка перетину: A.start < B.end AND A.end > B.start
+                                    if ($startTime->lt($otherEnd) && $endTime->gt($otherStart)) {
+                                        $overlappingCount++;
+                                        if ($otherIndex < $aptIndex) {
+                                            $positionInOverlap++;
+                                        }
+                                    }
+                                }
+                                
+                                $widthPercent = $overlappingCount > 1 ? (100 / $overlappingCount) : 100;
+                                $leftPercent = $positionInOverlap * $widthPercent;
+                            @endphp
+                            
+                            <div class="appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
+                                 style="top: {{ $topPx }}px;
+                                        height: {{ $heightPx }}px; 
+                                        background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); 
+                                        z-index: {{ 5 + $aptIndex }}; 
+                                        left: {{ $leftPercent }}%;
+                                        width: calc({{ $widthPercent }}% - 4px);"
+                                 onclick="showAppointmentDetails({{ $apt['id'] }})">
+                                
+                                <div class="text-white text-xs font-bold mb-1">
+                                    {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
+                                </div>
+                                
+                                <div class="text-white text-sm font-semibold mb-1 truncate">
+                                    {{ $apt['client_name'] }}
+                                </div>
+                                
+                                <div class="text-white text-xs opacity-90 truncate">
+                                    {{ $apt['service_name'] }}
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -142,6 +191,7 @@
         </div>
     </div>
 </div>
+
     <!-- 📆 Нижня панель дат -->
     <div class="border-t bg-white">
         <div class="flex overflow-x-auto hide-scrollbar">
@@ -252,10 +302,8 @@ var calendarData = {
     todayIndex: {{ $calendar['todayIndex'] }}
 };
 
-// Ініціалізація - показуємо сьогоднішній день
 var currentDayIndex = calendarData.todayIndex;
 
-// При завантаженні сторінки показуємо сьогодні
 document.addEventListener('DOMContentLoaded', function() {
     selectDate(currentDayIndex);
 });
@@ -263,7 +311,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function selectDate(index) {
     currentDayIndex = index;
     
-    // Оновлюємо кнопки
     document.querySelectorAll('.date-btn').forEach(function(btn, i) {
         if (i === index) {
             btn.classList.add('active', 'bg-purple-500', 'text-white');
@@ -282,69 +329,104 @@ function selectDate(index) {
         }
     });
 
-    // Оновлюємо дату у хедері
     var date = new Date(calendarData.weekDates[index]);
     document.getElementById('current-date').textContent = 
         date.getDate().toString().padStart(2, '0') + '.' + 
         (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // Оновлюємо сітку
     reloadTimeline(index);
 }
 
 function reloadTimeline(dayIndex) {
     var dateKey = calendarData.weekDates[dayIndex];
+    var masterColumns = document.querySelectorAll('.staff-column[data-master-id]');
     
-    // Отримуємо всі колонки майстрів (пропускаємо першу - це колонка часу)
-    var masterColumns = document.querySelectorAll('.staff-column:not(.w-16)');
-    
-    masterColumns.forEach(function(col, masterIdx) {
+    masterColumns.forEach(function(col) {
         var masterId = parseInt(col.dataset.masterId);
-        var slots = col.querySelectorAll('.time-slot');
+        var masterIdx = parseInt(col.dataset.masterIndex);
         
-        slots.forEach(function(slot) {
-            // Очищаємо попередні картки
-            slot.querySelectorAll('.appointment-card').forEach(function(card) {
-                card.remove();
-            });
+        // Видаляємо всі старі картки
+        col.querySelectorAll('.appointment-card').forEach(function(card) {
+            card.remove();
+        });
+        
+        var masterData = calendarData.scheduleByMaster[masterId];
+        
+        if (!masterData || !masterData.appointments_by_date || !masterData.appointments_by_date[dateKey]) {
+            return;
+        }
+        
+        var appointments = masterData.appointments_by_date[dateKey];
+        var colors = [
+            {from: '#8B5CF6', to: '#6366F1'},
+            {from: '#3B82F6', to: '#2563EB'},
+            {from: '#10B981', to: '#059669'},
+            {from: '#F59E0B', to: '#D97706'},
+            {from: '#EF4444', to: '#DC2626'}
+        ];
+        
+        // Перший слот дня
+        var dayStartParts = calendarData.timeSlots[0].split(':');
+        var dayStartMinutes = parseInt(dayStartParts[0]) * 60 + parseInt(dayStartParts[1]);
+        
+        appointments.forEach(function(apt, aptIndex) {
+            // Парсимо час запису
+            var timeParts = apt.time.substring(0, 5).split(':');
+            var aptStartMinutes = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
+            var aptEndMinutes = aptStartMinutes + parseInt(apt.duration);
             
-            var timeSlot = slot.dataset.timeSlot;
-            var masterData = calendarData.scheduleByMaster[masterId];
+            // Offset від початку дня
+            var minutesFromDayStart = aptStartMinutes - dayStartMinutes;
             
-            if (!masterData || !masterData.appointments_by_date || !masterData.appointments_by_date[dateKey]) {
-                return;
-            }
+            // 80px на 30 хвилин
+            var pixelsPerMinute = 80 / 30;
+            var topPx = minutesFromDayStart * pixelsPerMinute;
+            var heightPx = apt.duration * pixelsPerMinute;
             
-            var appointments = masterData.appointments_by_date[dateKey];
+            // Виявляємо нахлести
+            var overlappingCount = 0;
+            var positionInOverlap = 0;
             
-            appointments.forEach(function(apt) {
-                var aptTime = apt.time.substring(0, 5);
+            appointments.forEach(function(otherApt, otherIndex) {
+                var otherTimeParts = otherApt.time.substring(0, 5).split(':');
+                var otherStartMinutes = parseInt(otherTimeParts[0]) * 60 + parseInt(otherTimeParts[1]);
+                var otherEndMinutes = otherStartMinutes + parseInt(otherApt.duration);
                 
-                if (aptTime === timeSlot) {
-                    var heightPx = (apt.duration / 30) * 80;
-                    var colors = [
-                        {from: '#8B5CF6', to: '#6366F1'},
-                        {from: '#3B82F6', to: '#2563EB'},
-                        {from: '#10B981', to: '#059669'}
-                    ];
-                    var color = colors[masterIdx % 3];
-                    
-                    var endTime = new Date('2000-01-01 ' + apt.time);
-                    endTime.setMinutes(endTime.getMinutes() + parseInt(apt.duration));
-                    var endTimeStr = endTime.toTimeString().substring(0, 5);
-                    
-                    var card = document.createElement('div');
-                    card.className = 'appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
-                    card.style.cssText = 'height: ' + heightPx + 'px; background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); z-index: 5;';
-                    card.onclick = function() { showAppointmentDetails(apt.id); };
-                    card.innerHTML = '<div class="text-white text-xs font-bold mb-1">' + aptTime + ' – ' + endTimeStr + '</div>' +
-                        '<div class="text-white text-sm font-semibold mb-1 truncate">' + apt.client_name + '</div>' +
-                        '<div class="text-white text-xs opacity-90 truncate">' + apt.service_name + '</div>' +
-                        (apt.status === 'scheduled' ? '<div class="absolute top-2 right-2 text-white text-xs">⏰</div>' : '');
-                    
-                    slot.appendChild(card);
+                // Перевірка перетину
+                if (aptStartMinutes < otherEndMinutes && aptEndMinutes > otherStartMinutes) {
+                    overlappingCount++;
+                    if (otherIndex < aptIndex) {
+                        positionInOverlap++;
+                    }
                 }
             });
+            
+            var widthPercent = overlappingCount > 1 ? (100 / overlappingCount) : 100;
+            var leftPercent = positionInOverlap * widthPercent;
+            
+            var color = colors[(masterIdx + aptIndex) % colors.length];
+            
+            // Обчислюємо час закінчення
+            var endHours = Math.floor(aptEndMinutes / 60);
+            var endMins = aptEndMinutes % 60;
+            var endTimeStr = endHours.toString().padStart(2, '0') + ':' + endMins.toString().padStart(2, '0');
+            
+            var card = document.createElement('div');
+            card.className = 'appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
+            card.style.cssText = 'top: ' + topPx + 'px; ' +
+                'height: ' + heightPx + 'px; ' +
+                'background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); ' +
+                'z-index: ' + (5 + aptIndex) + '; ' +
+                'left: ' + leftPercent + '%; ' +
+                'width: calc(' + widthPercent + '% - 4px);';
+            card.onclick = function() { showAppointmentDetails(apt.id); };
+            
+            var aptTime = apt.time.substring(0, 5);
+            card.innerHTML = '<div class="text-white text-xs font-bold mb-1">' + aptTime + ' – ' + endTimeStr + '</div>' +
+                '<div class="text-white text-sm font-semibold mb-1 truncate">' + apt.client_name + '</div>' +
+                '<div class="text-white text-xs opacity-90 truncate">' + apt.service_name + '</div>';
+            
+            col.appendChild(card);
         });
     });
 }
