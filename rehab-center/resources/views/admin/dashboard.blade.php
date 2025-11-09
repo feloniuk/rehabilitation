@@ -40,7 +40,7 @@
 
 <!-- 👥 Блок співробітників + таблиця часу (єдиний flex-контейнер) -->
 <div class="timeline-wrapper" style="height: calc(100vh - 340px);">
-    <div class="flex flex-col">
+    <div class="flex flex-col" style="height: inherit;">
         
         <!-- Шапка з майстрами (sticky) -->
         <div class="staff-header bg-white border-b sticky z-10" style="top: 57px;">
@@ -112,7 +112,7 @@
                                     @endphp
                                     
                                     <div class="appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
-                                         style=" background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); z-index: 5;"
+                                         style="height: {{ $heightPx }}px; background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); z-index: 5;"
                                          onclick="showAppointmentDetails({{ $apt['id'] }})">
                                         
                                         <div class="text-white text-xs font-bold mb-1">
@@ -335,7 +335,7 @@ function reloadTimeline(dayIndex) {
                     
                     var card = document.createElement('div');
                     card.className = 'appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
-                    card.style.cssText = ' background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); z-index: 5;';
+                    card.style.cssText = 'height: ' + heightPx + 'px; background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); z-index: 5;';
                     card.onclick = function() { showAppointmentDetails(apt.id); };
                     card.innerHTML = '<div class="text-white text-xs font-bold mb-1">' + aptTime + ' – ' + endTimeStr + '</div>' +
                         '<div class="text-white text-sm font-semibold mb-1 truncate">' + apt.client_name + '</div>' +
