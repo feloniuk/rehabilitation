@@ -38,105 +38,110 @@
         </div>
     </div>
 
-    <!-- 👥 Блок співробітників (фіксований при скролі) -->
-    <div class="staff-header bg-white border-b sticky z-10" style="top: 57px;">
-        <div class="flex overflow-x-auto hide-scrollbar">
-            <!-- Колонка часу (ліва) -->
-            <div class="flex-shrink-0 w-16 border-r bg-gray-50"></div>
-            
-            <!-- Майстри -->
-            @foreach($calendar['masters'] as $master)
-                <div class="flex-shrink-0 staff-column border-r last:border-r-0">
-                    <div class="p-3 text-center">
-                        @if($master->photo)
-                            <img src="{{ asset('storage/' . $master->photo) }}" 
-                                 class="w-10 h-10 rounded-full mx-auto mb-2 object-cover">
-                        @else
-                            <div class="w-10 h-10 rounded-full mx-auto mb-2 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                                {{ substr($master->name, 0, 1) }}
-                            </div>
-                        @endif
-                        <div class="text-xs font-semibold text-gray-900 truncate">{{ $master->name }}</div>
-                        @if($master->specialty)
-                            <div class="text-[10px] text-gray-500 truncate">{{ $master->specialty }}</div>
-                        @endif
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-
-    <!-- 🕐 Таблиця часу (Timeline Grid) -->
-    <div class="timeline-container" style="height: calc(100vh - 340px); overflow-y: auto;">
-        <div class="flex">
-            <!-- Колонка часу -->
-            <div class="flex-shrink-0 w-16 border-r bg-gray-50">
-                @foreach($calendar['timeSlots'] as $timeSlot)
-                    <div class="time-slot h-20 border-b flex items-start justify-center pt-1">
-                        <span class="text-[11px] font-medium text-gray-600">{{ $timeSlot }}</span>
+<!-- 👥 Блок співробітників + таблиця часу (єдиний flex-контейнер) -->
+<div class="timeline-wrapper" style="height: calc(100vh - 340px);">
+    <div class="flex flex-col">
+        
+        <!-- Шапка з майстрами (sticky) -->
+        <div class="staff-header bg-white border-b sticky z-10" style="top: 57px;">
+            <div class="flex">
+                <!-- Колонка часу (ліва) -->
+                <div class="flex-shrink-0 w-16 border-r bg-gray-50"></div>
+                
+                <!-- Майстри -->
+                @foreach($calendar['masters'] as $master)
+                    <div class="flex-1 staff-column border-r last:border-r-0">
+                        <div class="p-3 text-center">
+                            @if($master->photo)
+                                <img src="{{ asset('storage/' . $master->photo) }}" 
+                                     class="w-10 h-10 rounded-full mx-auto mb-2 object-cover">
+                            @else
+                                <div class="w-10 h-10 rounded-full mx-auto mb-2 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                                    {{ substr($master->name, 0, 1) }}
+                                </div>
+                            @endif
+                            <div class="text-xs font-semibold text-gray-900 truncate">{{ $master->name }}</div>
+                            @if($master->specialty)
+                                <div class="text-[10px] text-gray-500 truncate">{{ $master->specialty }}</div>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
+        </div>
 
-            <!-- Колонки майстрів -->
-            @foreach($calendar['masters'] as $masterIndex => $master)
-                <div class="flex-1 staff-column border-r last:border-r-0 relative" data-master-id="{{ $master->id }}">
-                    @php
-                        $dateKey = $calendar['weekDates'][0]->format('Y-m-d');
-                        $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
-                    @endphp
-
-                    <!-- Сітка часових слотів -->
-                    @foreach($calendar['timeSlots'] as $slotIndex => $timeSlot)
-                        <div class="time-slot h-20 border-b border-dashed border-gray-200 relative" data-time-slot="{{ $timeSlot }}">
-                            @php
-                                $slotAppointments = $dayAppointments->filter(function($apt) use ($timeSlot) {
-                                    return substr($apt['time'], 0, 5) === $timeSlot;
-                                });
-                            @endphp
-
-                            @foreach($slotAppointments as $apt)
-                                @php
-                                    $heightPx = ($apt['duration'] / 30) * 80;
-                                    $colors = [
-                                        ['from' => '#8B5CF6', 'to' => '#6366F1'],
-                                        ['from' => '#3B82F6', 'to' => '#2563EB'],
-                                        ['from' => '#10B981', 'to' => '#059669'],
-                                    ];
-                                    $color = $colors[$masterIndex % 3];
-                                    $endTime = \Carbon\Carbon::parse($apt['time'])->addMinutes($apt['duration']);
-                                @endphp
-                                
-                                <div class="appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
-                                     style="height: {{ $heightPx }}px; background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); z-index: 5;"
-                                     onclick="showAppointmentDetails({{ $apt['id'] }})">
-                                    
-                                    <div class="text-white text-xs font-bold mb-1">
-                                        {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
-                                    </div>
-                                    
-                                    <div class="text-white text-sm font-semibold mb-1 truncate">
-                                        {{ $apt['client_name'] }}
-                                    </div>
-                                    
-                                    <div class="text-white text-xs opacity-90 truncate">
-                                        {{ $apt['service_name'] }}
-                                    </div>
-
-                                    @if($apt['status'] === 'scheduled')
-                                        <div class="absolute top-2 right-2">
-                                            <span class="text-white text-xs">⏰</span>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endforeach
+        <!-- 🕐 Таблиця часу (scrollable) -->
+        <div class="timeline-container overflow-y-auto flex-1">
+            <div class="flex">
+                <!-- Колонка часу -->
+                <div class="flex-shrink-0 w-16 border-r bg-gray-50">
+                    @foreach($calendar['timeSlots'] as $timeSlot)
+                        <div class="time-slot h-20 border-b flex items-start justify-center pt-1">
+                            <span class="text-[11px] font-medium text-gray-600">{{ $timeSlot }}</span>
                         </div>
                     @endforeach
                 </div>
-            @endforeach
+
+                <!-- Колонки майстрів -->
+                @foreach($calendar['masters'] as $masterIndex => $master)
+                    <div class="flex-1 staff-column border-r last:border-r-0 relative" data-master-id="{{ $master->id }}">
+                        @php
+                            $dateKey = $calendar['weekDates'][0]->format('Y-m-d');
+                            $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
+                        @endphp
+
+                        <!-- Сітка часових слотів -->
+                        @foreach($calendar['timeSlots'] as $slotIndex => $timeSlot)
+                            <div class="time-slot h-20 border-b border-dashed border-gray-200 relative" data-time-slot="{{ $timeSlot }}">
+                                @php
+                                    $slotAppointments = $dayAppointments->filter(function($apt) use ($timeSlot) {
+                                        return substr($apt['time'], 0, 5) === $timeSlot;
+                                    });
+                                @endphp
+
+                                @foreach($slotAppointments as $apt)
+                                    @php
+                                        $heightPx = ($apt['duration'] / 30) * 80;
+                                        $colors = [
+                                            ['from' => '#8B5CF6', 'to' => '#6366F1'],
+                                            ['from' => '#3B82F6', 'to' => '#2563EB'],
+                                            ['from' => '#10B981', 'to' => '#059669'],
+                                        ];
+                                        $color = $colors[$masterIndex % 3];
+                                        $endTime = \Carbon\Carbon::parse($apt['time'])->addMinutes($apt['duration']);
+                                    @endphp
+                                    
+                                    <div class="appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
+                                         style=" background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); z-index: 5;"
+                                         onclick="showAppointmentDetails({{ $apt['id'] }})">
+                                        
+                                        <div class="text-white text-xs font-bold mb-1">
+                                            {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
+                                        </div>
+                                        
+                                        <div class="text-white text-sm font-semibold mb-1 truncate">
+                                            {{ $apt['client_name'] }}
+                                        </div>
+                                        
+                                        <div class="text-white text-xs opacity-90 truncate">
+                                            {{ $apt['service_name'] }}
+                                        </div>
+
+                                        @if($apt['status'] === 'scheduled')
+                                            <div class="absolute top-2 right-2">
+                                                <span class="text-white text-xs">⏰</span>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
         </div>
     </div>
-
+</div>
     <!-- 📆 Нижня панель дат -->
     <div class="border-t bg-white">
         <div class="flex overflow-x-auto hide-scrollbar">
@@ -206,7 +211,6 @@
 
 .staff-column {
     min-width: 160px;
-    width: 160px;
 }
 
 .time-slot {
@@ -217,13 +221,14 @@
     overflow: hidden;
 }
 
-.date-btn.active {
-    background-color: #8B5CF6 !important;
-    color: white !important;
+.timeline-wrapper {
+    display: flex;
+    flex-direction: column;
 }
 
-.date-btn.active .text-gray-500 {
-    color: rgba(255,255,255,0.8) !important;
+.timeline-container {
+    flex: 1;
+    overflow-y: auto;
 }
 </style>
 @endpush
@@ -330,7 +335,7 @@ function reloadTimeline(dayIndex) {
                     
                     var card = document.createElement('div');
                     card.className = 'appointment-card absolute left-1 right-1 rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
-                    card.style.cssText = 'height: ' + heightPx + 'px; background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); z-index: 5;';
+                    card.style.cssText = ' background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); z-index: 5;';
                     card.onclick = function() { showAppointmentDetails(apt.id); };
                     card.innerHTML = '<div class="text-white text-xs font-bold mb-1">' + aptTime + ' – ' + endTimeStr + '</div>' +
                         '<div class="text-white text-sm font-semibold mb-1 truncate">' + apt.client_name + '</div>' +
