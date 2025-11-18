@@ -5,10 +5,10 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow">
-    <div class="px-6 py-4 border-b flex justify-between items-center">
-        <h3 class="text-lg font-semibold">Список послуг</h3>
+    <div class="px-6 py-4 border-b flex flex-col md:flex-row justify-between items-center">
+        <h3 class="text-lg font-semibold mb-4 md:mb-0">Список послуг</h3>
         <a href="{{ route('admin.services.create') }}" 
-           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+           class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full md:w-auto text-center">
             <i class="fas fa-plus mr-2"></i>Додати послугу
         </a>
     </div>
@@ -18,8 +18,8 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Назва</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Тривалість</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Майстрів</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Тривалість</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Майстрів</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дії</th>
                 </tr>
@@ -35,18 +35,18 @@
                                 <div>
                                     <div class="font-medium text-gray-900">{{ $service->name }}</div>
                                     @if($service->description)
-                                        <div class="text-sm text-gray-500">{{ Str::limit($service->description, 50) }}</div>
+                                        <div class="text-sm text-gray-500 hidden md:block">{{ Str::limit($service->description, 50) }}</div>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
                             <span class="inline-flex items-center">
                                 <i class="fas fa-clock text-gray-400 mr-1"></i>
                                 {{ $service->duration }} хв
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                 <i class="fas fa-users mr-1"></i>
                                 {{ $service->master_services_count }}
@@ -55,10 +55,7 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($service->is_active)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    <i class="fas fa-check-circle mr-1" style="
-                                    display: flex;
-                                    align-items: center;
-                                "></i>
+                                    <i class="fas fa-check-circle mr-1"></i>
                                     Активна
                                 </span>
                             @else

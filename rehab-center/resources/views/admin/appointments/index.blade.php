@@ -9,7 +9,7 @@
     <div class="px-6 py-4 border-b bg-gray-50">
         <form method="GET" action="{{ route('admin.appointments.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4">
             <!-- Поиск по клиенту -->
-            <div>
+            <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Клієнт</label>
                 <input type="text" 
                        name="client_name" 
@@ -20,7 +20,7 @@
 
             <!-- Мастер - только для админа -->
             @if(auth()->user()->isAdmin())
-            <div>
+            <div class="md:col-span-1 hidden md:block">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Майстер</label>
                 <select name="master_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Всі майстри</option>
@@ -34,7 +34,7 @@
             @endif
 
             <!-- Услуга -->
-            <div>
+            <div class="md:col-span-1">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Послуга</label>
                 <select name="service_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Всі послуги</option>
@@ -47,7 +47,7 @@
             </div>
 
             <!-- Статус -->
-            <div>
+            <div class="md:col-span-1 hidden md:block">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
                 <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Всі статуси</option>
@@ -59,31 +59,13 @@
                 </select>
             </div>
 
-            <!-- Дата от -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Дата від</label>
-                <input type="date" 
-                       name="date_from" 
-                       value="{{ request('date_from') }}"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <!-- Дата до -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Дата до</label>
-                <input type="date" 
-                       name="date_to" 
-                       value="{{ request('date_to') }}"
-                       class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-
             <!-- Кнопки -->
             <div class="md:col-span-6 flex gap-2">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm w-full md:w-auto">
                     <i class="fas fa-search mr-1"></i>
                     Фільтрувати
                 </button>
-                <a href="{{ route('admin.appointments.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm">
+                <a href="{{ route('admin.appointments.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm w-full md:w-auto text-center">
                     <i class="fas fa-times mr-1"></i>
                     Очистити
                 </a>
@@ -109,15 +91,15 @@
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Клієнт</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Клієнт</th>
                     @if(auth()->user()->isAdmin())
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Майстер</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Майстер</th>
                     @endif
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Послуга</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дата/Час</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ціна</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Статус</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Дії</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Послуга</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата/Час</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Ціна</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Статус</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дії</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -132,7 +114,7 @@
                                 {{ $appointment->master->name }}
                             </td>
                         @endif
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                             <div class="text-sm text-gray-900">{{ $appointment->service->name }}</div>
                             <div class="text-xs text-gray-500">{{ $appointment->duration }} хв</div>
                         </td>
@@ -140,10 +122,10 @@
                             <div class="text-sm text-gray-900">{{ $appointment->appointment_date->format('d.m.Y') }}</div>
                             <div class="text-xs text-gray-500">{{ substr($appointment->appointment_time, 0, 5) }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
                             {{ number_format($appointment->price, 0) }} грн
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                             @if($appointment->status === 'scheduled')
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     Заплановано
