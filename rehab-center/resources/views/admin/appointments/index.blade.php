@@ -84,16 +84,22 @@
                 @forelse($appointments as $appointment)
                     <tr class="hover:bg-gray-50 cursor-pointer">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-gray-900">{{ $appointment->client->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $appointment->client->phone }}</div>
+                            <div class="font-medium text-gray-900 max-w-[75px] truncate" title="{{ $appointment->client->name }}">
+                                {{ $appointment->client->name }}
+                            </div>
+                            <div class="text-sm text-gray-500 max-w-[75px] truncate" title="{{ $appointment->client->phone }}">
+                                {{ $appointment->client->phone }}
+                            </div>
                         </td>
                         @if(auth()->user()->isAdmin())
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate" title="{{ $appointment->master->name }}">
                                 {{ $appointment->master->name }}
                             </td>
                         @endif
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $appointment->service->name }}</div>
+                            <div class="text-sm text-gray-900 max-w-[75px] truncate" title="{{ $appointment->service->name }}">
+                                {{ $appointment->service->name }}
+                            </div>
                             <div class="text-xs text-gray-500">{{ $appointment->duration }} хв</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
@@ -126,7 +132,7 @@
                                     <i class="fas fa-eye text-lg"></i>
                                 </button>
                                 <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}" 
-                                      class="inline" onsubmit="return confirm('Ви впевнені?')">
+                                    class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 

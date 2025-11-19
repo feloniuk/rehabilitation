@@ -198,7 +198,7 @@
             @foreach($calendar['weekDates'] as $index => $date)
                 <button onclick="selectDate({{ $index }})"
                         data-date-index="{{ $index }}"
-                        class="date-btn flex-1 min-w-[60px] py-3 text-center border-r last:border-r-0 transition-colors {{ $index === $calendar['todayIndex'] ? 'bg-purple-500 text-white active' : 'hover:bg-gray-50' }}">
+                        class="date-btn flex-1 min-w-[60px] py-3 text-center border-r last:border-r-0 transition-colors {{ $index === $calendar['todayIndex'] ? 'bg-purple-500 text-white active' : 'hover:bg-purple-200' }}">
                     <div class="text-[10px] font-medium {{ $index === $calendar['todayIndex'] ? 'text-purple-100' : 'text-gray-500' }}">
                         {{ strtoupper($date->isoFormat('dd')) }}
                     </div>
