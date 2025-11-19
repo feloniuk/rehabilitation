@@ -40,7 +40,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-medium text-gray-900">
-                                {{ $log->appointment->client->name }}
+                                {{ $log->appointment->client->name ?: '' }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">

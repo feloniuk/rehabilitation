@@ -12,13 +12,10 @@ use danog\MadelineProto\Settings\AppInfo;
 use danog\MadelineProto\Settings\Logger as LoggerSettings;
 use Illuminate\Support\Facades\Log;
 
-/**
- * Сервіс для відправки повідомлень у Telegram через MadelineProto (userbot)
- */
 class TelegramNotificationService
 {
     private ?API $telegram = null;
-    private bool $isConfigured = true;
+    private bool $isConfigured = false;
 
     public function __construct()
     {
@@ -27,11 +24,18 @@ class TelegramNotificationService
 
         if (!$apiId || !$apiHash) {
             Log::warning('Telegram API credentials not configured.');
-            $this->isConfigured = false;
             return;
         }
 
         try {
+            // Очистка старих сесійних файлів
+            $sessionPath = storage_path('app/telegram_session.madeline');
+            $lockPath = $sessionPath . '.lock';
+            
+            if (file_exists($lockPath)) {
+                unlink($lockPath);
+            }
+
             $settings = new Settings;
 
             // Налаштування додатку
@@ -40,41 +44,39 @@ class TelegramNotificationService
             $appInfo->setApiHash($apiHash);
             $settings->setAppInfo($appInfo);
 
-            // Налаштування логування
-            // ВАЖНО: Logger::FILE_LOGGER та Logger::ERROR - це int константи з danog\MadelineProto\Logger
+            // Розширені налаштування логування
             $logger = new LoggerSettings;
-            $logger->setType(Logger::FILE_LOGGER); // int constant
-            $logger->setExtra(storage_path('logs/telegram.log'));
-            $logger->setLevel(Logger::ERROR); // int constant
+            $logger->setType(Logger::FILE_LOGGER);
+            $logger->setExtra(storage_path('logs/telegram_detailed.log'));
+            $logger->setLevel(Logger::NOTICE);
             $settings->setLogger($logger);
 
-            // Ініціалізація сесії (без повторного start)
-            $this->telegram = new API(storage_path('app/telegram_session.madeline'), $settings);
-            $this->telegram->async(false);
+            // Додаткові налаштування
+            // $settings->setAllowUpdates(false);
+
+            $this->telegram = new API($sessionPath, $settings);
+
+            // Примусова перевірка сесії
+            $this->telegram->start();
 
             $this->isConfigured = true;
+
         } catch (\Exception $e) {
-            Log::error('Telegram initialization error: ' . $e->getMessage());
-            $this->isConfigured = false;
+            Log::error('Telegram initialization error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
         }
     }
 
-    /**
-     * Перевіряє чи налаштовано Telegram
-     */
     public function isConfigured(): bool
     {
         return $this->isConfigured;
     }
 
-    /**
-     * Перевірка активності сесії
-     */
     public function isAuthorized(): bool
     {
-        if (!$this->isConfigured) {
-            return false;
-        }
+        if (!$this->isConfigured) return false;
 
         try {
             $this->telegram->getSelf();
@@ -85,52 +87,141 @@ class TelegramNotificationService
         }
     }
 
-    /**
-     * Відправлення повідомлення одному користувачу
-     */
     public function sendMessage(string $phone, string $message): bool
-    {
-        if (!$this->isConfigured || !$this->isAuthorized()) {
-            Log::warning('Telegram not configured or not authorized.');
-            return false;
-        }
+{
+    if (!$this->isConfigured || !$this->isAuthorized()) {
+        Log::warning('Telegram not configured or not authorized.');
+        return false;
+    }
+
+    try {
+        // Нормалізація телефону
+        $phone = $this->normalizePhone($phone);
+        $fullPhone = '+' . $phone;
+
+        // Логування всіх спроб
+        Log::info('Attempting to send message', [
+            'phone' => $fullPhone,
+            'message' => $message
+        ]);
 
         try {
-            // Нормалізуємо телефон (без +)
-            $phone = $this->normalizePhone($phone);
-
-            // Отримуємо peer за телефоном
-            $peer = $this->telegram->contacts->resolvePhone($phone);
-
-            // Відправляємо повідомлення
-            $this->telegram->messages->sendMessage([
-                'peer' => $peer,
+            // Спроба надіслати повідомлення безпосередньо
+            $result = $this->telegram->messages->sendMessage([
+                'peer' => $fullPhone,
                 'message' => $message,
+                'random_id' => random_int(0, PHP_INT_MAX)
+            ]);
+
+            Log::info('Message sent successfully', [
+                'phone' => $fullPhone,
+                'result' => $result
             ]);
 
             return true;
-        } catch (\danog\MadelineProto\RPCErrorException $e) {
-            Log::error('Telegram RPC error: ' . $e->getMessage(), [
-                'phone' => $phone,
-                'error_code' => $e->rpc ?? null,
-            ]);
-            return false;
         } catch (\Exception $e) {
-            Log::error('Telegram send error: ' . $e->getMessage(), [
-                'phone' => $phone,
-                'trace' => $e->getTraceAsString(),
+            Log::error('Message send failed', [
+                'phone' => $fullPhone,
+                'error' => $e->getMessage(),
+                'error_class' => get_class($e),
+                'trace' => $e->getTraceAsString()
             ]);
+
+            // Додаткова спроба з резолвом
+            try {
+                // Резолв телефону
+                $resolvedData = $this->telegram->contacts->resolvePhone(
+                    phone: $fullPhone,
+                    floodWaitLimit: 10
+                );
+
+                // Витягуємо інформацію про користувача
+                if (!empty($resolvedData['users'])) {
+                    $user = $resolvedData['users'][0];
+                    $userId = $user['id'];
+                    $accessHash = $user['access_hash'] ?? 0;
+
+                    // Надсилання повідомлення з використанням ID користувача
+                    $result = $this->telegram->messages->sendMessage([
+                        'peer' => [
+                            '_' => 'inputPeerUser',
+                            'user_id' => $userId,
+                            'access_hash' => $accessHash
+                        ],
+                        'message' => $message,
+                        'random_id' => random_int(0, PHP_INT_MAX)
+                    ]);
+
+                    Log::info('Message sent via user ID', [
+                        'phone' => $fullPhone,
+                        'user_id' => $userId,
+                        'result' => $result
+                    ]);
+
+                    return true;
+                }
+            } catch (\Exception $resolveError) {
+                Log::error('Resolve and send failed', [
+                    'phone' => $fullPhone,
+                    'error' => $resolveError->getMessage(),
+                    'error_class' => get_class($resolveError)
+                ]);
+            }
+
             return false;
         }
+    } catch (\Exception $globalException) {
+        Log::error('Global Telegram error', [
+            'phone' => $phone,
+            'error' => $globalException->getMessage(),
+            'error_class' => get_class($globalException),
+            'trace' => $globalException->getTraceAsString()
+        ]);
+        return false;
     }
+}
 
-    /**
-     * Відправлення повідомлення про запис
-     */
+    private function findUserPeer(string $phone): ?array
+{
+    try {
+        // Спроба резолву через contacts.resolvePhone
+        try {
+            $resolvedPeer = $this->telegram->contacts->resolvePhone(
+                phone: $phone,
+                floodWaitLimit: 10,
+                queueId: null,
+                cancellation: null
+            );
+            
+            Log::info('Resolved via contacts', [
+                'phone' => $phone,
+                'peer' => $resolvedPeer
+            ]);
+
+            return $resolvedPeer;
+        } catch (\Exception $contactResolveError) {
+            Log::warning('Contact resolve failed', [
+                'phone' => $phone,
+                'error' => $contactResolveError->getMessage(),
+                'error_class' => get_class($contactResolveError)
+            ]);
+        }
+
+        return null;
+    } catch (\Exception $e) {
+        Log::error('Peer finding global error', [
+            'phone' => $phone,
+            'error' => $e->getMessage(),
+            'error_class' => get_class($e)
+        ]);
+        return null;
+    }
+}
+
     public function sendAppointmentNotification(Appointment $appointment, NotificationTemplate $template): NotificationLog
     {
         $message = $template->render($appointment);
-        $phone = $appointment->client->phone;
+        $phone = $this->normalizePhone($appointment->client->phone);
 
         $log = NotificationLog::create([
             'appointment_id' => $appointment->id,
@@ -141,12 +232,12 @@ class TelegramNotificationService
         ]);
 
         if (!$this->isConfigured) {
-            $log->markAsFailed('Telegram не налаштовано. Додайте TELEGRAM_API_ID і TELEGRAM_API_HASH у .env');
+            $log->markAsFailed('Telegram не налаштовано');
             return $log;
         }
 
         if (!$this->isAuthorized()) {
-            $log->markAsFailed('Telegram userbot не авторизований. Запустіть авторизацію вручну.');
+            $log->markAsFailed('Telegram userbot не авторизований');
             return $log;
         }
 
@@ -155,15 +246,12 @@ class TelegramNotificationService
         if ($success) {
             $log->markAsSent();
         } else {
-            $log->markAsFailed('Не вдалося відправити повідомлення в Telegram');
+            $log->markAsFailed('Не вдалося надіслати повідомлення');
         }
 
         return $log;
     }
 
-    /**
-     * Масова розсилка
-     */
     public function sendBulkNotifications(array $appointmentIds, NotificationTemplate $template): array
     {
         $results = [
@@ -211,11 +299,16 @@ class TelegramNotificationService
         return $results;
     }
 
-    /**
-     * Нормалізація номера телефону (без +)
-     */
     private function normalizePhone(string $phone): string
     {
-        return ltrim(preg_replace('/[^0-9]/', '', $phone), '+');
+        // Видаляємо всі нецифрові символи
+        $normalized = preg_replace('/[^0-9]/', '', $phone);
+        
+        // Додаємо код країни, якщо відсутній
+        if (strpos($normalized, '38') !== 0 && strlen($normalized) == 10) {
+            $normalized = '38' . $normalized;
+        }
+        
+        return $normalized;
     }
 }
