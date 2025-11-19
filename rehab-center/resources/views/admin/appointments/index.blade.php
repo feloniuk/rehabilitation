@@ -5,10 +5,11 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow">
-    <!-- Фильтры -->
-    <div class="px-6 py-4 border-b bg-gray-50">
-        <form method="GET" action="{{ route('admin.appointments.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <!-- Поиск по клиенту -->
+    {{-- Фільтри --}}
+    <div class="px-4 py-4 border-b bg-gray-50">
+        <form method="GET" action="{{ route('admin.appointments.index') }}" 
+              class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {{-- Клієнт --}}
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Клієнт</label>
                 <input type="text" 
@@ -18,76 +19,54 @@
                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
-            <!-- Мастер - только для админа -->
+            {{-- Майстер (тільки для адміна) --}}
             @if(auth()->user()->isAdmin())
-            <div class="md:col-span-1 hidden md:block">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Майстер</label>
-                <select name="master_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Всі майстри</option>
-                    @foreach($masters as $master)
-                        <option value="{{ $master->id }}" {{ request('master_id') == $master->id ? 'selected' : '' }}>
-                            {{ $master->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Майстер</label>
+                    <select name="master_id" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Всі майстри</option>
+                        @foreach($masters as $master)
+                            <option value="{{ $master->id }}" 
+                                    {{ request('master_id') == $master->id ? 'selected' : '' }}>
+                                {{ $master->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             @endif
 
-            <!-- Услуга -->
-            <div class="md:col-span-1">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Послуга</label>
-                <select name="service_id" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Всі послуги</option>
-                    @foreach($services as $service)
-                        <option value="{{ $service->id }}" {{ request('service_id') == $service->id ? 'selected' : '' }}>
-                            {{ $service->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <!-- Статус -->
-            <div class="md:col-span-1 hidden md:block">
+            {{-- Статус --}}
+            <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Статус</label>
-                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select name="status" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="">Всі статуси</option>
                     @foreach($statuses as $value => $label)
-                        <option value="{{ $value }}" {{ request('status') == $value ? 'selected' : '' }}>
+                        <option value="{{ $value }}" 
+                                {{ request('status') == $value ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
                 </select>
             </div>
 
-            <!-- Кнопки -->
-            <div class="md:col-span-6 flex gap-2">
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm w-full md:w-auto">
-                    <i class="fas fa-search mr-1"></i>
-                    Фільтрувати
+            {{-- Кнопки --}}
+            <div class="col-span-full flex gap-2 mt-2">
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm w-full md:w-auto">
+                    <i class="fas fa-search mr-1"></i>Фільтрувати
                 </button>
-                <a href="{{ route('admin.appointments.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm w-full md:w-auto text-center">
-                    <i class="fas fa-times mr-1"></i>
-                    Очистити
+                <a href="{{ route('admin.appointments.index') }}" 
+                   class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm w-full md:w-auto text-center">
+                    <i class="fas fa-times mr-1"></i>Скинути
                 </a>
             </div>
         </form>
     </div>
 
-    <!-- Заголовок с общей информацией -->
-    <div class="px-6 py-4 border-b flex justify-between items-center">
-        <div>
-            <h3 class="text-lg font-semibold">Список записів</h3>
-            <p class="text-sm text-gray-600">
-                Знайдено записів: {{ $appointments->total() }}
-                @if(auth()->user()->isMaster())
-                    <span class="ml-2 text-blue-600">(тільки ваші записи)</span>
-                @endif
-            </p>
-        </div>
-    </div>
-
-    <!-- Таблица -->
-    <div class="overflow-x-auto">
+    {{-- Desktop Table View --}}
+    <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -95,16 +74,15 @@
                     @if(auth()->user()->isAdmin())
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Майстер</th>
                     @endif
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Послуга</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Послуга</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата/Час</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Ціна</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Статус</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дії</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($appointments as $appointment)
-                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="showAppointmentDetails({{ $appointment->id }})">
+                    <tr class="hover:bg-gray-50 cursor-pointer">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-medium text-gray-900">{{ $appointment->client->name }}</div>
                             <div class="text-sm text-gray-500">{{ $appointment->client->phone }}</div>
@@ -114,7 +92,7 @@
                                 {{ $appointment->master->name }}
                             </td>
                         @endif
-                        <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $appointment->service->name }}</div>
                             <div class="text-xs text-gray-500">{{ $appointment->duration }} хв</div>
                         </td>
@@ -122,38 +100,38 @@
                             <div class="text-sm text-gray-900">{{ $appointment->appointment_date->format('d.m.Y') }}</div>
                             <div class="text-xs text-gray-500">{{ substr($appointment->appointment_time, 0, 5) }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
-                            {{ number_format($appointment->price, 0) }} грн
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap hidden md:table-cell">
-                            @if($appointment->status === 'scheduled')
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Заплановано
-                                </span>
-                            @elseif($appointment->status === 'completed')
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Завершено
-                                </span>
-                            @else
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    Скасовано
-                                </span>
-                            @endif
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @switch($appointment->status)
+                                @case('scheduled')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Заплановано
+                                    </span>
+                                    @break
+                                @case('completed')
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        Завершено
+                                    </span>
+                                    @break
+                                @default
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Скасовано
+                                    </span>
+                            @endswitch
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex items-center space-x-3" onclick="event.stopPropagation()">
+                            <div class="flex items-center space-x-3">
                                 <button onclick="showAppointmentDetails({{ $appointment->id }})" 
                                         class="text-blue-600 hover:text-blue-900 transition-colors"
-                                        title="Переглянути деталі">
+                                        title="Деталі">
                                     <i class="fas fa-eye text-lg"></i>
                                 </button>
                                 <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}" 
-                                      class="inline" onsubmit="return confirm('Ви впевнені що хочете видалити цей запис?')">
+                                      class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" 
                                             class="text-red-600 hover:text-red-900 transition-colors"
-                                            title="Видалити запис">
+                                            title="Видалити">
                                         <i class="fas fa-trash text-lg"></i>
                                     </button>
                                 </form>
@@ -162,8 +140,9 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isAdmin() ? '7' : '6' }}" class="px-6 py-8 text-center text-gray-500">
-                            <i class="fas fa-calendar-times text-3xl mb-2"></i>
+                        <td colspan="{{ auth()->user()->isAdmin() ? '6' : '5' }}" 
+                            class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-calendar-times text-4xl mb-3"></i>
                             <p>Записів не знайдено</p>
                         </td>
                     </tr>
@@ -172,30 +151,101 @@
         </table>
     </div>
 
-    <!-- Пагинация -->
+    {{-- Mobile Card View --}}
+    <div class="md:hidden p-4 space-y-4">
+        @forelse($appointments as $appointment)
+            <div class="bg-white rounded-lg shadow-md border p-4">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h3 class="font-semibold text-gray-900">{{ $appointment->client->name }}</h3>
+                        <p class="text-sm text-gray-500">{{ $appointment->client->phone }}</p>
+                    </div>
+                    
+                    <div class="flex space-x-2">
+                        <button onclick="showAppointmentDetails({{ $appointment->id }})" 
+                                class="text-blue-600"
+                                title="Деталі">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}" 
+                              class="inline" onsubmit="return confirm('Ви впевнені?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" 
+                                    class="text-red-600"
+                                    title="Видалити">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="space-y-2 text-sm">
+                    @if(auth()->user()->isAdmin())
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Майстер:</span>
+                            <span>{{ $appointment->master->name }}</span>
+                        </div>
+                    @endif
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Послуга:</span>
+                        <span>{{ $appointment->service->name }} ({{ $appointment->duration }} хв)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Дата/Час:</span>
+                        <span>
+                            {{ $appointment->appointment_date->format('d.m.Y') }} 
+                            {{ substr($appointment->appointment_time, 0, 5) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-gray-600">Статус:</span>
+                        @switch($appointment->status)
+                            @case('scheduled')
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                    Заплановано
+                                </span>
+                                @break
+                            @case('completed')
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                    Завершено
+                                </span>
+                                @break
+                            @default
+                                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
+                                    Скасовано
+                                </span>
+                        @endswitch
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="text-center py-8 text-gray-500">
+                <i class="fas fa-calendar-times text-4xl mb-3"></i>
+                <p>Записів не знайдено</p>
+            </div>
+        @endforelse
+    </div>
+
     @if($appointments->hasPages())
         <div class="px-6 py-4 border-t">
-            {{ $appointments->appends(request()->query())->links() }}
+            {{ $appointments->links('vendor.pagination.tailwind') }}
         </div>
     @endif
 </div>
 
-<!-- Модальное окно с деталями записи -->
-<div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white rounded-lg max-w-md w-full mx-4">
-        <div class="flex justify-between items-center p-6 border-b">
-            <h3 class="text-lg font-semibold">Деталі запису</h3>
+{{-- Модалка з деталями запису --}}
+<div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 class="font-semibold">Деталі запису</h3>
             <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times"></i>
             </button>
         </div>
-        
-        <div id="appointmentContent" class="p-6">
-            <!-- Содержимое будет загружено через AJAX -->
-        </div>
-        
-        <div class="flex justify-end space-x-3 p-6 border-t bg-gray-50">
-            <button onclick="closeModal()" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+        <div id="appointmentContent" class="p-4"></div>
+        <div class="p-4 border-t">
+            <button onclick="closeModal()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">
                 Закрити
             </button>
         </div>
@@ -204,129 +254,111 @@
 
 @push('scripts')
 <script>
-function showAppointmentDetails(appointmentId) {
-    // Показать модальное окно
-    document.getElementById('appointmentModal').classList.remove('hidden');
-    document.getElementById('appointmentModal').classList.add('flex');
+function showAppointmentDetails(id) {
+    const modal = document.getElementById('appointmentModal');
+    const content = document.getElementById('appointmentContent');
     
-    // Показать загрузку
-    document.getElementById('appointmentContent').innerHTML = `
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    content.innerHTML = `
         <div class="text-center py-8">
             <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
             <p class="text-gray-500 mt-2">Завантаження...</p>
         </div>
     `;
     
-    // Загрузить данные
-    fetch(`/admin/appointments/${appointmentId}`)
+    fetch(`/admin/appointments/${id}`)
         .then(response => response.json())
         .then(data => {
-            document.getElementById('appointmentContent').innerHTML = `
-                <div class="space-y-4">
+            content.innerHTML = `
+                <div class="space-y-3">
                     <div>
-                        <h4 class="font-semibold text-gray-700 mb-2">Клієнт</h4>
-                        <p class="text-lg font-medium">${data.client.name}</p>
-                        <p class="text-sm text-gray-600">${data.client.phone}</p>
-                        <p class="text-sm text-gray-600">${data.client.email}</p>
+                        <div class="text-xs text-gray-500 mb-1">Клієнт</div>
+                        <div class="font-semibold">${data.client.name}</div>
+                        <div class="text-sm text-gray-600">${data.client.phone}</div>
                     </div>
-                    
                     <div>
-                        <h4 class="font-semibold text-gray-700 mb-2">Майстер</h4>
-                        <p class="text-lg font-medium">${data.master.name}</p>
-                        <p class="text-sm text-gray-600">${data.master.phone}</p>
+                        <div class="text-xs text-gray-500 mb-1">Майстер</div>
+                        <div class="font-medium">${data.master.name}</div>
                     </div>
-                    
                     <div>
-                        <h4 class="font-semibold text-gray-700 mb-2">Послуга</h4>
-                        <p class="text-lg font-medium">${data.service.name}</p>
-                        <p class="text-sm text-gray-600">Тривалість: ${data.service.duration} хв</p>
+                        <div class="text-xs text-gray-500 mb-1">Послуга</div>
+                        <div class="font-medium">${data.service.name}</div>
+                        <div class="text-sm text-gray-600">${data.service.duration} хв</div>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-2">Дата</h4>
-                            <p class="text-lg font-medium">${data.appointment_date}</p>
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Дата</div>
+                            <div class="font-medium">${data.appointment_date}</div>
                         </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-2">Час</h4>
-                            <p class="text-lg font-medium">${data.appointment_time}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-2">Ціна</h4>
-                            <p class="text-lg font-medium text-green-600">${data.price} грн</p>
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-700 mb-2">Статус</h4>
-                            <select id="statusSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm" onchange="updateStatus(${data.id})">
-                                <option value="scheduled" ${data.status === 'scheduled' ? 'selected' : ''}>Заплановано</option>
-                                <option value="completed" ${data.status === 'completed' ? 'selected' : ''}>Завершено</option>
-                                <option value="cancelled" ${data.status === 'cancelled' ? 'selected' : ''}>Скасовано</option>
-                            </select>
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Час</div>
+                            <div class="font-medium">${data.appointment_time}</div>
                         </div>
                     </div>
-                    
+                    <div class="flex gap-3">
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Ціна</div>
+                            <div class="text-lg font-bold text-green-600">${data.price} грн</div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-xs text-gray-500 mb-1">Статус</div>
+                            ${getStatusBadge(data.status)}
+                        </div>
+                    </div>
                     ${data.notes ? `
                     <div>
-                        <h4 class="font-semibold text-gray-700 mb-2">Примітки</h4>
-                        <p class="text-sm text-gray-600 bg-gray-50 p-3 rounded">${data.notes}</p>
+                        <div class="text-xs text-gray-500 mb-1">Примітки</div>
+                        <div class="bg-gray-50 p-3 rounded text-sm">${data.notes}</div>
                     </div>
                     ` : ''}
-                    
-                    <div>
-                        <h4 class="font-semibold text-gray-700 mb-2">Створено</h4>
-                        <p class="text-sm text-gray-600">${data.created_at}</p>
-                    </div>
                 </div>
             `;
         })
         .catch(error => {
-            document.getElementById('appointmentContent').innerHTML = `
-                <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle text-2xl text-red-400"></i>
-                    <p class="text-red-500 mt-2">Помилка завантаження даних</p>
+            content.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <i class="fas fa-exclamation-triangle text-3xl mb-2"></i>
+                    <p>Помилка завантаження</p>
                 </div>
             `;
         });
 }
 
+function getStatusBadge(status) {
+    switch(status) {
+        case 'scheduled':
+            return `<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Заплановано</span>`;
+        case 'completed':
+            return `<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Завершено</span>`;
+        default:
+            return `<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Скасовано</span>`;
+    }
+}
+
 function closeModal() {
-    document.getElementById('appointmentModal').classList.add('hidden');
-    document.getElementById('appointmentModal').classList.remove('flex');
+    const modal = document.getElementById('appointmentModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
 }
 
-function updateStatus(appointmentId) {
-    const status = document.getElementById('statusSelect').value;
-    
-    fetch(`/admin/appointments/${appointmentId}/status`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ status: status })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Обновить статус в таблице
-            location.reload();
-        } else {
-            alert('Помилка оновлення статусу');
-        }
-    })
-    .catch(error => {
-        alert('Помилка оновлення статусу');
-    });
-}
-
-// Закрытие модального окна по ESC
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeModal();
     }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteForms = document.querySelectorAll('form[onsubmit]');
+    deleteForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const confirmed = confirm(this.getAttribute('onsubmit').replace('return ', ''));
+            if (!confirmed) {
+                e.preventDefault();
+            }
+        });
+    });
 });
 </script>
 @endpush
