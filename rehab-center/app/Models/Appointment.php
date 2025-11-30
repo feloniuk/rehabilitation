@@ -18,6 +18,7 @@ class Appointment extends Model
     protected $casts = [
         'appointment_date' => 'date',
         'price' => 'decimal:2',
+        'telegram_notification_sent' => 'boolean',
         'duration' => 'integer', // ВАЖНО: приводим к integer
     ];
 

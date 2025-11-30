@@ -173,7 +173,7 @@
                                  onclick="showAppointmentDetails({{ $apt['id'] }})">
                                 
                                 <div class="text-white text-xs font-bold mb-1">
-                                    {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
+                                    {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }} {{ $apt['telegram_notification_sent'] === true ? ' <span class="ml-1">📨</span>' : '' }}
                                 </div>
                                 
                                 <div class="text-white text-sm font-semibold mb-1 truncate">
@@ -423,15 +423,16 @@ function reloadTimeline(dayIndex) {
 
             var aptTime = apt.time.substring(0, 5);
             card.innerHTML = `
-                <div class="text-white text-xs font-bold mb-1">${aptTime} – ${endTimeStr}</div>
+                <div class="text-white text-xs font-bold mb-1">${aptTime} – ${endTimeStr} ${apt.telegram_notification_sent === true ? ' <span class="ml-1">📨</span>' : ''}</div>
                 <div class="text-white text-sm font-semibold mb-1 truncate">
                     ${apt.client_name}
-                    ${apt.telegram_notification_sent ? '<span class="ml-1 text-xs">📨</span>' : ''}
                 </div>
                 <div class="text-white text-xs opacity-90 truncate">${apt.service_name}</div>
             `;
 
-            if (apt.telegram_notification_sent) {
+            console.log('Appointment:', apt);
+            console.log('Telegram Notification Sent:', apt.telegram_notification_sent);
+            if (apt.telegram_notification_sent === true) {
                 card.classList.add('border-2', 'border-blue-300');
             }
             col.appendChild(card);

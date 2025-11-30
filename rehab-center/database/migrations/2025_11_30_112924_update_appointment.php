@@ -8,9 +8,14 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::table('appointments', function (Blueprint $table) {
-            $table->boolean('telegram_notification_sent')->default(false);
-        });
+        // Если колонки нет, создаем ее
+        if (!Schema::hasColumn('appointments', 'telegram_notification_sent')) {
+            Schema::table('appointments', function (Blueprint $table) {
+                $table->boolean('telegram_notification_sent')
+                      ->default(false)
+                      ->after('notes'); // Укажите после какого поля добавить
+            });
+        }
     }
 
     public function down()
