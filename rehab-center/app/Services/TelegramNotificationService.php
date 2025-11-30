@@ -287,6 +287,7 @@ class TelegramNotificationService
             $results['logs'][] = $log;
 
             if ($log->status === 'sent') {
+                $appointment->update(['telegram_notification_sent' => true]);
                 $results['success']++;
             } else {
                 $results['failed']++;

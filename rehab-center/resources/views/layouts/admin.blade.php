@@ -198,7 +198,7 @@
                     @endif
                     
                     <div class="border-t border-gray-700 mt-4 pt-4">
-                        <a href="{{ route('home') }}" 
+                        <a href="{{ route('/') }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
                             <i class="fas fa-external-link-alt w-6"></i>
                             <span class="ml-3">На сайт</span>

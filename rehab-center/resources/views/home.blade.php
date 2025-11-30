@@ -219,13 +219,13 @@
                                 @endphp
                                 
                                 @foreach($uniqueServices as $masterService)
-                                    <span class="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-xs font-medium">
+                                    <span class="bg-pink-100 text-black-700 px-3 py-1 rounded-full text-xs font-medium">
                                         {{ $masterService->service->name }}
                                     </span>
                                 @endforeach
                                 
                                 @if($master->masterServices->count() > 3)
-                                    <span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
+                                    <span class="bg-gray-100 text-black-600 px-3 py-1 rounded-full text-xs font-medium">
                                         +{{ $master->masterServices->count() - 3 }}
                                     </span>
                                 @endif
@@ -428,25 +428,32 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Налаштування Intersection Observer
+    // Настройки Intersection Observer
     const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        root: null, // viewport
+        rootMargin: '0px 0px -100px 0px', // Небольшой отступ снизу
+        threshold: 0.1 // Элемент виден на 10%
     };
 
+    // Функция для добавления анимации
+    const animateElement = (entry) => {
+        entry.target.classList.add('visible');
+        // Можно отключить наблюдение после первого появления
+        observer.unobserve(entry.target);
+    };
+
+    // Создаем Observer
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                // Можна відключити спостереження після появи для оптимізації
-                observer.unobserve(entry.target);
+                animateElement(entry);
             }
         });
     }, observerOptions);
 
-    // Спостерігаємо за всіма елементами з анімацією
-    const animatedElements = document.querySelectorAll('.fade-in-up, .fade-in-left, .fade-in-right, .scale-in');
-    animatedElements.forEach(el => observer.observe(el));
+    // Элементы для ленивой загрузки
+    const lazyElements = document.querySelectorAll('.fade-in-up, .fade-in-left, .fade-in-right, .scale-in');
+    lazyElements.forEach(el => observer.observe(el));
 });
 </script>
 @endpush

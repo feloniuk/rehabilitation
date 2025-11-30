@@ -400,17 +400,17 @@ function reloadTimeline(dayIndex) {
                     }
                 }
             });
-            
+
             var widthPercent = overlappingCount > 1 ? (100 / overlappingCount) : 100;
             var leftPercent = positionInOverlap * widthPercent;
-            
+
             var color = colors[(masterIdx + aptIndex) % colors.length];
-            
+
             // Обчислюємо час закінчення
             var endHours = Math.floor(aptEndMinutes / 60);
             var endMins = aptEndMinutes % 60;
             var endTimeStr = endHours.toString().padStart(2, '0') + ':' + endMins.toString().padStart(2, '0');
-            
+
             var card = document.createElement('div');
             card.className = 'appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
             card.style.cssText = 'top: ' + topPx + 'px; ' +
@@ -420,12 +420,20 @@ function reloadTimeline(dayIndex) {
                 'left: ' + leftPercent + '%; ' +
                 'width: calc(' + widthPercent + '% - 4px);';
             card.onclick = function() { showAppointmentDetails(apt.id); };
-            
+
             var aptTime = apt.time.substring(0, 5);
-            card.innerHTML = '<div class="text-white text-xs font-bold mb-1">' + aptTime + ' – ' + endTimeStr + '</div>' +
-                '<div class="text-white text-sm font-semibold mb-1 truncate">' + apt.client_name + '</div>' +
-                '<div class="text-white text-xs opacity-90 truncate">' + apt.service_name + '</div>';
-            
+            card.innerHTML = `
+                <div class="text-white text-xs font-bold mb-1">${aptTime} – ${endTimeStr}</div>
+                <div class="text-white text-sm font-semibold mb-1 truncate">
+                    ${apt.client_name}
+                    ${apt.telegram_notification_sent ? '<span class="ml-1 text-xs">📨</span>' : ''}
+                </div>
+                <div class="text-white text-xs opacity-90 truncate">${apt.service_name}</div>
+            `;
+
+            if (apt.telegram_notification_sent) {
+                card.classList.add('border-2', 'border-blue-300');
+            }
             col.appendChild(card);
         });
     });

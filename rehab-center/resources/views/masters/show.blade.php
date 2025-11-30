@@ -136,7 +136,7 @@
                                         <div class="flex-1 mb-4 md:mb-0">
                                             <!-- Service Icon -->
                                             <div class="flex items-start space-x-4">
-                                                <div class="w-12 h-12 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200 transition-colors">
+                                                <div class="w-12  bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200 transition-colors">
                                                     <i class="fas fa-spa text-pink-600"></i>
                                                 </div>
                                                 <div>

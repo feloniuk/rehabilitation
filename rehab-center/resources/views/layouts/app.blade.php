@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Реабілітаційний центр')</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pink: {
+                            '50': 'rgb(255, 240, 245)',
+                            '100': 'rgb(255, 224, 233)',
+                            '200': 'rgb(255, 212, 225)',
+                            '300': 'rgb(255, 200, 217)',
+                            '400': 'rgb(255, 188, 209)',
+                            '500': 'rgb(255, 176, 201)',
+                            '600': 'rgb(255, 164, 193)',
+                            '700': 'rgb(255, 152, 185)',
+                            '800': 'rgb(255, 140, 177)',
+                            '900': 'rgb(255, 128, 169)',
+                        },
+                        rose: {
+                            '600': 'rgb(239, 102, 136)',
+                            '700': 'rgb(191, 81, 108)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
