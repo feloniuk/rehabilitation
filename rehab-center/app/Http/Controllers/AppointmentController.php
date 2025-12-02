@@ -38,7 +38,7 @@ class AppointmentController extends Controller
         ]);
 
         // Создаем или находим клиента
-        $client = User::updateOrCreate(
+        $client = User::firstOrCreate(
             ['phone' => $request->phone],
             [
                 'name' => $request->name,
