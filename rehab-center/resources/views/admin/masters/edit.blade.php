@@ -147,12 +147,12 @@
             </div>
 
             <div class="mb-6">
-                <label class="flex items-center">
-                    <input type="checkbox" name="is_active" value="1" 
-                           {{ old('is_active', $master->is_active) ? 'checked' : '' }}
-                           class="mr-2">
-                    <span class="text-sm font-medium text-gray-700">Активний майстер</span>
-                </label>
+            <label class="flex items-center">
+                <input type="checkbox" name="is_active" value="1" 
+                    {{ old('is_active', $master->is_active) === true ? 'checked' : '' }}
+                    class="mr-2">
+                <span class="text-sm font-medium text-gray-700">Активний майстер</span>
+            </label>
             </div>
 
             <!-- Work Schedule -->
@@ -202,30 +202,43 @@
                         @php
                             $masterService = $master->masterServices->where('service_id', $service->id)->first();
                         @endphp
-                        <div class="border rounded-lg p-4">
+                        <div class="border rounded-lg p-4 service-block">
                             <div class="flex items-center mb-3">
                                 <input type="checkbox" id="service_{{ $service->id }}" 
-                                       {{ $masterService ? 'checked' : '' }}
-                                       onchange="toggleService({{ $service->id }})" class="mr-2">
+                                    name="service_checkbox_{{ $service->id }}" 
+                                    value="1"
+                                    {{ $masterService ? 'checked' : '' }}
+                                    onchange="toggleService({{ $service->id }})" class="mr-2 service-checkbox">
+                                    
                                 <label for="service_{{ $service->id }}" class="font-medium">
                                     {{ $service->name }}
                                 </label>
                             </div>
                             
-                            <div id="service_fields_{{ $service->id }}" class="space-y-2" style="display: {{ $masterService ? 'block' : 'none' }};">
+                            <div id="service_fields_{{ $service->id }}" 
+                                class="service-fields space-y-2" 
+                                style="display: {{ $masterService ? 'block' : 'none' }};">
                                 <div>
                                     <label class="block text-sm text-gray-600">Ціна (грн) *</label>
-                                    <input type="number" name="services[{{ $service->id }}][price]" step="0.01" min="0"
-                                           class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                                           value="{{ old("services.$service->id.price", $masterService->price ?? '') }}">
+                                    <input type="number" 
+                                        name="services[{{ $service->id }}][price]" 
+                                        step="0.01" 
+                                        min="0"
+                                        class="w-full px-2 py-1 border border-gray-300 rounded text-sm service-price"
+                                        value="{{ old("services.$service->id.price", $masterService->price ?? '') }}"
+                                        {{ $masterService ? 'required' : '' }}>
                                 </div>
                                 <div>
                                     <label class="block text-sm text-gray-600">Тривалість (хв)</label>
-                                    <input type="number" name="services[{{ $service->id }}][duration]" min="15"
-                                           class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                                           placeholder="{{ $service->duration }}" 
-                                           value="{{ old("services.$service->id.duration", $masterService->duration ?? '') }}">
-                                    <p class="text-xs text-gray-500">Залишіть пустим для використання стандартної тривалості ({{ $service->duration }} хв)</p>
+                                    <input type="number" 
+                                        name="services[{{ $service->id }}][duration]" 
+                                        min="15"
+                                        class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                        placeholder="{{ $service->duration }}" 
+                                        value="{{ old("services.$service->id.duration", $masterService->duration ?? '') }}">
+                                    <p class="text-xs text-gray-500">
+                                        Залишіть пустим для використання стандартної тривалості ({{ $service->duration }} хв)
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -248,17 +261,20 @@
 </div>
 
 @push('scripts')
+
 <script>
 function toggleService(serviceId) {
-    const checkbox = document.getElementById(`service_${serviceId}`);
-    const fields = document.getElementById(`service_fields_${serviceId}`);
-    
+    const block = document.querySelector(`#service_fields_${serviceId}`);
+    const checkbox = document.querySelector(`#service_${serviceId}`);
+    const priceInput = block.querySelector('.service-price');
+
     if (checkbox.checked) {
-        fields.style.display = 'block';
-        fields.querySelector('input[name$="[price]"]').required = true;
+        block.style.display = 'block';
+        priceInput.required = true;
     } else {
-        fields.style.display = 'none';
-        fields.querySelector('input[name$="[price]"]').required = false;
+        block.style.display = 'none';
+        priceInput.required = false;
+        // priceInput.value = '';
     }
 }
 </script>

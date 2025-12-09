@@ -92,35 +92,42 @@ class MasterController extends Controller
     {
         $master = User::where('role', 'master')->findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|min:8',
-            'phone' => 'nullable|string|max:20',
-            'description' => 'nullable|string',
-            'specialty' => 'nullable|string|max:255',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'work_schedule' => 'required|array',
-            'services' => 'nullable|array',
-            'experience_years' => 'nullable|integer|min:0',
-            'clients_count' => 'nullable|integer|min:0',
-            'certificates_count' => 'nullable|integer|min:0',
-        ]);
+    // Собираем все чекбоксы услуг вручную
+        $serviceCheckboxes = collect($request->all())
+            ->filter(function($value, $key) {
+                return str_starts_with($key, 'service_checkbox_');
+            })
+            ->filter(function($value) {
+                return $value == '1';
+            });
 
+        // Собираем услуги с ценой
         $selectedServices = [];
-        if ($request->has('services')) {
-            foreach ($request->services as $serviceId => $serviceData) {
-                if (isset($serviceData['price']) && !empty($serviceData['price'])) {
-                    $selectedServices[$serviceId] = $serviceData;
-                }
+        foreach ($request->input('services', []) as $serviceId => $serviceData) {
+            $checkboxKey = "service_checkbox_{$serviceId}";
+            
+            if (
+                isset($request[$checkboxKey]) && 
+                $request[$checkboxKey] == '1' && 
+                isset($serviceData['price']) && 
+                $serviceData['price'] !== null && 
+                $serviceData['price'] !== ''
+            ) {
+                $selectedServices[$serviceId] = $serviceData;
             }
         }
 
-        if (empty($selectedServices)) {
-            return back()->withErrors(['services' => 'Оберіть хоча б одну послугу та вкажіть ціну.'])
-                        ->withInput();
+        // ЖЕСТКАЯ валидация
+        if ($selectedServices === []) {
+            return back()
+                ->withErrors([
+                    'services' => 'Потрібно вибрати хоча б одну послугу з встановленою ціною!'
+                ])
+                ->withInput()
+                ->with('error', 'Оберіть та вкажіть ціну принаймні для однієї послуги');
         }
 
+        // Остальная логика без изменений...
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
@@ -128,7 +135,7 @@ class MasterController extends Controller
             'description' => $request->description,
             'specialty' => $request->specialty,
             'work_schedule' => $request->work_schedule,
-            'is_active' => $request->has('is_active'),
+            'is_active' => $request->has('is_active') ? true : false,
             'experience_years' => $request->experience_years ?? 0,
             'clients_count' => $request->clients_count ?? 0,
             'certificates_count' => $request->certificates_count ?? 0,
@@ -140,16 +147,16 @@ class MasterController extends Controller
 
         if ($request->hasFile('photo')) {
             try {
-                // Видаляємо стару фотографію
+                // Удаляем старую фотографию
                 if ($master->photo) {
                     Storage::disk('public')->delete($master->photo);
                 }
                 
-                // Зберігаємо нову
+                // Сохраняем новую
                 $path = $request->file('photo')->store('masters', 'public');
                 $updateData['photo'] = $path;
                 
-                // Перевірка збереження
+                // Проверка сохранения
                 if (!Storage::disk('public')->exists($path)) {
                     Log::error("Photo not saved: {$path}");
                 }
@@ -160,7 +167,10 @@ class MasterController extends Controller
 
         $master->update($updateData);
 
+        // Полное удаление старых услуг перед добавлением новых
         $master->masterServices()->delete();
+
+        // Создание новых услуг
         foreach ($selectedServices as $serviceId => $serviceData) {
             MasterService::create([
                 'master_id' => $master->id,
