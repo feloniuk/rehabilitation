@@ -28,6 +28,7 @@ class MasterController extends Controller
             'experience_years' => 'nullable|integer|min:0',
             'clients_count' => 'nullable|integer|min:0',
             'certificates_count' => 'nullable|integer|min:0',
+            'rating' => 'nullable|integer|min:1|max:5',
         ]);
 
         $selectedServices = [];
@@ -51,6 +52,7 @@ class MasterController extends Controller
             'phone' => $request->phone,
             'role' => 'master',
             'description' => $request->description,
+            'rating' => $request->rating,
             'specialty' => $request->specialty,
             'work_schedule' => $request->work_schedule,
             'is_active' => true,
@@ -133,6 +135,7 @@ class MasterController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'description' => $request->description,
+            'rating' => $request->rating,
             'specialty' => $request->specialty,
             'work_schedule' => $request->work_schedule,
             'is_active' => $request->has('is_active') ? true : false,

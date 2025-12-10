@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\MasterController as AdminMasterController;
 use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
 use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Admin\ManualAppointmentController;
@@ -62,6 +63,7 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
+        Route::resource('clients', ClientController::class);
         Route::resource('masters', AdminMasterController::class);
         Route::resource('services', AdminServiceController::class);
 

@@ -27,6 +27,9 @@ class ServiceController extends Controller
             'description' => 'nullable|string',
             'duration' => 'required|integer|min:1',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'faqs' => 'nullable|array',
+            'faqs.*.question' => 'required|string',
+            'faqs.*.answer' => 'required|string',
         ]);
 
         $serviceData = [
@@ -37,6 +40,13 @@ class ServiceController extends Controller
         ];
 
         $service = Service::create($serviceData);
+
+        if ($request->has('faqs')) {
+            $service->faqs()->delete(); // Удаляем старые
+            foreach ($request->faqs as $faqData) {
+                $service->faqs()->create($faqData);
+            }
+        }
 
         // Завантаження фото
         if ($request->hasFile('photo')) {
@@ -72,6 +82,9 @@ class ServiceController extends Controller
             'description' => 'nullable|string',
             'duration' => 'required|integer|min:15',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'faqs' => 'nullable|array',
+            'faqs.*.question' => 'required|string',
+            'faqs.*.answer' => 'required|string',
         ]);
 
         $updateData = [
@@ -88,6 +101,15 @@ class ServiceController extends Controller
                 $updateData['photo'] = null;
             }
         }
+
+        
+        if ($request->has('faqs')) {
+            $service->faqs()->delete(); // Удаляем старые
+            foreach ($request->faqs as $faqData) {
+                $service->faqs()->create($faqData);
+            }
+        }
+
         // Завантаження нового фото
         elseif ($request->hasFile('photo')) {
             try {
@@ -124,6 +146,7 @@ class ServiceController extends Controller
             Storage::disk('public')->delete($service->photo);
         }
         
+        $service->faqs()->delete();
         $service->delete();
 
         return redirect()->route('admin.services.index')

@@ -42,10 +42,12 @@
                     
                     <!-- Rating Stars -->
                     <div class="flex justify-center mb-6">
-                        @for($i = 1; $i <= 5; $i++)
+                        @for($i = 1; $i <= $master->rating; $i++)
                             <i class="fas fa-star text-yellow-400 text-sm"></i>
                         @endfor
-                        <span class="text-sm text-gray-600 ml-2">(4.9)</span>
+                        @for($i = $master->rating + 1; $i <= 5; $i++)
+                            <i class="fas fa-star text-gray-300 text-sm"></i>
+                        @endfor
                     </div>
                 </div>
 

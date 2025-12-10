@@ -22,6 +22,11 @@ class Service extends Model
                     ->withPivot('price', 'duration');
     }
 
+    public function faqs()
+    {
+        return $this->hasMany(ServiceFaq::class)->orderBy('order');
+    }
+
     public function masterServices()
     {
         return $this->hasMany(MasterService::class);

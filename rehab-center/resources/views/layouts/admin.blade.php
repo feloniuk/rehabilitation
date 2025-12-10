@@ -155,6 +155,12 @@
                             <i class="fas fa-users w-6"></i>
                             <span class="ml-3">Майстри</span>
                         </a>
+
+                        <a href="{{ route('admin.clients.index') }}" 
+                           class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.clients.*') ? 'bg-gray-700 text-white' : '' }}">
+                            <i class="fas fa-users w-6"></i>
+                            <span class="ml-3">Клієнти</span>
+                        </a>
                         
                         <a href="{{ route('admin.services.index') }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.services.*') ? 'bg-gray-700 text-white' : '' }}">

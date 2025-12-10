@@ -82,6 +82,22 @@
                 @enderror
             </div>
 
+            
+
+            <div class="mb-6">
+                <label for="rating" class="block text-sm font-medium text-gray-700 mb-2">
+                    Рейтинг *
+                </label>
+                <select id="rating" name="rating" required 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    @for($i = 1; $i <= 5; $i++)
+                        <option value="{{ $i }}" {{ (old('rating', $master->rating) == $i) ? 'selected' : '' }}>
+                            {{ $i }} зірок
+                        </option>
+                    @endfor
+                </select>
+            </div>
+
             <div class="mb-6">
                 <label for="specialty" class="block text-sm font-medium text-gray-700 mb-2">Спеціалізація</label>
                 <input type="text" id="specialty" name="specialty" 

@@ -260,52 +260,34 @@
     </section>
 
     <!-- FAQ Section -->
-    <section class="mb-12">
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Часті питання</h2>
-            
-            <div class="max-w-3xl mx-auto space-y-6">
-                <div class="border border-gray-200 rounded-lg">
-                    <button class="w-full text-left p-6 focus:outline-none" onclick="toggleFaq(1)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-800">Скільки сеансів потрібно для результату?</h3>
-                            <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="icon-1"></i>
-                        </div>
-                    </button>
-                    <div class="hidden p-6 pt-0 text-gray-600" id="answer-1">
-                        Кількість сеансів залежить від індивідуальних потреб та стану здоров'я. 
-                        Зазвичай рекомендується курс з 5-10 сеансів для досягнення стабільного результату.
-                    </div>
-                </div>
+    @if($service->faqs->count() > 0)
+        <section class="mb-12">
+            <div class="bg-white rounded-2xl shadow-xl p-8">
+                <h2 class="text-3xl font-bold text-gray-800 mb-8 text-center">Часті запитання</h2>
                 
-                <div class="border border-gray-200 rounded-lg">
-                    <button class="w-full text-left p-6 focus:outline-none" onclick="toggleFaq(2)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-800">Чи можна скасувати запис?</h3>
-                            <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="icon-2"></i>
+                <div class="max-w-3xl mx-auto space-y-6">
+                    @foreach($service->faqs as $faq)
+                        <div class="border border-gray-200 rounded-lg">
+                            <button class="w-full text-left p-6 focus:outline-none" 
+                                    onclick="toggleFaq({{ $loop->index }})">
+                                <div class="flex justify-between items-center">
+                                    <h3 class="font-semibold text-gray-800">
+                                        {{ $faq->question }}
+                                    </h3>
+                                    <i class="fas fa-chevron-down text-gray-400 transform transition-transform" 
+                                    id="icon-{{ $loop->index }}"></i>
+                                </div>
+                            </button>
+                            <div class="hidden p-6 pt-0 text-gray-600" 
+                                id="answer-{{ $loop->index }}">
+                                {{ $faq->answer }}
+                            </div>
                         </div>
-                    </button>
-                    <div class="hidden p-6 pt-0 text-gray-600" id="answer-2">
-                        Так, ви можете скасувати запис не пізніше ніж за 24 години до призначеного часу. 
-                        Для скасування зв'яжіться з нами по телефону.
-                    </div>
-                </div>
-                
-                <div class="border border-gray-200 rounded-lg">
-                    <button class="w-full text-left p-6 focus:outline-none" onclick="toggleFaq(3)">
-                        <div class="flex justify-between items-center">
-                            <h3 class="font-semibold text-gray-800">Які протипоказання до процедури?</h3>
-                            <i class="fas fa-chevron-down text-gray-400 transform transition-transform" id="icon-3"></i>
-                        </div>
-                    </button>
-                    <div class="hidden p-6 pt-0 text-gray-600" id="answer-3">
-                        Протипоказання обговорюються індивідуально на консультації. 
-                        Загалом не рекомендується при гострих запальних процесах та деяких хронічних захворюваннях.
-                    </div>
+                    @endforeach
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    @endif
 </div>
 
 @push('scripts')
@@ -317,6 +299,15 @@ function toggleFaq(id) {
     answer.classList.toggle('hidden');
     icon.classList.toggle('rotate-180');
 }
+
+
+function toggleFaq(id) {
+        const answer = document.getElementById(`answer-${id}`);
+        const icon = document.getElementById(`icon-${id}`);
+        
+        answer.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
 </script>
 @endpush
 @endsection

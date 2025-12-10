@@ -111,6 +111,36 @@
             </label>
         </div>
 
+        <!-- В секции после основных полей -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-4">Часті запитання (FAQ)</h3>
+            <div id="faqs-container">
+                @foreach($service->faqs as $index => $faq)
+                    <div class="faq-item mb-4 border p-4 rounded">
+                        <input type="text" 
+                            name="faqs[{{ $index }}][question]" 
+                            placeholder="Питання" 
+                            value="{{ $faq->question }}"
+                            class="w-full mb-2 px-3 py-2 border border-gray-300 rounded-md">
+                        <textarea 
+                            name="faqs[{{ $index }}][answer]" 
+                            placeholder="Відповідь" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            rows="3">{{ $faq->answer }}</textarea>
+                        <button type="button" onclick="removeFaqItem(this)" 
+                                class="mt-2 text-red-600">
+                            Видалити
+                        </button>
+                    </div>
+                @endforeach
+            </div>
+            <button type="button" onclick="addFaqItem()" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded">
+                Додати FAQ
+            </button>
+        </div>
+
+
         <div class="flex justify-between items-center">
             <a href="{{ route('admin.services.index') }}" 
                class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
@@ -142,6 +172,36 @@
 
 @push('scripts')
 <script>
+    
+let faqIndex = {{ $service->faqs->count() }};
+
+function addFaqItem() {
+    const container = document.getElementById('faqs-container');
+    const newItem = document.createElement('div');
+    newItem.classList.add('faq-item', 'mb-4', 'border', 'p-4', 'rounded');
+    newItem.innerHTML = `
+        <input type="text" 
+               name="faqs[${faqIndex}][question]" 
+               placeholder="Питання" 
+               class="w-full mb-2 px-3 py-2 border border-gray-300 rounded-md">
+        <textarea 
+            name="faqs[${faqIndex}][answer]" 
+            placeholder="Відповідь" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+            rows="3"></textarea>
+        <button type="button" onclick="removeFaqItem(this)" 
+                class="mt-2 text-red-600">
+            Видалити
+        </button>
+    `;
+    container.appendChild(newItem);
+    faqIndex++;
+}
+
+function removeFaqItem(btn) {
+    btn.closest('.faq-item').remove();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const photoInput = document.getElementById('photo');
     const photoPreview = document.getElementById('photo-preview');
