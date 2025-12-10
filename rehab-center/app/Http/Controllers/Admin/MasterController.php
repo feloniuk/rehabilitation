@@ -94,7 +94,7 @@ class MasterController extends Controller
     {
         $master = User::where('role', 'master')->findOrFail($id);
 
-    // Собираем все чекбоксы услуг вручную
+        // Собираем все чекбоксы услуг вручную
         $serviceCheckboxes = collect($request->all())
             ->filter(function($value, $key) {
                 return str_starts_with($key, 'service_checkbox_');
@@ -129,7 +129,6 @@ class MasterController extends Controller
                 ->with('error', 'Оберіть та вкажіть ціну принаймні для однієї послуги');
         }
 
-        // Остальная логика без изменений...
         $updateData = [
             'name' => $request->name,
             'email' => $request->email,
