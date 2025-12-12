@@ -12,7 +12,7 @@ class Appointment extends Model
 
     protected $fillable = [
         'client_id', 'master_id', 'service_id', 'appointment_date', 
-        'appointment_time', 'duration', 'price', 'status', 'notes'
+        'appointment_time', 'duration', 'price', 'status', 'notes', 'telegram_notification_sent'
     ];
 
     protected $casts = [

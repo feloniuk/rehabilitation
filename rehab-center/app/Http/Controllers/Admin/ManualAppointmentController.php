@@ -36,14 +36,15 @@ class ManualAppointmentController extends Controller
         $perPage = 15;
 
         $query = User::where('role', 'client')
-            ->select('id', 'name', 'phone', 'email')
+            ->select('id', 'name', 'phone', 'email', 'description')
             ->orderBy('name', 'asc');
 
         if ($search && strlen($search) >= 2) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                 ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -58,7 +59,8 @@ class ManualAppointmentController extends Controller
                 'text' => $client->name . ' (' . $client->phone . ')',
                 'name' => $client->name,
                 'phone' => $client->phone,
-                'email' => $client->email
+                'email' => $client->email,
+                'description' => $client->description
             ];
         });
 

@@ -245,6 +245,10 @@ class TelegramNotificationService
 
         if ($success) {
             $log->markAsSent();
+
+            $appointment->update([
+                'telegram_notification_sent' => true
+            ]);
         } else {
             $log->markAsFailed('Не вдалося надіслати повідомлення');
         }

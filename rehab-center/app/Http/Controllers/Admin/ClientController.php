@@ -30,6 +30,7 @@ class ClientController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'phone' => 'required|string|max:20|unique:users,phone',
+            'description' => 'nullable|string|max:500',
             'password' => 'required|min:8|confirmed'
         ], [
             'phone.unique' => 'Клієнт з таким телефоном вже існує',
@@ -40,6 +41,7 @@ class ClientController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'description' => $request->description,
             'password' => Hash::make($request->password),
             'role' => 'client',
             'is_active' => true
@@ -72,6 +74,7 @@ class ClientController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:500',
             'email' => [
                 'required', 
                 'email', 
@@ -90,6 +93,7 @@ class ClientController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
+            'description' => $request->description,
             'is_active' => $request->has('is_active')
         ];
 
