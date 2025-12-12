@@ -8,6 +8,8 @@ use App\Models\Service;
 use App\Models\MasterService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Services\MasterNotificationService;
+use App\Services\MasterTelegramBotNotificationService;
 
 class AppointmentController extends Controller
 {
@@ -25,7 +27,7 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('master', 'service', 'masterService'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -66,6 +68,8 @@ class AppointmentController extends Controller
             'price' => $price,
             'notes' => $request->notes,
         ]);
+
+        $masterTelegramBotService->sendMasterNotification($appointment);
 
         return redirect()->route('appointment.success')->with('appointment_id', $appointment->id);
     }

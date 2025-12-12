@@ -53,12 +53,20 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($client->is_active)
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                <span style="
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     <i class="fas fa-check-circle mr-1"></i>
                                     Активний
                                 </span>
                             @else
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                <span style="
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                     <i class="fas fa-times-circle mr-1"></i>
                                     Неактивний
                                 </span>

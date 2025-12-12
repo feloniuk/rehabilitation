@@ -91,7 +91,7 @@
                 <select id="rating" name="rating" required 
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                     @for($i = 1; $i <= 5; $i++)
-                        <option value="{{ $i }}" {{ (old('rating', $master->rating) == $i) ? 'selected' : '' }}>
+                        <option value="{{ $i }}">
                             {{ $i }} зірок
                         </option>
                     @endfor

@@ -19,35 +19,6 @@
             <i class="fas fa-edit mr-2"></i>Редагувати головну
         </a>
     </div>
-    
-    <div class="p-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {{-- Статистика головної сторінки --}}
-            <div class="bg-white border-2 border-pink-200 rounded-lg p-4">
-                <div class="text-pink-600 text-3xl mb-2">
-                    <i class="fas fa-align-left"></i>
-                </div>
-                <h4 class="font-semibold text-gray-800 mb-1">{{ $homePageBlocks->count() }}</h4>
-                <p class="text-sm text-gray-600">Текстових блоків</p>
-            </div>
-            
-            <div class="bg-white border-2 border-blue-200 rounded-lg p-4">
-                <div class="text-blue-600 text-3xl mb-2">
-                    <i class="fas fa-language"></i>
-                </div>
-                <h4 class="font-semibold text-gray-800 mb-1">Українська</h4>
-                <p class="text-sm text-gray-600">Мова контенту</p>
-            </div>
-            
-            <div class="bg-white border-2 border-purple-200 rounded-lg p-4">
-                <div class="text-purple-600 text-3xl mb-2">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <h4 class="font-semibold text-gray-800 mb-1">Онлайн</h4>
-                <p class="text-sm text-gray-600">Статус публікації</p>
-            </div>
-        </div>
-    </div>
 </div>
 
 <div class="bg-white rounded-lg shadow">
@@ -87,12 +58,20 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @if($page->is_active)
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                <span style="
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     <i class="fas fa-check-circle mr-1"></i>
                                     Активна
                                 </span>
                             @else
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                <span style="
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                     <i class="fas fa-times-circle mr-1"></i>
                                     Неактивна
                                 </span>

@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\MasterService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Services\MasterTelegramBotNotificationService;
 
 class ManualAppointmentController extends Controller
 {
@@ -75,7 +76,7 @@ class ManualAppointmentController extends Controller
     /**
      * Збереження запису (з можливістю вручну вказати час)
      */
-    public function store(Request $request)
+    public function store(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $rules = [
             'master_id' => 'required|exists:users,id',
@@ -143,6 +144,8 @@ class ManualAppointmentController extends Controller
             'notes' => $request->notes,
             'status' => 'scheduled',
         ]);
+
+        $masterTelegramBotService->sendMasterNotification($appointment);
 
         return redirect()->route('admin.appointments.index')
             ->with('success', 'Запис успішно створено');
