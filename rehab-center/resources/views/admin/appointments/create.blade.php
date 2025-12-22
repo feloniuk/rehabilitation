@@ -190,6 +190,8 @@
             </div>
 
             {{-- Дозвіл на нахлест --}}
+            
+            @if(auth()->user()->isAdmin())
             <div class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <label class="flex items-center">
                     <input type="checkbox" name="allow_overlap" value="1" 
@@ -201,6 +203,7 @@
                     </span>
                 </label>
             </div>
+            @endif
 
             {{-- Кнопки --}}
             <div class="flex justify-end space-x-4">
