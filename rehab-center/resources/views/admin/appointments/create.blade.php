@@ -285,14 +285,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
+                    // Внутри функции, где происходит рендеринг результатов
                     resultsContainer.innerHTML = data.results.map(client => `
                         <label class="flex items-center p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
                             <input type="radio" 
-                                   name="client_radio" 
-                                   value="${client.id}" 
-                                   data-name="${client.name}"
-                                   data-phone="${client.phone}"
-                                   class="mr-4 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500">
+                                name="client_radio" 
+                                value="${client.id}" 
+                                data-name="${client.name}"
+                                data-phone="${client.phone}"
+                                class="mr-4 w-5 h-5 text-blue-600 focus:ring-2 focus:ring-blue-500">
                             <div class="flex-1">
                                 <div class="font-semibold text-gray-900">${client.name}</div>
                                 <div class="text-sm text-gray-600 mt-1">
@@ -300,6 +301,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                     ${client.phone}
                                     ${client.email ? `<span class="ml-3"><i class="fas fa-envelope text-gray-400 mr-1"></i>${client.email}</span>` : ''}
                                 </div>
+                                ${client.description ? `
+                                    <div class="text-xs text-gray-500 mt-2 bg-gray-100 p-2 rounded">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        ${client.description}
+                                    </div>
+                                ` : ''}
                             </div>
                             <i class="fas fa-check text-blue-600 opacity-0 transition-opacity"></i>
                         </label>

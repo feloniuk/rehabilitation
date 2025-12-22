@@ -433,7 +433,7 @@ function reloadTimeline(dayIndex) {
             console.log('Appointment:', apt);
             console.log('Telegram Notification Sent:', apt.telegram_notification_sent);
             if (apt.telegram_notification_sent === true) {
-                card.classList.add('border-2', 'border-blue-300');
+                card.classList.add('border-2', 'border-red-400');
             }
             col.appendChild(card);
         });

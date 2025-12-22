@@ -9,6 +9,7 @@ use App\Models\Service;
 use App\Models\MasterService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Services\MasterTelegramBotNotificationService;
 
 class ManualAppointmentController extends Controller
 {
@@ -36,14 +37,15 @@ class ManualAppointmentController extends Controller
         $perPage = 15;
 
         $query = User::where('role', 'client')
-            ->select('id', 'name', 'phone', 'email')
+            ->select('id', 'name', 'phone', 'email', 'description')
             ->orderBy('name', 'asc');
 
         if ($search && strlen($search) >= 2) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                 ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%");
+                ->orWhere('email', 'like', "%{$search}%")
+                ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -58,7 +60,8 @@ class ManualAppointmentController extends Controller
                 'text' => $client->name . ' (' . $client->phone . ')',
                 'name' => $client->name,
                 'phone' => $client->phone,
-                'email' => $client->email
+                'email' => $client->email,
+                'description' => $client->description
             ];
         });
 
@@ -73,7 +76,7 @@ class ManualAppointmentController extends Controller
     /**
      * Збереження запису (з можливістю вручну вказати час)
      */
-    public function store(Request $request)
+    public function store(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $rules = [
             'master_id' => 'required|exists:users,id',
@@ -141,6 +144,8 @@ class ManualAppointmentController extends Controller
             'notes' => $request->notes,
             'status' => 'scheduled',
         ]);
+
+        $masterTelegramBotService->sendMasterNotification($appointment);
 
         return redirect()->route('admin.appointments.index')
             ->with('success', 'Запис успішно створено');

@@ -40,4 +40,8 @@ return [
         'api_hash' => env('TELEGRAM_API_HASH'),
     ],
 
+    'telegram_bot' => [
+        'token' => env('TELEGRAM_BOT_TOKEN'),
+    ],
+
 ];

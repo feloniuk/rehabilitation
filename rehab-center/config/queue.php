@@ -72,6 +72,12 @@ return [
             'after_commit' => false,
         ],
 
+
+        'master_notifications' => [
+            'driver' => 'database', // или database
+            'queue' => 'master_notifications',
+        ],
+
     ],
 
     /*

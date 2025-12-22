@@ -16,7 +16,7 @@
             
             <!-- Логотип -->
             <div class="mb-8 flex justify-center">
-                <img src="{{ asset('logo.png') }}" 
+                <img src="{{ asset('logo.webp') }}" 
                      alt="{{ \App\Models\Setting::get('center_name', 'Реабілітаційний центр') }}"
                      class="max-w-md w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-300">
             </div>
