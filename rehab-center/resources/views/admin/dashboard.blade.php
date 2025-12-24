@@ -315,7 +315,44 @@ var currentDayIndex = calendarData.todayIndex;
 
 document.addEventListener('DOMContentLoaded', function() {
     selectDate(currentDayIndex);
+    scrollToCurrentHour();
 });
+
+function scrollToCurrentHour() {
+    // Отримуємо поточний час (без хвилин)
+    var now = new Date();
+    var currentHour = now.getHours();
+    var currentMinute = now.getMinutes();
+    var currentTimeStr = currentHour.toString().padStart(2, '0') + ':' + currentMinute.toString().padStart(2, '0');
+
+    // Шукаємо індекс слота, який <= поточному часу
+    var firstSlotTime = calendarData.timeSlots[0];
+    var firstSlotParts = firstSlotTime.split(':');
+    var firstSlotMinutes = parseInt(firstSlotParts[0]) * 60 + parseInt(firstSlotParts[1]);
+
+    var targetSlotIndex = 0;
+    for (var i = 0; i < calendarData.timeSlots.length; i++) {
+        var slotParts = calendarData.timeSlots[i].split(':');
+        var slotMinutes = parseInt(slotParts[0]) * 60 + parseInt(slotParts[1]);
+        var nowMinutes = currentHour * 60 + currentMinute;
+
+        if (slotMinutes <= nowMinutes) {
+            targetSlotIndex = i;
+        } else {
+            break;
+        }
+    }
+
+    // Кожен слот має висоту 80px (h-20)
+    var slotHeightPx = 80;
+    var scrollPosition = targetSlotIndex * slotHeightPx;
+
+    // Скролимо контейнер
+    var timelineContainer = document.querySelector('.timeline-container');
+    if (timelineContainer) {
+        timelineContainer.scrollTop = scrollPosition;
+    }
+}
 
 function selectDate(index) {
     currentDayIndex = index;

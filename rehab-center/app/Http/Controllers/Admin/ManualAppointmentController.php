@@ -103,6 +103,18 @@ class ManualAppointmentController extends Controller
 
         $validated = $request->validate($rules);
 
+        // Перевірка що час в майбутньому
+        $appointmentDateTime = Carbon::createFromFormat(
+            'Y-m-d H:i',
+            $request->appointment_date.' '.substr($request->appointment_time, 0, 5)
+        );
+
+        if ($appointmentDateTime->isPast()) {
+            return back()->withErrors([
+                'appointment_date' => 'Неможливо створити запис на прошедший час. Виберіть дату та час в майбутньому.',
+            ])->withInput();
+        }
+
         // Перевірка на конфлікт часу
         if (! $request->boolean('allow_overlap')) {
             $conflict = $this->checkTimeConflict(

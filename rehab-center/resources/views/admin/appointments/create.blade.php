@@ -65,8 +65,9 @@
                         <i class="fas fa-calendar text-purple-500 mr-1"></i>
                         Дата *
                     </label>
-                    <input type="date" id="appointment_date" name="appointment_date" required 
+                    <input type="date" id="appointment_date" name="appointment_date" required
                            value="{{ old('appointment_date', date('Y-m-d')) }}"
+                           min="{{ date('Y-m-d') }}"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
 
@@ -415,6 +416,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         e.target.value = value.trim();
     });
+
+    // Обмеження часу для сьогоднішньої дати
+    function updateTimeRestriction() {
+        const dateInput = document.getElementById('appointment_date');
+        const timeInput = document.getElementById('appointment_time');
+        const selectedDate = dateInput.value;
+        const today = new Date().toISOString().split('T')[0];
+
+        if (selectedDate === today) {
+            // Якщо вибрана сьогодняшня дата, встановлюємо мінімальний час
+            const now = new Date();
+            const currentHour = String(now.getHours()).padStart(2, '0');
+            const currentMinute = String(now.getMinutes()).padStart(2, '0');
+            const currentTime = `${currentHour}:${currentMinute}`;
+
+            timeInput.min = currentTime;
+
+            // Якщо вибраний час менше за поточний, очищаємо його
+            if (timeInput.value < currentTime) {
+                timeInput.value = currentTime;
+            }
+        } else {
+            // Для майбутніх дат можна вибирати будь-який час
+            timeInput.min = '00:00';
+        }
+    }
+
+    // Обмеження дати та часу
+    document.getElementById('appointment_date').addEventListener('change', updateTimeRestriction);
+    document.getElementById('appointment_time').addEventListener('change', updateTimeRestriction);
+
+    // Ініціалізація при завантаженні сторінки
+    updateTimeRestriction();
 
     // Валідація форми
     document.getElementById('appointment-form').addEventListener('submit', function(e) {
