@@ -52,7 +52,7 @@
         </div>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up delay-100">
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up">
                 <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <i class="fas fa-user-md text-2xl text-pink-600"></i>
                 </div>
@@ -63,8 +63,8 @@
                     {!! \App\Models\TextBlock::get('feature_1_text', 'Наші майстри мають багаторічний досвід та постійно підвищують кваліфікацію') !!}
                 </p>
             </div>
-            
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up delay-300">
+
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up">
                 <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <i class="fas fa-heart text-2xl text-blue-600"></i>
                 </div>
@@ -75,8 +75,8 @@
                     {!! \App\Models\TextBlock::get('feature_2_text', 'Кожна програма реабілітації розробляється з урахуванням особистих потреб') !!}
                 </p>
             </div>
-            
-            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up delay-500">
+
+            <div class="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 fade-in-up">
                 <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <i class="fas fa-award text-2xl text-rose-600"></i>
                 </div>
@@ -105,7 +105,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($services as $index => $service)
-                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-[480px] scale-in" style="transition-delay: {{ $index * 0.1 }}s;">
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-[480px] scale-in">
                     <!-- Фото послуги - фіксована висота -->
                     <div class="h-48 bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center relative overflow-hidden flex-shrink-0">
                         @if($service->photo)
@@ -179,7 +179,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             @foreach($masters as $index => $master)
-                <div style="display: flex; flex-direction: column; transition-delay: {{ $index * 0.1 }}s;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden fade-in-up">
+                <div style="display: flex; flex-direction: column;" class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden fade-in-up">
                     <div class="relative h-64 overflow-hidden">
                         @if($master->photo)
                             <img src="{{ asset('storage/' . $master->photo) }}"
@@ -272,10 +272,10 @@
         <h2 class="text-4xl font-bold mb-6 fade-in-up">
             {!! \App\Models\TextBlock::get('cta_title', 'Готові почати шлях до здоров\'я?') !!}
         </h2>
-        <p class="text-xl mb-8 opacity-90 fade-in-up delay-200">
+        <p class="text-xl mb-8 opacity-90 fade-in-up">
             {!! \App\Models\TextBlock::get('cta_subtitle', 'Зв\'яжіться з нами прямо зараз та отримайте професійну консультацію') !!}
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in-up delay-400">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in-up">
             <a href="tel:{{ \App\Models\Setting::get('center_phone') }}"
                class="bg-white text-pink-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors">
                 <i class="fas fa-phone mr-2"></i>
@@ -293,7 +293,7 @@
 <section class="py-20 bg-white">
     <div class="max-w-7xl mx-auto px-4">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div class="group fade-in-up delay-100">
+            <div class="group fade-in-up">
                 <div class="text-4xl font-bold text-pink-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_specialists_count', $masters->count() . '+') !!}
                 </div>
@@ -301,7 +301,7 @@
                     {!! \App\Models\TextBlock::get('stats_specialists_label', 'Спеціалістів') !!}
                 </div>
             </div>
-            <div class="group fade-in-up delay-200">
+            <div class="group fade-in-up">
                 <div class="text-4xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform">
                     {{ $services->count() }}+
                 </div>
@@ -309,7 +309,7 @@
                     {!! \App\Models\TextBlock::get('stats_services_label', 'Видів послуг') !!}
                 </div>
             </div>
-            <div class="group fade-in-up delay-300">
+            <div class="group fade-in-up">
                 <div class="text-4xl font-bold text-rose-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_clients_count', '100+') !!}
                 </div>
@@ -317,7 +317,7 @@
                     {!! \App\Models\TextBlock::get('stats_clients_label', 'Задоволених клієнтів') !!}
                 </div>
             </div>
-            <div class="group fade-in-up delay-400">
+            <div class="group fade-in-up">
                 <div class="text-4xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform">
                     {!! \App\Models\TextBlock::get('stats_experience_count', '5+') !!}
                 </div>
@@ -374,7 +374,7 @@
 .fade-in-up {
     opacity: 0;
     transform: translateY(30px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
 .fade-in-up.visible {
@@ -385,7 +385,7 @@
 .fade-in-left {
     opacity: 0;
     transform: translateX(-30px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
 .fade-in-left.visible {
@@ -396,7 +396,7 @@
 .fade-in-right {
     opacity: 0;
     transform: translateX(30px);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
 .fade-in-right.visible {
@@ -407,7 +407,7 @@
 .scale-in {
     opacity: 0;
     transform: scale(0.9);
-    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
 }
 
 .scale-in.visible {
@@ -415,13 +415,6 @@
     transform: scale(1);
 }
 
-/* Затримки для послідовної появи */
-.delay-100 { transition-delay: 0.1s; }
-.delay-200 { transition-delay: 0.2s; }
-.delay-300 { transition-delay: 0.3s; }
-.delay-400 { transition-delay: 0.4s; }
-.delay-500 { transition-delay: 0.5s; }
-.delay-600 { transition-delay: 0.6s; }
 </style>
 @endpush
 
@@ -431,8 +424,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Настройки Intersection Observer
     const observerOptions = {
         root: null, // viewport
-        rootMargin: '0px 0px -100px 0px', // Небольшой отступ снизу
-        threshold: 0.1 // Элемент виден на 10%
+        rootMargin: '0px 0px -50px 0px', // Меньший отступ для більш швидкої детекції
+        threshold: 0 // Навіть найменша видимість активує анімацію
     };
 
     // Функция для добавления анимации
