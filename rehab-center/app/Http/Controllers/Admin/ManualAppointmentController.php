@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Helpers\PhoneHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\User;
-use App\Models\Service;
 use App\Models\MasterService;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
+use App\Models\Service;
+use App\Models\User;
 use App\Services\MasterTelegramBotNotificationService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ManualAppointmentController extends Controller
 {
@@ -37,39 +38,41 @@ class ManualAppointmentController extends Controller
         $perPage = 15;
 
         $query = User::where('role', 'client')
-            ->select('id', 'name', 'phone', 'email', 'description')
+            ->select('id', 'name', 'phone', 'email', 'description', 'telegram_username')
             ->orderBy('name', 'asc');
 
         if ($search && strlen($search) >= 2) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                ->orWhere('phone', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
-                ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('telegram_username', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
         $total = $query->count();
         $clients = $query->skip(($page - 1) * $perPage)
-                        ->take($perPage)
-                        ->get();
+            ->take($perPage)
+            ->get();
 
-        $results = $clients->map(function($client) {
+        $results = $clients->map(function ($client) {
             return [
                 'id' => $client->id,
-                'text' => $client->name . ' (' . $client->phone . ')',
+                'text' => $client->name.' ('.$client->phone.')',
                 'name' => $client->name,
                 'phone' => $client->phone,
                 'email' => $client->email,
-                'description' => $client->description
+                'telegram_username' => $client->telegram_username,
+                'description' => $client->description,
             ];
         });
 
         return response()->json([
             'results' => $results,
             'pagination' => [
-                'more' => ($page * $perPage) < $total
-            ]
+                'more' => ($page * $perPage) < $total,
+            ],
         ]);
     }
 
@@ -101,7 +104,7 @@ class ManualAppointmentController extends Controller
         $validated = $request->validate($rules);
 
         // Перевірка на конфлікт часу
-        if (!$request->boolean('allow_overlap')) {
+        if (! $request->boolean('allow_overlap')) {
             $conflict = $this->checkTimeConflict(
                 $request->master_id,
                 $request->appointment_date,
@@ -111,7 +114,7 @@ class ManualAppointmentController extends Controller
 
             if ($conflict) {
                 return back()->withErrors([
-                    'appointment_time' => 'На цей час вже є запис. Увімкніть "Дозволити нахлест" якщо потрібно створити запис у будь-якому випадку.'
+                    'appointment_time' => 'На цей час вже є запис. Увімкніть "Дозволити нахлест" якщо потрібно створити запис у будь-якому випадку.',
                 ])->withInput();
             }
         }
@@ -120,8 +123,10 @@ class ManualAppointmentController extends Controller
         if ($request->client_type === 'existing') {
             $clientId = $request->existing_client;
         } else {
+            $normalizedPhone = PhoneHelper::normalize($request->new_client_phone);
+
             $client = User::updateOrCreate(
-                ['phone' => $request->new_client_phone],
+                ['phone' => $normalizedPhone],
                 [
                     'name' => $request->new_client_name,
                     'email' => $request->new_client_email,
@@ -153,7 +158,7 @@ class ManualAppointmentController extends Controller
 
     /**
      * Перевірка конфлікту часу
-     * 
+     *
      * ВИПРАВЛЕНО: правильне парсування дати та часу
      */
     private function checkTimeConflict(
@@ -165,12 +170,12 @@ class ManualAppointmentController extends Controller
         // Створюємо Carbon об'єкт правильно
         // $date може прийти як '2025-10-27' або '2025-10-27 00:00:00'
         // $time приходить як '09:00' або '09:00:00'
-        
+
         // Спочатку парсимо дату (відкидаємо час якщо він є)
         $dateOnly = Carbon::parse($date)->format('Y-m-d');
-        
+
         // Тепер створюємо повний datetime
-        $startTime = Carbon::createFromFormat('Y-m-d H:i', $dateOnly . ' ' . substr($time, 0, 5));
+        $startTime = Carbon::createFromFormat('Y-m-d H:i', $dateOnly.' '.substr($time, 0, 5));
         $endTime = $startTime->copy()->addMinutes($duration);
 
         // Шукаємо існуючі записи на цей день
@@ -205,7 +210,7 @@ class ManualAppointmentController extends Controller
             ->where('service_id', $serviceId)
             ->first();
 
-        if (!$masterService) {
+        if (! $masterService) {
             return response()->json(['error' => 'Послуга не знайдена'], 404);
         }
 
@@ -225,11 +230,11 @@ class ManualAppointmentController extends Controller
 
         if ($masterServices->isEmpty()) {
             return response()->json([
-                'error' => 'Послуг не знайдено для цього майстра'
+                'error' => 'Послуг не знайдено для цього майстра',
             ], 404);
         }
 
-        $services = $masterServices->map(function($masterService) {
+        $services = $masterServices->map(function ($masterService) {
             return [
                 'id' => $masterService->service->id,
                 'name' => $masterService->service->name,

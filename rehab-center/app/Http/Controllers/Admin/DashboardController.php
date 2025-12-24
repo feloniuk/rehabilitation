@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -12,10 +13,10 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        
+
         // Обробка навігації по тижнях
         $weekOffset = 0;
-        
+
         if ($request->has('week')) {
             if ($request->week === 'previous') {
                 $weekOffset = $request->session()->get('week_offset', 0) - 1;
@@ -25,7 +26,7 @@ class DashboardController extends Controller
                 $weekOffset = (int) $request->week;
             }
         }
-        
+
         $request->session()->put('week_offset', $weekOffset);
 
         $stats = $this->getStats($user);
@@ -36,7 +37,7 @@ class DashboardController extends Controller
 
     private function getStats($user)
     {
-        $baseQuery = $user->isAdmin() 
+        $baseQuery = $user->isAdmin()
             ? Appointment::query()
             : Appointment::where('master_id', $user->id);
 
@@ -44,11 +45,11 @@ class DashboardController extends Controller
             'today' => (clone $baseQuery)->whereDate('appointment_date', today())->count(),
             'week' => (clone $baseQuery)->whereBetween('appointment_date', [
                 now()->startOfWeek(),
-                now()->endOfWeek()
+                now()->endOfWeek(),
             ])->count(),
             'month' => (clone $baseQuery)->whereBetween('appointment_date', [
                 now()->startOfMonth(),
-                now()->endOfMonth()
+                now()->endOfMonth(),
             ])->count(),
             'upcoming' => (clone $baseQuery)->where('appointment_date', '>=', today())->count(),
         ];
@@ -62,49 +63,50 @@ class DashboardController extends Controller
 
         // Отримуємо всіх активних майстрів
         $mastersQuery = User::where('role', 'master')
-                           ->where('is_active', true);
-        
+            ->where('is_active', true);
+
         if ($user->isMaster()) {
             $mastersQuery->where('id', $user->id);
         }
-        
+
         $masters = $mastersQuery->orderBy('name')->get();
 
         // Отримуємо всі записи на цей тиждень
         $appointmentsQuery = Appointment::whereBetween('appointment_date', [$startDate, $endDate])
-                           ->with(['client', 'service', 'master'])
-                           ->where('status', 'scheduled');
+            ->with(['client', 'service', 'master'])
+            ->where('status', 'scheduled');
 
         if ($user->isMaster()) {
             $appointmentsQuery->where('master_id', $user->id);
         }
 
         $appointments = $appointmentsQuery->orderBy('appointment_date')
-                                         ->orderBy('appointment_time')
-                                         ->get();
+            ->orderBy('appointment_time')
+            ->get();
 
         // Групуємо записи по майстрах і датах
         $scheduleByMaster = [];
         foreach ($masters as $master) {
             $scheduleByMaster[$master->id] = [
                 'master' => $master,
-                'appointments_by_date' => []
+                'appointments_by_date' => [],
             ];
         }
 
         foreach ($appointments as $appointment) {
             $dateKey = $appointment->appointment_date->format('Y-m-d');
-            
-            if (!isset($scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey])) {
+
+            if (! isset($scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey])) {
                 $scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey] = [];
             }
-            
+
             $scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey][] = [
                 'id' => $appointment->id,
                 'date' => $appointment->appointment_date,
                 'time' => $appointment->appointment_time,
                 'duration' => (int) $appointment->duration,
                 'client_name' => $appointment->client->name,
+                'client_telegram' => $appointment->client->telegram_username,
                 'service_name' => $appointment->service->name,
                 'price' => $appointment->price,
                 'status' => $appointment->status,
@@ -119,14 +121,14 @@ class DashboardController extends Controller
         $weekDates = [];
         $currentDate = $startDate->copy();
         $todayIndex = null;
-        
+
         while ($currentDate <= $endDate) {
             $weekDates[] = $currentDate->copy();
-            
+
             if ($currentDate->isToday()) {
                 $todayIndex = count($weekDates) - 1;
             }
-            
+
             $currentDate->addDay();
         }
 
@@ -143,23 +145,22 @@ class DashboardController extends Controller
 
     /**
      * Генерує часові слоти з заданим кроком
-     * 
-     * @param string $startTime Початковий час (формат H:i)
-     * @param string $endTime Кінцевий час (формат H:i)
-     * @param int $stepMinutes Крок у хвилинах
-     * @return array
+     *
+     * @param  string  $startTime  Початковий час (формат H:i)
+     * @param  string  $endTime  Кінцевий час (формат H:i)
+     * @param  int  $stepMinutes  Крок у хвилинах
      */
     private function generateTimeSlots(string $startTime, string $endTime, int $stepMinutes): array
     {
         $slots = [];
         $current = Carbon::createFromFormat('H:i', $startTime);
         $end = Carbon::createFromFormat('H:i', $endTime);
-        
+
         while ($current->lte($end)) {
             $slots[] = $current->format('H:i');
             $current->addMinutes($stepMinutes);
         }
-        
+
         return $slots;
     }
 }

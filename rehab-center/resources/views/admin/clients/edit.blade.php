@@ -49,29 +49,27 @@
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-            </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Новий пароль
+                    <label for="telegram_username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fab fa-telegram text-blue-500 mr-1"></i>
+                        Telegram username
                     </label>
-                    <input type="password" id="password" name="password"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <p class="text-sm text-gray-500 mt-1">Залиште порожнім, якщо не хочете змінювати</p>
-                    @error('password')
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">@</span>
+                        <input type="text" id="telegram_username" name="telegram_username"
+                               value="{{ old('telegram_username', $client->telegram_username) }}"
+                               class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               placeholder="username">
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">Необов'язково. Для швидкого зв'язку через Telegram.</p>
+                    @error('telegram_username')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror
                 </div>
-
-                <div>
-                    <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
-                        Підтвердження пароля
-                    </label>
-                    <input type="password" id="password_confirmation" name="password_confirmation"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
             </div>
+
+            {{-- Пароль не редагується, профіль клієнта поки не передбачений --}}
 
             <div class="mb-6">
                 <label class="flex items-center">

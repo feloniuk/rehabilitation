@@ -173,13 +173,22 @@
                                  onclick="showAppointmentDetails({{ $apt['id'] }})">
                                 
                                 <div class="text-white text-xs font-bold mb-1">
-                                    {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }} {{ $apt['telegram_notification_sent'] === true ? ' <span class="ml-1">📨</span>' : '' }}
+                                    {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
+                                    @if($apt['telegram_notification_sent'] === true)<span class="ml-1">📨</span>@endif
                                 </div>
-                                
-                                <div class="text-white text-sm font-semibold mb-1 truncate">
+
+                                <div class="text-white text-sm font-semibold mb-1 truncate flex items-center">
                                     {{ $apt['client_name'] }}
+                                    @if(!empty($apt['client_telegram']))
+                                        <a href="https://t.me/{{ $apt['client_telegram'] }}" target="_blank"
+                                           onclick="event.stopPropagation()"
+                                           class="ml-1 text-white hover:text-blue-200 flex-shrink-0"
+                                           title="@{{ $apt['client_telegram'] }}">
+                                            <i class="fab fa-telegram"></i>
+                                        </a>
+                                    @endif
                                 </div>
-                                
+
                                 <div class="text-white text-xs opacity-90 truncate">
                                     {{ $apt['service_name'] }}
                                 </div>
@@ -422,10 +431,13 @@ function reloadTimeline(dayIndex) {
             card.onclick = function() { showAppointmentDetails(apt.id); };
 
             var aptTime = apt.time.substring(0, 5);
+            var telegramLink = apt.client_telegram
+                ? `<a href="https://t.me/${apt.client_telegram}" target="_blank" onclick="event.stopPropagation()" class="ml-1 text-white hover:text-blue-200 flex-shrink-0" title="@${apt.client_telegram}"><i class="fab fa-telegram"></i></a>`
+                : '';
             card.innerHTML = `
-                <div class="text-white text-xs font-bold mb-1">${aptTime} – ${endTimeStr} ${apt.telegram_notification_sent === true ? ' <span class="ml-1">📨</span>' : ''}</div>
-                <div class="text-white text-sm font-semibold mb-1 truncate">
-                    ${apt.client_name}
+                <div class="text-white text-xs font-bold mb-1">${aptTime} – ${endTimeStr}${apt.telegram_notification_sent === true ? ' <span class="ml-1">📨</span>' : ''}</div>
+                <div class="text-white text-sm font-semibold mb-1 truncate flex items-center">
+                    ${apt.client_name}${telegramLink}
                 </div>
                 <div class="text-white text-xs opacity-90 truncate">${apt.service_name}</div>
             `;

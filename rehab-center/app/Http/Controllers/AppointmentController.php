@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\PhoneHelper;
 use App\Models\Appointment;
-use App\Models\User;
-use App\Models\Service;
 use App\Models\MasterService;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use App\Services\MasterNotificationService;
+use App\Models\Service;
+use App\Models\User;
 use App\Services\MasterTelegramBotNotificationService;
+use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
@@ -21,8 +20,8 @@ class AppointmentController extends Controller
         $master = User::where('role', 'master')->findOrFail($masterId);
         $service = Service::findOrFail($serviceId);
         $masterService = MasterService::where('master_id', $masterId)
-                                     ->where('service_id', $serviceId)
-                                     ->firstOrFail();
+            ->where('service_id', $serviceId)
+            ->firstOrFail();
 
         return view('appointments.create', compact('master', 'service', 'masterService'));
     }
@@ -39,20 +38,21 @@ class AppointmentController extends Controller
             'appointment_time' => 'required',
         ]);
 
-        // Создаем или находим клиента
+        // Нормалізуємо телефон та шукаємо/створюємо клієнта
+        $normalizedPhone = PhoneHelper::normalize($request->phone);
+
         $client = User::firstOrCreate(
-            ['phone' => $request->phone],
+            ['phone' => $normalizedPhone],
             [
                 'name' => $request->name,
-                'phone' => $request->phone,
                 'role' => 'client',
-                'password' => bcrypt(str()->random(12))
+                'password' => bcrypt(str()->random(12)),
             ]
         );
 
         $masterService = MasterService::where('master_id', $request->master_id)
-                                     ->where('service_id', $request->service_id)
-                                     ->firstOrFail();
+            ->where('service_id', $request->service_id)
+            ->firstOrFail();
 
         // ИСПРАВЛЕНИЕ: явно приводим к integer
         $duration = (int) $masterService->getDuration();
@@ -86,7 +86,7 @@ class AppointmentController extends Controller
     {
         $appointment = Appointment::findOrFail($id);
 
-        if (!$appointment->canBeCancelled()) {
+        if (! $appointment->canBeCancelled()) {
             return back()->with('error', 'Неможливо скасувати запис менше ніж за 24 години до прийому');
         }
 

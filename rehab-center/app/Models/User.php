@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Helpers\PhoneHelper;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -12,9 +13,9 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'phone', 'role', 'description',
+        'name', 'email', 'password', 'phone', 'telegram_username', 'telegram_chat_id', 'role', 'description',
         'photo', 'work_schedule', 'is_active', 'rating',
-        'experience_years', 'clients_count', 'certificates_count', 'specialty'
+        'experience_years', 'clients_count', 'certificates_count', 'specialty',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -28,6 +29,22 @@ class User extends Authenticatable
         'certificates_count' => 'integer',
     ];
 
+    /**
+     * Нормалізує телефон при збереженні
+     */
+    public function setPhoneAttribute(?string $value): void
+    {
+        $this->attributes['phone'] = PhoneHelper::normalize($value);
+    }
+
+    /**
+     * Знаходить користувача за телефоном (з нормалізацією)
+     */
+    public static function findByPhone(string $phone): ?self
+    {
+        return self::where('phone', PhoneHelper::normalize($phone))->first();
+    }
+
     // Relationship methods
     public function masterServices()
     {
@@ -37,7 +54,7 @@ class User extends Authenticatable
     public function services()
     {
         return $this->belongsToMany(Service::class, 'master_services', 'master_id', 'service_id')
-                    ->withPivot('price', 'duration');
+            ->withPivot('price', 'duration');
     }
 
     public function clientAppointments()
@@ -68,10 +85,12 @@ class User extends Authenticatable
 
     public function getWorkingDays()
     {
-        if (!$this->work_schedule) return [];
+        if (! $this->work_schedule) {
+            return [];
+        }
 
         return collect($this->work_schedule)
-            ->filter(fn($day) => $day['is_working'] ?? false)
+            ->filter(fn ($day) => $day['is_working'] ?? false)
             ->keys()
             ->toArray();
     }
@@ -83,11 +102,13 @@ class User extends Authenticatable
 
     public function getWorkingHours($dayName)
     {
-        if (!$this->isWorkingOnDay($dayName)) return null;
+        if (! $this->isWorkingOnDay($dayName)) {
+            return null;
+        }
 
         return [
             'start' => $this->work_schedule[$dayName]['start'] ?? '09:00',
-            'end' => $this->work_schedule[$dayName]['end'] ?? '17:00'
+            'end' => $this->work_schedule[$dayName]['end'] ?? '17:00',
         ];
     }
 }

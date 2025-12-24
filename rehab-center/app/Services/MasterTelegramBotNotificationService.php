@@ -2,256 +2,148 @@
 
 namespace App\Services;
 
+use App\Helpers\PhoneHelper;
 use App\Models\Appointment;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class MasterTelegramBotNotificationService
 {
-    private string $botToken;
+    private ?string $botToken;
 
     public function __construct()
     {
         $this->botToken = config('services.telegram_bot.token');
     }
 
-    private function findMasterChatId(string $phone): ?string
-    {
-        // Нормализация телефона
-        $normalizedPhone = $this->normalizePhone($phone);
-        $fullPhone = '+38' . $normalizedPhone;
-
-        try {
-            // Получаем список updates от бота
-            $updatesResponse = Http::get("https://api.telegram.org/bot{$this->botToken}/getUpdates");
-
-            if (!$updatesResponse->successful()) {
-                Log::error('Failed to get Telegram updates', [
-                    'response' => $updatesResponse->body()
-                ]);
-                return null;
-            }
-
-            $updates = $updatesResponse->json()['result'] ?? [];
-
-            // Детальное логирование updates
-            Log::info('Telegram Updates Debug', [
-                'updates_count' => count($updates),
-                'first_update' => $updates[0] ?? null
-            ]);
-
-            // Проходим по всем updates и ищем чат
-            foreach ($updates as $update) {
-                // Различные способы найти chat_id
-                $chatId = null;
-
-                // Проверка через contact
-                if (isset($update['message']['contact']['phone_number'])) {
-                    $contactPhone = $this->normalizePhone($update['message']['contact']['phone_number']);
-                    if ($contactPhone === $normalizedPhone) {
-                        $chatId = $update['message']['chat']['id'];
-                    }
-                }
-
-                // Проверка через from
-                if (!$chatId && isset($update['message']['from']['phone_number'])) {
-                    $fromPhone = $this->normalizePhone($update['message']['from']['phone_number']);
-                    if ($fromPhone === $normalizedPhone) {
-                        $chatId = $update['message']['chat']['id'];
-                    }
-                }
-
-                // Проверка напрямую через chat
-                if (!$chatId && isset($update['message']['chat'])) {
-                    $chatId = $update['message']['chat']['id'];
-                }
-
-                // Если нашли chat_id
-                if ($chatId) {
-                    Log::info('Found chat_id for master', [
-                        'phone' => $normalizedPhone,
-                        'chat_id' => $chatId
-                    ]);
-                    return $chatId;
-                }
-            }
-
-            // Попытка прямой отправки с номером телефона
-            try {
-                $directSendResponse = Http::post("https://api.telegram.org/bot{$this->botToken}/sendMessage", [
-                    'chat_id' => $fullPhone,
-                    'text' => 'Тестове повідомлення для перевірки з\'єднання'
-                ]);
-
-                if ($directSendResponse->successful()) {
-                    Log::info('Direct send successful', [
-                        'phone' => $fullPhone
-                    ]);
-                    return $fullPhone;
-                }
-            } catch (\Exception $directSendException) {
-                Log::error('Direct send error', [
-                    'error' => $directSendException->getMessage()
-                ]);
-            }
-
-            Log::warning('No chat_id found for master', [
-                'phone' => $normalizedPhone
-            ]);
-            return null;
-
-        } catch (\Exception $e) {
-            Log::error('Critical error in findMasterChatId', [
-                'phone' => $normalizedPhone,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return null;
-        }
-    }
-
-    public function sendMasterNotification(Appointment $appointment)
+    /**
+     * Отправляет уведомление мастеру о новой записи
+     */
+    public function sendMasterNotification(Appointment $appointment): bool
     {
         try {
-            $masterPhone = $this->normalizePhone($appointment->master->phone);
-            $chatId = $this->findMasterChatId($masterPhone);
+            $master = $appointment->master;
 
-            if (!$chatId) {
-                Log::error('Cannot send notification - no chat_id', [
-                    'master' => $appointment->master->name,
-                    'phone' => $masterPhone
+            // Сначала проверяем, есть ли chat_id в БД
+            if (! $master->telegram_chat_id) {
+                Log::error('Master has no telegram_chat_id configured', [
+                    'master_id' => $master->id,
+                    'master_name' => $master->name,
+                    'phone' => $master->phone,
                 ]);
+
                 return false;
             }
 
             $message = $this->formatNewAppointmentMessage($appointment);
 
             $response = Http::post("https://api.telegram.org/bot{$this->botToken}/sendMessage", [
-                'chat_id' => $chatId,
+                'chat_id' => $master->telegram_chat_id,
                 'text' => $message,
-                'parse_mode' => 'Markdown' // Важно для распознавания ссылок
+                'parse_mode' => 'Markdown',
             ]);
 
             if ($response->successful()) {
                 Log::info('Master notification sent successfully', [
-                    'master' => $appointment->master->name,
-                    'chat_id' => $chatId
+                    'master_id' => $master->id,
+                    'master_name' => $master->name,
+                    'appointment_id' => $appointment->id,
+                    'chat_id' => $master->telegram_chat_id,
                 ]);
+
                 return true;
-            } else {
-                Log::error('Failed to send master notification', [
-                    'response' => $response->body(),
-                    'chat_id' => $chatId,
-                    'master' => $appointment->master->name
-                ]);
-                return false;
             }
+
+            Log::error('Failed to send master notification - API error', [
+                'master_id' => $master->id,
+                'master_name' => $master->name,
+                'appointment_id' => $appointment->id,
+                'chat_id' => $master->telegram_chat_id,
+                'response' => $response->body(),
+            ]);
+
+            return false;
 
         } catch (\Exception $e) {
             Log::error('Master notification error', [
-                'message' => $e->getMessage(),
-                'master' => $appointment->master->name
+                'appointment_id' => $appointment->id,
+                'master_id' => $appointment->master_id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
+
             return false;
         }
     }
 
-    private function normalizePhone(string $phone): string
+    /**
+     * Сохраняет chat_id мастера из Telegram webhook
+     * Вызывается, когда мастер отправляет /start боту с контактом
+     */
+    public function saveMasterChatId(string $phone, string $chatId): bool
     {
-        // Удаляем все нецифровые символы
-        $normalized = preg_replace('/[^0-9]/', '', $phone);
-        
-        // Убираем leading '+' или '38'
-        $normalized = preg_replace('/^(\+38|38)/', '', $normalized);
-        
-        // Оставляем только последние 10 цифр
-        $normalized = substr($normalized, -10);
-        
-        return $normalized;
+        try {
+            $normalizedPhone = PhoneHelper::normalize($phone);
+            $master = User::where('role', 'master')
+                ->where('phone', $normalizedPhone)
+                ->first();
+
+            if (! $master) {
+                Log::warning('Master not found for phone number', [
+                    'phone' => $normalizedPhone,
+                    'chat_id' => $chatId,
+                ]);
+
+                return false;
+            }
+
+            $master->update(['telegram_chat_id' => $chatId]);
+
+            Log::info('Master chat_id saved', [
+                'master_id' => $master->id,
+                'master_name' => $master->name,
+                'chat_id' => $chatId,
+            ]);
+
+            return true;
+
+        } catch (\Exception $e) {
+            Log::error('Error saving master chat_id', [
+                'phone' => $phone,
+                'chat_id' => $chatId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
+    /**
+     * Форматирует сообщение о новой записи
+     */
     private function formatNewAppointmentMessage(Appointment $appointment): string
     {
-        // Пытаемся найти username клиента в Telegram
-        $clientUsername = $this->findClientTelegramUsername($appointment->client);
+        $clientName = $appointment->client->name;
 
-        // Формируем имя клиента (с ссылкой или без)
-        $clientNameFormatted = $clientUsername 
-            ? "[{$appointment->client->name}](tg://user?id={$clientUsername})" 
-            : $appointment->client->name;
+        // Если у клиента есть telegram_username из нашей БД, добавляем линк
+        if ($appointment->client->telegram_username) {
+            $clientName = "[{$clientName}](https://t.me/{$appointment->client->telegram_username})";
+        }
 
         return sprintf(
-            "🆕 Нова реєстрація 
-
-👤 Клієнт: %s
-📱 Телефон: %s
-💆 Послуга: %s
-📅 Дата: %s
-🕰 Час: %s
-
-Деталі в адмін-панелі.",
-            $clientNameFormatted,
+            "🆕 Нова реєстрація\n\n".
+            "👤 Клієнт: %s\n".
+            "📱 Телефон: %s\n".
+            "💆 Послуга: %s\n".
+            "📅 Дата: %s\n".
+            "🕰 Час: %s\n\n".
+            'Деталі в адмін-панелі.',
+            $clientName,
             $appointment->client->phone,
             $appointment->service->name,
             $appointment->appointment_date->format('d.m.Y'),
             substr($appointment->appointment_time, 0, 5)
         );
     }
-
-    private function findClientTelegramUsername(User $client): ?string
-    {
-        try {
-            // Получаем updates от бота
-            $updatesResponse = Http::get("https://api.telegram.org/bot{$this->botToken}/getUpdates");
-
-            if (!$updatesResponse->successful()) {
-                Log::warning('Failed to get Telegram updates for client', [
-                    'client_id' => $client->id,
-                    'client_name' => $client->name
-                ]);
-                return null;
-            }
-
-            $updates = $updatesResponse->json()['result'] ?? [];
-
-            // Нормализуем номер телефона клиента
-            $normalizedClientPhone = $this->normalizePhone($client->phone);
-
-            // Проходим по всем updates и ищем matching
-            foreach ($updates as $update) {
-                // Проверка через контакт
-                if (isset($update['message']['contact']['phone_number'])) {
-                    $contactPhone = $this->normalizePhone($update['message']['contact']['phone_number']);
-                    if ($contactPhone === $normalizedClientPhone) {
-                        return $update['message']['from']['id'] ?? null;
-                    }
-                }
-
-                // Проверка через from
-                if (isset($update['message']['from']['phone_number'])) {
-                    $fromPhone = $this->normalizePhone($update['message']['from']['phone_number']);
-                    if ($fromPhone === $normalizedClientPhone) {
-                        return $update['message']['from']['id'] ?? null;
-                    }
-                }
-            }
-
-            Log::info('No Telegram user found for client', [
-                'client_id' => $client->id,
-                'client_name' => $client->name,
-                'phone' => $normalizedClientPhone
-            ]);
-
-            return null;
-
-        } catch (\Exception $e) {
-            Log::error('Error finding client Telegram username', [
-                'client_id' => $client->id,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
 }
