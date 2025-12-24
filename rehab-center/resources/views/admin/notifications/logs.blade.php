@@ -59,7 +59,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-medium text-gray-900">
-                                {{ $log->appointment->client->name ?? 'Без клієнта' }}
+                                {{ $log->appointment?->client?->name ?? 'Без клієнта' }}
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -69,9 +69,13 @@
                             {{ $log->template ? $log->template->name : 'Без шаблону' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ $log->appointment->appointment_date->format('d.m.Y') }}
-                            {{ substr($log->appointment->appointment_time, 0, 5) }}<br>
-                            <span class="text-xs">{{ $log->appointment->service->name }}</span>
+                            @if($log->appointment)
+                                {{ $log->appointment->appointment_date->format('d.m.Y') }}
+                                {{ substr($log->appointment->appointment_time, 0, 5) }}<br>
+                                <span class="text-xs">{{ $log->appointment->service->name }}</span>
+                            @else
+                                <span class="text-gray-400"><i class="fas fa-trash-alt mr-1"></i>Запись удалена</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @switch($log->status)
@@ -121,11 +125,11 @@
                 <div class="flex justify-between items-center mb-3">
                     <div>
                         <h3 class="font-semibold text-gray-900">
-                            {{ $log->appointment->client->name ?? 'Без клієнта' }}
+                            {{ $log->appointment?->client?->name ?? 'Без клієнта' }}
                         </h3>
                         <p class="text-sm text-gray-500">{{ $log->phone }}</p>
                     </div>
-                    <button onclick="showMessage({{ $log->id }})" 
+                    <button onclick="showMessage({{ $log->id }})"
                             class="text-blue-600"
                             title="Переглянути повідомлення">
                         <i class="fas fa-eye"></i>
@@ -140,8 +144,12 @@
                     <div class="flex justify-between">
                         <span class="text-gray-600">Запис:</span>
                         <span>
-                            {{ $log->appointment->appointment_date->format('d.m.Y') }} 
-                            {{ substr($log->appointment->appointment_time, 0, 5) }}
+                            @if($log->appointment)
+                                {{ $log->appointment->appointment_date->format('d.m.Y') }}
+                                {{ substr($log->appointment->appointment_time, 0, 5) }}
+                            @else
+                                <span class="text-gray-400"><i class="fas fa-trash-alt mr-1"></i>Удалена</span>
+                            @endif
                         </span>
                     </div>
                     <div class="flex justify-between items-center">

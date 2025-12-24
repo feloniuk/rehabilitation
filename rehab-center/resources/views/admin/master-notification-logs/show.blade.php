@@ -42,83 +42,107 @@
 
                 <div class="border-l-4 border-gray-500 pl-4">
                     <div class="text-sm text-gray-600">Время</div>
-                    <div class="text-lg font-semibold">{{ $log->created_at->format('d.m.Y H:i:s') }}</div>
+                    <div class="text-lg font-semibold">{{ $log->created_at?->format('d.m.Y H:i:s') ?? '—' }}</div>
                 </div>
             </div>
         </div>
 
         {{-- Информация о мастере --}}
-        <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-user-md text-blue-500 mr-2"></i>Информация о мастере
-            </h2>
+        @if($log->master)
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-user-md text-blue-500 mr-2"></i>Информация о мастере
+                </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <div class="text-sm text-gray-600">Имя</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ $log->master->name }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Телефон</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ $log->phone }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Email</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ $log->master->email }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Статус</div>
-                    @if($log->master->is_active)
-                        <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-                            Активен
-                        </span>
-                    @else
-                        <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
-                            Неактивен
-                        </span>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- Информация о записи --}}
-        <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-calendar text-green-500 mr-2"></i>Информация о записи
-            </h2>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <div class="text-sm text-gray-600">Клиент</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ $log->appointment->client->name }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Услуга</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ $log->appointment->service->name }}</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Дата и время</div>
-                    <div class="text-lg font-semibold text-gray-900">
-                        {{ $log->appointment->appointment_date->format('d.m.Y') }}
-                        в {{ substr($log->appointment->appointment_time, 0, 5) }}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="text-sm text-gray-600">Имя</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $log->master->name }}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Телефон</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $log->phone }}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Email</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $log->master->email }}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Статус</div>
+                        @if($log->master->is_active)
+                            <span class="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+                                Активен
+                            </span>
+                        @else
+                            <span class="inline-block px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-semibold">
+                                Неактивен
+                            </span>
+                        @endif
                     </div>
                 </div>
-                <div>
-                    <div class="text-sm text-gray-600">Длительность</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ $log->appointment->duration }} мин</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Цена</div>
-                    <div class="text-lg font-semibold text-gray-900">{{ number_format($log->appointment->price, 2) }} грн</div>
-                </div>
-                <div>
-                    <div class="text-sm text-gray-600">Статус записи</div>
-                    <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                        {{ ucfirst($log->appointment->status) }}
-                    </span>
+            </div>
+        @else
+            <div class="bg-yellow-50 rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                <h2 class="text-xl font-semibold mb-2 text-yellow-800">
+                    <i class="fas fa-user-slash mr-2"></i>Мастер удален
+                </h2>
+                <p class="text-sm text-yellow-700">
+                    Мастер был удален из системы. Детали недоступны. Номер телефона: {{ $log->phone }}
+                </p>
+            </div>
+        @endif
+
+        {{-- Информация о записи --}}
+        @if($log->appointment)
+            <div class="bg-white rounded-lg shadow p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">
+                    <i class="fas fa-calendar text-green-500 mr-2"></i>Информация о записи
+                </h2>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <div class="text-sm text-gray-600">Клиент</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $log->appointment->client->name ?? '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Услуга</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $log->appointment->service->name ?? '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Дата и время</div>
+                        <div class="text-lg font-semibold text-gray-900">
+                            {{ $log->appointment->appointment_date?->format('d.m.Y') ?? '—' }}
+                            в {{ substr($log->appointment->appointment_time, 0, 5) ?? '—' }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Длительность</div>
+                        <div class="text-lg font-semibold text-gray-900">{{ $log->appointment->duration ?? '—' }} мин</div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Цена</div>
+                        <div class="text-lg font-semibold text-gray-900">
+                            {{ $log->appointment->price ? number_format($log->appointment->price, 2) : '—' }} грн
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-sm text-gray-600">Статус записи</div>
+                        <span class="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                            {{ $log->appointment->status ? ucfirst($log->appointment->status) : '—' }}
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
+        @else
+            <div class="bg-yellow-50 rounded-lg shadow p-6 border-l-4 border-yellow-500">
+                <h2 class="text-xl font-semibold mb-2 text-yellow-800">
+                    <i class="fas fa-trash-alt mr-2"></i>Запись удалена
+                </h2>
+                <p class="text-sm text-yellow-700">
+                    Оригинальная запись была удалена. Детали недоступны.
+                </p>
+            </div>
+        @endif
 
         {{-- Текст уведомления --}}
         <div class="bg-white rounded-lg shadow p-6">
@@ -158,11 +182,11 @@
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Создано:</span>
-                    <span class="text-gray-900">{{ $log->created_at->format('d.m.Y H:i:s') }}</span>
+                    <span class="text-gray-900">{{ $log->created_at?->format('d.m.Y H:i:s') ?? '—' }}</span>
                 </div>
                 <div class="flex justify-between">
                     <span class="text-gray-600">Обновлено:</span>
-                    <span class="text-gray-900">{{ $log->updated_at->format('d.m.Y H:i:s') }}</span>
+                    <span class="text-gray-900">{{ $log->updated_at?->format('d.m.Y H:i:s') ?? '—' }}</span>
                 </div>
             </div>
         </div>

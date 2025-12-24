@@ -80,12 +80,18 @@
                         <tr class="border-b border-gray-200 hover:bg-gray-50">
                             <td class="px-4 py-3 text-gray-600">{{ $log->id }}</td>
                             <td class="px-4 py-3">
-                                <div class="font-medium text-gray-900">{{ $log->master->name }}</div>
+                                <div class="font-medium text-gray-900">{{ $log->master?->name ?? 'Удален' }}</div>
                                 <div class="text-xs text-gray-500">{{ $log->phone }}</div>
                             </td>
                             <td class="px-4 py-3">
-                                <div class="text-gray-700">{{ $log->appointment->service->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $log->appointment->appointment_date->format('d.m.Y H:i') }}</div>
+                                @if($log->appointment)
+                                    <div class="text-gray-700">{{ $log->appointment->service->name ?? '—' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $log->appointment->appointment_date?->format('d.m.Y H:i') ?? '—' }}</div>
+                                @else
+                                    <span class="text-gray-400 text-sm">
+                                        <i class="fas fa-trash-alt mr-1"></i>Запись удалена
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-4 py-3">
                                 @if($log->status === 'sent')
@@ -112,7 +118,7 @@
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-gray-600 text-sm">
-                                {{ $log->created_at->format('d.m.Y H:i:s') }}
+                                {{ $log->created_at?->format('d.m.Y H:i:s') ?? '—' }}
                             </td>
                             <td class="px-4 py-3">
                                 <a href="{{ route('admin.master-notification-logs.show', $log) }}"
