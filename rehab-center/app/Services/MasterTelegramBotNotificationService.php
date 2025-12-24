@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Helpers\PhoneHelper;
 use App\Models\Appointment;
+use App\Models\MasterNotificationLog;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -24,22 +25,52 @@ class MasterTelegramBotNotificationService
     {
         try {
             $master = $appointment->master;
+            $message = $this->formatNewAppointmentMessage($appointment);
+
+            // Создаем лог записи сразу (статус pending)
+            $notificationLog = MasterNotificationLog::create([
+                'appointment_id' => $appointment->id,
+                'master_id' => $master->id,
+                'phone' => $master->phone,
+                'status' => 'pending',
+                'message' => $message,
+            ]);
 
             // Сначала проверяем, есть ли chat_id в БД
-            if (! $master->telegram_chat_id) {
-                Log::error('Master has no telegram_chat_id configured', [
+            $chatId = $master->telegram_chat_id;
+            $resolutionSource = 'database';
+
+            // Если нет chat_id - пытаемся найти через резолвер
+            if (! $chatId) {
+                Log::info('Master has no chat_id, attempting to resolve by phone', [
                     'master_id' => $master->id,
                     'master_name' => $master->name,
                     'phone' => $master->phone,
                 ]);
 
+                $resolver = new TelegramMasterChatIdResolverService;
+                $chatId = $resolver->resolveMasterChatId($master);
+                $resolutionSource = 'resolver';
+            }
+
+            // Если все равно не нашли - логируем ошибку и выходим
+            if (! $chatId) {
+                $errorMsg = 'Could not determine telegram_chat_id for master';
+
+                Log::error($errorMsg, [
+                    'master_id' => $master->id,
+                    'master_name' => $master->name,
+                    'phone' => $master->phone,
+                    'notification_log_id' => $notificationLog->id,
+                ]);
+
+                $notificationLog->markAsFailed($errorMsg);
+
                 return false;
             }
 
-            $message = $this->formatNewAppointmentMessage($appointment);
-
             $response = Http::post("https://api.telegram.org/bot{$this->botToken}/sendMessage", [
-                'chat_id' => $master->telegram_chat_id,
+                'chat_id' => $chatId,
                 'text' => $message,
                 'parse_mode' => 'Markdown',
             ]);
@@ -49,19 +80,27 @@ class MasterTelegramBotNotificationService
                     'master_id' => $master->id,
                     'master_name' => $master->name,
                     'appointment_id' => $appointment->id,
-                    'chat_id' => $master->telegram_chat_id,
+                    'chat_id' => $chatId,
+                    'notification_log_id' => $notificationLog->id,
                 ]);
+
+                $notificationLog->markAsSent($chatId, $resolutionSource);
 
                 return true;
             }
+
+            $errorMsg = 'Telegram API error: '.$response->body();
 
             Log::error('Failed to send master notification - API error', [
                 'master_id' => $master->id,
                 'master_name' => $master->name,
                 'appointment_id' => $appointment->id,
-                'chat_id' => $master->telegram_chat_id,
+                'chat_id' => $chatId,
                 'response' => $response->body(),
+                'notification_log_id' => $notificationLog->id,
             ]);
+
+            $notificationLog->markAsFailed($errorMsg);
 
             return false;
 
@@ -72,6 +111,10 @@ class MasterTelegramBotNotificationService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            if (isset($notificationLog)) {
+                $notificationLog->markAsFailed($e->getMessage());
+            }
 
             return false;
         }
@@ -100,10 +143,12 @@ class MasterTelegramBotNotificationService
 
             $master->update(['telegram_chat_id' => $chatId]);
 
-            Log::info('Master chat_id saved', [
+            Log::info('Master chat_id saved from webhook', [
                 'master_id' => $master->id,
                 'master_name' => $master->name,
+                'phone' => $normalizedPhone,
                 'chat_id' => $chatId,
+                'source' => 'bot_webhook',
             ]);
 
             return true;

@@ -1,20 +1,21 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ServiceController;
-use App\Http\Controllers\MasterController;
-use App\Http\Controllers\AppointmentController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\MasterController as AdminMasterController;
-use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
-use App\Http\Controllers\Admin\PageController;
-use App\Http\Controllers\Admin\ClientController;
-use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
+use App\Http\Controllers\Admin\ClientController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ManualAppointmentController;
+use App\Http\Controllers\Admin\MasterController as AdminMasterController;
+use App\Http\Controllers\Admin\MasterNotificationLogController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\PageController;
+use App\Http\Controllers\Admin\ServiceController as AdminServiceController;
+use App\Http\Controllers\Admin\SettingController;
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MasterController;
+use App\Http\Controllers\ServiceController;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 // Public routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -29,7 +30,7 @@ Route::patch('/appointment/{appointment}/cancel', [AppointmentController::class,
 
 // AJAX routes
 Route::get('/masters/{master}/available-slots/{date}/{service}', [MasterController::class, 'getAvailableSlots'])
-     ->name('masters.available-slots');
+    ->name('masters.available-slots');
 
 // Auth routes
 Auth::routes(['register' => false]);
@@ -37,29 +38,28 @@ Auth::routes(['register' => false]);
 // Admin routes
 Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Записи - доступно для всіх админів і майстрів
     Route::get('appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
-    
+
     Route::get('appointments/create-manual', [ManualAppointmentController::class, 'create'])
         ->name('appointments.manual.create');
     Route::post('appointments/create-manual', [ManualAppointmentController::class, 'store'])
         ->name('appointments.manual.store');
-    
+
     // API для пошуку клієнтів (для Select2)
     Route::get('appointments/search-clients', [ManualAppointmentController::class, 'searchClients'])
         ->name('appointments.search-clients');
-    
+
     Route::get('appointments/master-services', [ManualAppointmentController::class, 'getMasterServices'])
         ->name('appointments.get-master-services');
-    
+
     Route::get('appointments/get-service-price', [ManualAppointmentController::class, 'getServicePrice'])
         ->name('appointments.get-service-price');
-        
+
     Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
     Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
     Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
-
 
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
@@ -79,7 +79,7 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         Route::get('pages/{id}/edit', [PageController::class, 'edit'])->name('pages.edit');
         Route::put('pages/{id}', [PageController::class, 'update'])->name('pages.update');
         Route::delete('pages/{id}', [PageController::class, 'destroy'])->name('pages.destroy');
-        
+
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
 
@@ -91,29 +91,37 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
             ->name('notifications.logs');
         Route::post('notifications/preview', [NotificationController::class, 'previewTemplate'])
             ->name('notifications.preview');
-        
+
         // Управління шаблонами
         Route::get('notifications/templates', [NotificationController::class, 'templates'])
             ->name('notifications.templates');
         Route::post('notifications/templates', [NotificationController::class, 'storeTemplate'])
             ->name('notifications.templates.store');
-        Route::get('notifications/templates/{id}/edit', function($id) {
+        Route::get('notifications/templates/{id}/edit', function ($id) {
             $template = \App\Models\NotificationTemplate::findOrFail($id);
+
             return response()->json($template);
         })->name('notifications.templates.edit');
         Route::put('notifications/templates/{id}', [NotificationController::class, 'updateTemplate'])
             ->name('notifications.templates.update');
+
+        // Логи отправки уведомлений мастерам
+        Route::get('master-notification-logs', [MasterNotificationLogController::class, 'index'])
+            ->name('master-notification-logs.index');
+        Route::get('master-notification-logs/{masterNotificationLog}', [MasterNotificationLogController::class, 'show'])
+            ->name('master-notification-logs.show');
         Route::delete('notifications/templates/{id}', [NotificationController::class, 'deleteTemplate'])
             ->name('notifications.templates.delete');
-        
+
     });
 });
 
 // Page routes - в кінці
 Route::get('/{slug}', function ($slug) {
     $page = \App\Models\Page::findBySlug($slug);
-    if (!$page) {
+    if (! $page) {
         abort(404);
     }
+
     return view('pages.show', compact('page'));
 })->name('pages.show');

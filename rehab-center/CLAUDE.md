@@ -257,36 +257,73 @@ routes/
 
 1. **Регистрация мастера в Telegram боте:**
    - Мастер отправляет `/start` боту с контактом (+38XXXXXXXXXXX)
-   - Бот сохраняет `chat_id` в `users.telegram_chat_id`
+   - Бот сохраняет `chat_id` в `users.telegram_chat_id` через webhook
    - Используется `MasterTelegramBotNotificationService::saveMasterChatId()`
 
 2. **Отправка уведомления при создании записи:**
    - Когда запись создана через `AppointmentController` или `ManualAppointmentController`
    - Вызывается `MasterTelegramBotNotificationService::sendMasterNotification($appointment)`
    - Проверяется наличие `telegram_chat_id` у мастера
-   - Если есть - отправляется сообщение в Telegram (Bot API)
-   - Логируется результат отправки
+   - **Если нет** - система автоматически пытается найти `chat_id` через `TelegramMasterChatIdResolverService`
+     - Использует MadelineProto (userbot) для поиска пользователя по номеру телефона
+     - Если найден - сохраняет найденный `chat_id` в БД
+   - Отправляется сообщение в Telegram (Bot API)
+   - Логируется результат отправки (источник: БД, webhook или резолвер)
 
 3. **Проверить статус отправки:**
    ```bash
    tail -f storage/logs/laravel.log | grep "Master notification"
+   tail -f storage/logs/laravel.log | grep "attempting to resolve"
+   tail -f storage/logs/laravel.log | grep "chat_id"
    ```
 
-### Исправление проблемы (23.12.2025)
+### Преимущества автоматического резолвинга
 
-**Была проблема:** Уведомления приходили не тому мастеру или вообще не приходили
+- ✅ Не требует повторной авторизации мастеров в боте
+- ✅ Использует стабильный MadelineProto (userbot) который уже работает для уведомлений клиентам
+- ✅ Автоматически заполняет `telegram_chat_id` при первой отправке уведомления
+- ✅ Полное логирование всех операций для отладки
 
-**Причины:**
-- Нет хранения `chat_id` в БД - каждый раз искал через Telegram API
-- `normalizePhone()` обрезала номер до 10 цифр - мог найти не того пользователя
-- Логика поиска `chat_id` была нечеткая
+### Архитектура
 
-**Исправление:**
-- Добавлено поле `telegram_chat_id` в таблицу `users`
-- Переписан `MasterTelegramBotNotificationService`:
-  - `sendMasterNotification()` - теперь использует сохраненный `chat_id` из БД
-  - `saveMasterChatId()` - сохраняет `chat_id` с нормализацией номера через `PhoneHelper`
-- Логирование с полной информацией (master_id, master_name, chat_id, appointment_id)
+**MasterTelegramBotNotificationService** (Bot API):
+- Основной сервис для отправки уведомлений о новых записях
+- Использует Telegram Bot API для отправки сообщений
+- Fallback: при отсутствии `chat_id` вызывает резолвер
+
+**TelegramMasterChatIdResolverService** (MadelineProto):
+- Находит `chat_id` пользователя по номеру телефона
+- Использует MadelineProto (userbot) - contacts.resolvePhone()
+- Автоматически сохраняет найденный `chat_id` в БД
+
+**TelegramNotificationService** (MadelineProto):
+- Отправляет уведомления клиентам о напоминаниях/обновлениях
+- Более гибкий, работает через userbot
+
+### Логирование отправки уведомлений
+
+Все попытки отправки уведомлений мастерам логируются в таблицу `master_notification_logs`:
+
+**Информация логируется:**
+- ID записи и мастера
+- Телефон мастера (нормализованный)
+- Статус отправки (pending → sent / failed)
+- Использованный chat_id
+- Источник chat_id (database, webhook, resolver)
+- Полный текст сообщения
+- Ошибки если были
+
+**Просмотр логов в админке:**
+```
+/admin/master-notification-logs
+```
+
+Можно фильтровать по:
+- Статусу (ожидание, отправлено, ошибка)
+- Мастеру
+- Диапазону дат
+
+Нажав "Просмотр" - видны полные детали отправки, включая текст сообщения и ошибки.
 
 ### Deployment
 
@@ -295,8 +332,12 @@ routes/
 # 1. Запустить миграцию
 php artisan migrate
 
-# 2. Мастера должны еще раз авторизоваться в Telegram боте
-# чтобы сохранить chat_id в новое поле telegram_chat_id
+# 2. Мастера могут либо:
+#    a) Авторизоваться в боте снова (/start + контакт) - сохранится через webhook
+#    b) Система сама найдет chat_id при первой отправке уведомления о записи
+
+# 3. Проверить логи отправок в админке
+#    /admin/master-notification-logs
 ```
 
 ---
