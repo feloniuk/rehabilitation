@@ -164,10 +164,11 @@
                             @endphp
                             
                             <div class="appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
+                                 data-appointment-id="{{ $apt['id'] }}"
                                  style="top: {{ $topPx }}px;
-                                        height: {{ $heightPx }}px; 
-                                        background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); 
-                                        z-index: {{ 5 + $aptIndex }}; 
+                                        height: {{ $heightPx }}px;
+                                        background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }});
+                                        z-index: {{ 5 + $aptIndex }};
                                         left: {{ $leftPercent }}%;
                                         width: calc({{ $widthPercent }}% - 4px);"
                                  onclick="showAppointmentDetails({{ $apt['id'] }})">
@@ -250,8 +251,12 @@
             </button>
         </div>
         <div id="appointmentContent" class="p-4"></div>
-        <div class="p-4 border-t">
-            <button onclick="closeModal()" class="w-full bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600">
+        <div class="p-4 border-t flex gap-2">
+            <button id="quickReminderBtn" onclick="sendQuickReminder()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-paper-plane"></i>
+                <span>Швидке нагадування "на завтра"</span>
+            </button>
+            <button onclick="closeModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
                 Закрити
             </button>
         </div>
@@ -312,6 +317,7 @@ var calendarData = {
 };
 
 var currentDayIndex = calendarData.todayIndex;
+var currentAppointmentId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     selectDate(currentDayIndex);
@@ -459,6 +465,7 @@ function reloadTimeline(dayIndex) {
 
             var card = document.createElement('div');
             card.className = 'appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow';
+            card.setAttribute('data-appointment-id', apt.id);
             card.style.cssText = 'top: ' + topPx + 'px; ' +
                 'height: ' + heightPx + 'px; ' +
                 'background: linear-gradient(135deg, ' + color.from + ', ' + color.to + '); ' +
@@ -490,12 +497,14 @@ function reloadTimeline(dayIndex) {
 }
 
 function showAppointmentDetails(id) {
+    currentAppointmentId = id;
+
     var modal = document.getElementById('appointmentModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
+
     document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i></div>';
-    
+
     fetch('/admin/appointments/' + id)
         .then(function(r) { return r.json(); })
         .then(function(d) {
@@ -505,8 +514,8 @@ function showAppointmentDetails(id) {
                 'cancelled': 'bg-red-100 text-red-800'
             };
             var sc = statusClasses[d.status];
-            
-            document.getElementById('appointmentContent').innerHTML = 
+
+            document.getElementById('appointmentContent').innerHTML =
                 '<div class="space-y-3">' +
                     '<div><div class="text-xs text-gray-500 mb-1">Клієнт</div><div class="font-semibold">' + d.client.name + '</div><div class="text-sm text-gray-600">' + d.client.phone + '</div></div>' +
                     '<div><div class="text-xs text-gray-500 mb-1">Майстер</div><div class="font-medium">' + d.master.name + '</div></div>' +
@@ -515,10 +524,131 @@ function showAppointmentDetails(id) {
                     '<div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Ціна</div><div class="text-lg font-bold text-green-600">' + d.price + '₴</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Статус</div><span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ' + sc + '">' + d.status_text + '</span></div></div>' +
                     (d.notes ? '<div><div class="text-xs text-gray-500 mb-1">Примітки</div><div class="text-sm bg-gray-50 p-2 rounded">' + d.notes + '</div></div>' : '') +
                 '</div>';
+
+            // Оновлюємо стан кнопки швидкого нагадування
+            var btn = document.getElementById('quickReminderBtn');
+            if (d.telegram_notification_sent === true) {
+                btn.disabled = true;
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i><span>Нагадування вже надіслано</span>';
+            } else {
+                btn.disabled = false;
+                btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Швидке нагадування "на завтра"</span>';
+            }
         })
         .catch(function() {
             document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8 text-red-500">Помилка завантаження</div>';
         });
+}
+
+function sendQuickReminder() {
+    if (!currentAppointmentId) {
+        showNotification('Помилка: ID запису не знайдено', 'error');
+        return;
+    }
+
+    var btn = document.getElementById('quickReminderBtn');
+    var originalContent = btn.innerHTML;
+
+    // Показуємо лоадер
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Відправка...</span>';
+
+    // Отримуємо CSRF токен
+    var csrfToken = document.querySelector('meta[name="csrf-token"]');
+    if (!csrfToken) {
+        showNotification('Помилка: CSRF токен не знайдено', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        return;
+    }
+
+    fetch('/admin/appointments/' + currentAppointmentId + '/quick-reminder', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken.getAttribute('content'),
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(response) {
+        return response.json().then(function(data) {
+            return { status: response.status, data: data };
+        });
+    })
+    .then(function(result) {
+        if (result.data.success) {
+            // Успішно відправлено - робимо кнопку неактивною
+            btn.disabled = true;
+            btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            btn.classList.add('bg-gray-400', 'cursor-not-allowed');
+            btn.innerHTML = '<i class="fas fa-check-circle"></i><span>Нагадування вже надіслано</span>';
+
+            showNotification(result.data.message, 'success');
+            updateAppointmentCardInCalendar(currentAppointmentId);
+            closeModal();
+        } else {
+            // Помилка - повертаємо оригінальний вміст
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+            showNotification(result.data.message || 'Помилка відправки', 'error');
+        }
+    })
+    .catch(function(error) {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        showNotification('Помилка мережі: ' + error.message, 'error');
+    });
+}
+
+function updateAppointmentCardInCalendar(appointmentId) {
+    // Знаходимо картку запису по data-атрибуту
+    var card = document.querySelector('.appointment-card[data-appointment-id="' + appointmentId + '"]');
+
+    if (card) {
+        // Додаємо border
+        card.classList.add('border-2', 'border-red-400');
+
+        // Додаємо іконку 📨 до часу якщо її ще немає
+        var timeDiv = card.querySelector('.text-xs.font-bold');
+        if (timeDiv && !timeDiv.innerHTML.includes('📨')) {
+            timeDiv.innerHTML += ' <span class="ml-1">📨</span>';
+        }
+    }
+
+    // Оновлюємо дані в calendarData
+    for (var masterId in calendarData.scheduleByMaster) {
+        var masterData = calendarData.scheduleByMaster[masterId];
+        for (var dateKey in masterData.appointments_by_date) {
+            var appointments = masterData.appointments_by_date[dateKey];
+            for (var i = 0; i < appointments.length; i++) {
+                if (appointments[i].id === appointmentId) {
+                    appointments[i].telegram_notification_sent = true;
+                }
+            }
+        }
+    }
+}
+
+function showNotification(message, type) {
+    var bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+
+    var notification = document.createElement('div');
+    notification.className = 'fixed top-4 right-4 ' + bgColor + ' text-white px-6 py-3 rounded-lg shadow-lg z-[60] flex items-center gap-2';
+    notification.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'exclamation-circle') + '"></i><span>' + message + '</span>';
+
+    document.body.appendChild(notification);
+
+    setTimeout(function() {
+        notification.style.transition = 'opacity 0.3s';
+        notification.style.opacity = '0';
+        setTimeout(function() {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
 }
 
 function closeModal() {

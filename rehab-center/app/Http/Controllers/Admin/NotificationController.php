@@ -4,11 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\NotificationTemplate;
 use App\Models\NotificationLog;
+use App\Models\NotificationTemplate;
 use App\Services\TelegramNotificationService;
 use Illuminate\Http\Request;
-use Carbon\Carbon;
 
 class NotificationController extends Controller
 {
@@ -25,7 +24,7 @@ class NotificationController extends Controller
     public function index()
     {
 
-        if (!$this->telegramService->isConfigured()) {
+        if (! $this->telegramService->isConfigured()) {
             return view('admin.notifications.index')
                 ->with('error', 'Telegram не налаштовано. Додайте TELEGRAM_API_ID та TELEGRAM_API_HASH в .env файл.')
                 ->with('templates', [])
@@ -38,7 +37,7 @@ class NotificationController extends Controller
         }
 
         $templates = NotificationTemplate::where('is_active', true)->get();
-        
+
         // Майбутні записи для розсилки
         $upcomingAppointments = Appointment::with(['client', 'master', 'service'])
             ->where('appointment_date', '>=', now())
@@ -86,7 +85,7 @@ class NotificationController extends Controller
                 ->with('success', "Розсилку завершено. Успішно: {$results['success']}, Помилки: {$results['failed']}");
         } catch (\Exception $e) {
             return redirect()->route('admin.notifications.index')
-                ->with('error', 'Помилка розсилки: ' . $e->getMessage());
+                ->with('error', 'Помилка розсилки: '.$e->getMessage());
         }
     }
 
@@ -183,5 +182,49 @@ class NotificationController extends Controller
         $preview = $template->render($appointment);
 
         return response()->json(['preview' => $preview]);
+    }
+
+    /**
+     * Швидке нагадування "на завтра"
+     */
+    public function quickReminder(Request $request, $appointmentId)
+    {
+        try {
+            $appointment = Appointment::with(['client', 'master', 'service'])
+                ->findOrFail($appointmentId);
+
+            // Використовуємо шаблон з ID 1
+            $template = NotificationTemplate::find(1);
+
+            if (! $template) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Шаблон "на завтра" не знайдено (ID: 1)',
+                ], 404);
+            }
+
+            // Відправка повідомлення
+            $results = $this->telegramService->sendBulkNotifications(
+                [$appointment->id],
+                $template
+            );
+
+            if ($results['success'] > 0) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Нагадування успішно надіслано!',
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Помилка відправки. Перевірте налаштування Telegram.',
+                ], 500);
+            }
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Помилка: '.$e->getMessage(),
+            ], 500);
+        }
     }
 }

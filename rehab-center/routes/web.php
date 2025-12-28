@@ -91,6 +91,8 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
             ->name('notifications.logs');
         Route::post('notifications/preview', [NotificationController::class, 'previewTemplate'])
             ->name('notifications.preview');
+        Route::post('appointments/{appointment}/quick-reminder', [NotificationController::class, 'quickReminder'])
+            ->name('appointments.quick-reminder');
 
         // Управління шаблонами
         Route::get('notifications/templates', [NotificationController::class, 'templates'])

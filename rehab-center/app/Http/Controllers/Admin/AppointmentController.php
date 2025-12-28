@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
-use App\Models\User;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
@@ -13,10 +13,10 @@ class AppointmentController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        
+
         // Базовий запит з фільтрацією по ролі
         $query = Appointment::with(['client', 'master', 'service']);
-        
+
         // КРИТИЧНО: Якщо майстер - показуємо тільки його записи
         if ($user->isMaster()) {
             $query->where('master_id', $user->id);
@@ -48,27 +48,27 @@ class AppointmentController extends Controller
 
         // Фільтрація по клієнту
         if ($request->filled('client_name')) {
-            $query->whereHas('client', function($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->client_name . '%')
-                  ->orWhere('phone', 'like', '%' . $request->client_name . '%')
-                  ->orWhere('email', 'like', '%' . $request->client_name . '%');
+            $query->whereHas('client', function ($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->client_name.'%')
+                    ->orWhere('phone', 'like', '%'.$request->client_name.'%')
+                    ->orWhere('email', 'like', '%'.$request->client_name.'%');
             });
         }
 
         $appointments = $query->orderBy('appointment_date', 'desc')
-                             ->orderBy('appointment_time', 'desc')
-                             ->paginate(20);
+            ->orderBy('appointment_time', 'desc')
+            ->paginate(20);
 
         // Дані для фільтрів
-        $masters = $user->isAdmin() 
+        $masters = $user->isAdmin()
             ? User::where('role', 'master')->where('is_active', true)->get()
             : collect(); // Майстру не потрібен список майстрів
-            
+
         $services = Service::where('is_active', true)->get();
         $statuses = [
             'scheduled' => 'Заплановано',
             'completed' => 'Завершено',
-            'cancelled' => 'Скасовано'
+            'cancelled' => 'Скасовано',
         ];
 
         return view('admin.appointments.index', compact('appointments', 'masters', 'services', 'statuses'));
@@ -77,16 +77,16 @@ class AppointmentController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        
+
         $query = Appointment::with(['client', 'master', 'service']);
-        
+
         // Майстер може бачити тільки свої записи
         if ($user->isMaster()) {
             $query->where('master_id', $user->id);
         }
-        
+
         $appointment = $query->findOrFail($id);
-        
+
         return response()->json([
             'id' => $appointment->id,
             'client' => [
@@ -108,6 +108,7 @@ class AppointmentController extends Controller
             'status' => $appointment->status,
             'status_text' => $this->getStatusText($appointment->status),
             'notes' => $appointment->notes,
+            'telegram_notification_sent' => $appointment->telegram_notification_sent,
             'created_at' => $appointment->created_at->format('d.m.Y H:i'),
         ]);
     }
@@ -115,18 +116,18 @@ class AppointmentController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $user = auth()->user();
-        
+
         $request->validate([
-            'status' => 'required|in:scheduled,completed,cancelled'
+            'status' => 'required|in:scheduled,completed,cancelled',
         ]);
 
         $query = Appointment::query();
-        
+
         // Майстер може змінювати тільки свої записи
         if ($user->isMaster()) {
             $query->where('master_id', $user->id);
         }
-        
+
         $appointment = $query->findOrFail($id);
         $appointment->update(['status' => $request->status]);
 
@@ -134,26 +135,26 @@ class AppointmentController extends Controller
             'success' => true,
             'message' => 'Статус запису оновлено',
             'status' => $appointment->status,
-            'status_text' => $this->getStatusText($appointment->status)
+            'status_text' => $this->getStatusText($appointment->status),
         ]);
     }
 
     public function destroy($id)
     {
         $user = auth()->user();
-        
+
         $query = Appointment::query();
-        
+
         // Майстер може видаляти тільки свої записи
         if ($user->isMaster()) {
             $query->where('master_id', $user->id);
         }
-        
+
         $appointment = $query->findOrFail($id);
         $appointment->delete();
 
         return redirect()->route('admin.appointments.index')
-                        ->with('success', 'Запис видалено');
+            ->with('success', 'Запис видалено');
     }
 
     private function getStatusText($status)
@@ -161,7 +162,7 @@ class AppointmentController extends Controller
         return [
             'scheduled' => 'Заплановано',
             'completed' => 'Завершено',
-            'cancelled' => 'Скасовано'
+            'cancelled' => 'Скасовано',
         ][$status] ?? $status;
     }
 }

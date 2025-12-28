@@ -25,7 +25,6 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Назва</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Повідомлення</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Використано</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дії</th>
                 </tr>
             </thead>
@@ -40,28 +39,23 @@
                                 {{ Str::limit($template->message, 100) }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                {{ $template->logs_count }} разів
-                            </span>
-                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
-                                <button onclick="showTemplateDetails({{ $template->id }})" 
+                                <button onclick="showTemplateDetails({{ $template->id }})"
                                         class="text-blue-600 hover:text-blue-900 transition-colors"
                                         title="Перегляд">
                                     <i class="fas fa-eye text-lg"></i>
                                 </button>
-                                <button onclick="editTemplate({{ $template->id }})" 
+                                <button onclick="editTemplate({{ $template->id }})"
                                         class="text-indigo-600 hover:text-indigo-900 transition-colors"
                                         title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </button>
-                                <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}" 
+                                <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}"
                                       class="inline" onsubmit="return confirm('Ви впевнені, що хочете видалити цей шаблон?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" 
+                                    <button type="submit"
                                             class="text-red-600 hover:text-red-900 transition-colors"
                                             title="Видалити">
                                         <i class="fas fa-trash text-lg"></i>
@@ -72,7 +66,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+                        <td colspan="3" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-file-alt text-4xl mb-3"></i>
                             <p>Шаблонів ще не створено</p>
                         </td>
@@ -87,29 +81,24 @@
         @forelse($templates as $template)
             <div class="bg-white rounded-lg shadow-md border p-4">
                 <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <h3 class="font-semibold text-gray-900">{{ $template->name }}</h3>
-                        <span class="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-full">
-                            {{ $template->logs_count }} разів
-                        </span>
-                    </div>
-                    
+                    <h3 class="font-semibold text-gray-900">{{ $template->name }}</h3>
+
                     <div class="flex space-x-2">
-                        <button onclick="showTemplateDetails({{ $template->id }})" 
+                        <button onclick="showTemplateDetails({{ $template->id }})"
                                 class="text-blue-600"
                                 title="Перегляд">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <button onclick="editTemplate({{ $template->id }})" 
+                        <button onclick="editTemplate({{ $template->id }})"
                                 class="text-indigo-600"
                                 title="Редагувати">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}" 
+                        <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}"
                               class="inline" onsubmit="return confirm('Ви впевнені, що хочете видалити цей шаблон?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" 
+                            <button type="submit"
                                     class="text-red-600"
                                     title="Видалити">
                                 <i class="fas fa-trash"></i>
@@ -153,21 +142,15 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Назва шаблону</label>
                     <p id="template-details-name" class="text-gray-900"></p>
                 </div>
-                
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Повний текст</label>
                     <pre id="template-details-message" class="bg-gray-50 p-3 rounded text-sm whitespace-pre-wrap"></pre>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Використано</label>
-                        <p id="template-details-logs" class="text-gray-900"></p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Створено</label>
-                        <p id="template-details-created" class="text-gray-900"></p>
-                    </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Створено</label>
+                    <p id="template-details-created" class="text-gray-900"></p>
                 </div>
             </div>
         </div>
@@ -208,6 +191,21 @@
                     </label>
                     <textarea id="template-message" name="message" rows="6" required
                               class="w-full px-3 py-2 border border-gray-300 rounded-md"></textarea>
+                    <div class="mt-2 text-xs text-gray-600 bg-gray-50 p-3 rounded">
+                        <div class="font-semibold mb-2">Доступні плейсхолдери:</div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-1">
+                            <div><code class="bg-white px-1 rounded">{client_name}</code> - Ім'я клієнта</div>
+                            <div><code class="bg-white px-1 rounded">{master_name}</code> - Ім'я майстра</div>
+                            <div><code class="bg-white px-1 rounded">{service_name}</code> - Назва послуги</div>
+                            <div><code class="bg-white px-1 rounded">{date}</code> - Дата запису</div>
+                            <div><code class="bg-white px-1 rounded">{time}</code> - Час запису</div>
+                            <div><code class="bg-white px-1 rounded">{duration}</code> - Тривалість (хв)</div>
+                            <div><code class="bg-white px-1 rounded">{price}</code> - Ціна</div>
+                            <div><code class="bg-white px-1 rounded">{center_name}</code> - Назва центру</div>
+                            <div><code class="bg-white px-1 rounded">{center_phone}</code> - Телефон центру</div>
+                            <div><code class="bg-white px-1 rounded">{center_address}</code> - Адреса центру</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -227,17 +225,16 @@
 
 @push('scripts')
 <script>
-const templates = @json($templates);
+const templates = @json($templates->items());
 
 function showTemplateDetails(id) {
     const template = templates.find(t => t.id === id);
-    
+
     document.getElementById('template-details-title').textContent = 'Деталі шаблону';
     document.getElementById('template-details-name').textContent = template.name;
     document.getElementById('template-details-message').textContent = template.message;
-    document.getElementById('template-details-logs').textContent = template.logs_count + ' разів';
     document.getElementById('template-details-created').textContent = template.created_at;
-    
+
     const modal = document.getElementById('template-details-modal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
