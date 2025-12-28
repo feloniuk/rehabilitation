@@ -5,7 +5,10 @@
       "Bash(wc:*)",
       "Bash(php artisan:*)",
       "Bash(vendor/bin/pint:*)",
-      "Bash(php -l:*)"
+      "Bash(php -l:*)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd client photo thumbnails to clients list page\n\n- Display client photos in desktop table view\n- Display client photos in mobile card view  \n- Fall back to gradient avatar with initial if no photo\n- Match styling with master thumbnails for consistency\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
     ]
   },
   "enableAllProjectMcpServers": true,

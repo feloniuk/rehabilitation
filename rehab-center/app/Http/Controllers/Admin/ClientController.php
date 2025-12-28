@@ -48,7 +48,7 @@ class ClientController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
+            'email' => 'nullable|email|unique:users,email',
             'phone' => [
                 'required',
                 'string',
@@ -61,11 +61,12 @@ class ClientController extends Controller
             ],
             'telegram_username' => 'nullable|string|max:100',
             'description' => 'nullable|string|max:500',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
             'email.unique' => 'Клієнт з таким email вже існує',
         ]);
 
-        $client = User::create([
+        $data = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $normalizedPhone,
@@ -74,7 +75,13 @@ class ClientController extends Controller
             'password' => Hash::make(str()->random(16)),
             'role' => 'client',
             'is_active' => true,
-        ]);
+        ];
+
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('clients', 'public');
+        }
+
+        $client = User::create($data);
 
         return redirect()->route('admin.clients.index')
             ->with('success', 'Клієнта успішно створено');
@@ -108,9 +115,9 @@ class ClientController extends Controller
             'description' => 'nullable|string|max:500',
             'telegram_username' => 'nullable|string|max:100',
             'email' => [
-                'required',
+                'nullable',
                 'email',
-                Rule::unique('users', 'email')->ignore($client->id),
+                Rule::unique('users', 'email')->ignore($client->id)->whereNotNull('email'),
             ],
             'phone' => [
                 'required',
@@ -125,16 +132,27 @@ class ClientController extends Controller
                     }
                 },
             ],
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $client->update([
+        $data = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $normalizedPhone,
             'telegram_username' => $this->normalizeTelegramUsername($request->telegram_username),
             'description' => $request->description,
             'is_active' => $request->has('is_active'),
-        ]);
+        ];
+
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($client->photo) {
+                \Storage::disk('public')->delete($client->photo);
+            }
+            $data['photo'] = $request->file('photo')->store('clients', 'public');
+        }
+
+        $client->update($data);
 
         return redirect()->route('admin.clients.index')
             ->with('success', 'Дані клієнта оновлено');

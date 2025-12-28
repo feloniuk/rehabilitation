@@ -6,8 +6,20 @@
 @section('content')
 <div class="max-w-2xl mx-auto">
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="{{ route('admin.clients.store') }}">
+        <form method="POST" action="{{ route('admin.clients.store') }}" enctype="multipart/form-data">
             @csrf
+
+            <div class="mb-6">
+                <label for="photo" class="block text-sm font-medium text-gray-700 mb-2">
+                    Фото клієнта
+                </label>
+                <input type="file" id="photo" name="photo" accept="image/*"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <p class="text-xs text-gray-500 mt-1">Необов'язково. JPEG, PNG, GIF. Максимум 2MB.</p>
+                @error('photo')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
+            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
@@ -24,11 +36,12 @@
 
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        Email *
+                        Email
                     </label>
-                    <input type="email" id="email" name="email" required
+                    <input type="email" id="email" name="email"
                            value="{{ old('email') }}"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Необов'язково.</p>
                     @error('email')
                         <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                     @enderror

@@ -166,9 +166,9 @@
                             <div class="appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
                                  data-appointment-id="{{ $apt['id'] }}"
                                  style="top: {{ $topPx }}px;
-                                        height: {{ $heightPx }}px;
-                                        background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }});
-                                        z-index: {{ 5 + $aptIndex }};
+                                        height: {{ $heightPx }}px; 
+                                        background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); 
+                                        z-index: {{ 5 + $aptIndex }}; 
                                         left: {{ $leftPercent }}%;
                                         width: calc({{ $widthPercent }}% - 4px);"
                                  onclick="showAppointmentDetails({{ $apt['id'] }})">
@@ -496,18 +496,66 @@ function reloadTimeline(dayIndex) {
     });
 }
 
+function parseDescriptionWithViberLink(text) {
+    console.log('parseDescriptionWithViberLink called with:', text);
+
+    if (!text || text === null || text === undefined) {
+        console.log('Text is empty or null, returning empty string');
+        return '';
+    }
+
+    try {
+        // HTML encode text
+        var div = document.createElement('div');
+        div.textContent = text;
+        var encoded = div.innerHTML;
+
+        // Replace line breaks
+        encoded = encoded.replace(/\n/g, '<br>').replace(/\r/g, '');
+
+        // Replace Viber links
+        encoded = encoded.replace(/viber:\/\/chat\?number=([^&\s<>"']+)/g,
+            '<a href="viber://chat?number=$1" class="text-blue-600 hover:text-blue-800 hover:underline"><i class="fab fa-viber mr-1"></i>Viber</a>');
+
+        console.log('parseDescriptionWithViberLink returning:', encoded);
+        return encoded;
+    } catch (error) {
+        console.error('Error in parseDescriptionWithViberLink:', error);
+        return '';
+    }
+}
+
 function showAppointmentDetails(id) {
+    console.log('showAppointmentDetails called with id:', id);
     currentAppointmentId = id;
 
     var modal = document.getElementById('appointmentModal');
+    console.log('Modal element:', modal);
+
+    if (!modal) {
+        console.error('Modal element not found!');
+        return;
+    }
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    console.log('Modal classes after update:', modal.className);
 
     document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i></div>';
 
+    console.log('Fetching appointment from: /admin/appointments/' + id);
+
     fetch('/admin/appointments/' + id)
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            console.log('Fetch response status:', r.status);
+            if (!r.ok) {
+                throw new Error('HTTP ' + r.status + ': ' + r.statusText);
+            }
+            return r.json();
+        })
         .then(function(d) {
+            console.log('Appointment data received:', d);
+
             var statusClasses = {
                 'scheduled': 'bg-green-100 text-green-800',
                 'completed': 'bg-blue-100 text-blue-800',
@@ -515,15 +563,27 @@ function showAppointmentDetails(id) {
             };
             var sc = statusClasses[d.status];
 
-            document.getElementById('appointmentContent').innerHTML =
+            var emailHtml = d.client.email
+                ? '<div class="text-sm text-gray-600">' + d.client.email + '</div>'
+                : '';
+
+            var processedDescription = parseDescriptionWithViberLink(d.client.description);
+            var notesHtml = (d.notes && d.notes !== d.client.description) ? d.notes : '';
+
+            var notesContent = processedDescription + (notesHtml && processedDescription ? '<br><br>' : '') + notesHtml;
+
+            var contentHtml =
                 '<div class="space-y-3">' +
-                    '<div><div class="text-xs text-gray-500 mb-1">Клієнт</div><div class="font-semibold">' + d.client.name + '</div><div class="text-sm text-gray-600">' + d.client.phone + '</div></div>' +
+                    '<div><div class="text-xs text-gray-500 mb-1">Клієнт</div><div class="font-semibold">' + d.client.name + '</div><div class="text-sm text-gray-600">' + d.client.phone + '</div>' + emailHtml + '</div>' +
                     '<div><div class="text-xs text-gray-500 mb-1">Майстер</div><div class="font-medium">' + d.master.name + '</div></div>' +
                     '<div><div class="text-xs text-gray-500 mb-1">Послуга</div><div class="font-medium">' + d.service.name + '</div><div class="text-sm text-gray-600">' + d.service.duration + ' хв</div></div>' +
                     '<div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Дата</div><div class="font-medium">' + d.appointment_date + '</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Час</div><div class="font-medium">' + d.appointment_time + '</div></div></div>' +
                     '<div class="flex gap-3"><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Ціна</div><div class="text-lg font-bold text-green-600">' + d.price + '₴</div></div><div class="flex-1"><div class="text-xs text-gray-500 mb-1">Статус</div><span class="inline-block px-2 py-1 text-xs font-semibold rounded-full ' + sc + '">' + d.status_text + '</span></div></div>' +
-                    (d.notes ? '<div><div class="text-xs text-gray-500 mb-1">Примітки</div><div class="text-sm bg-gray-50 p-2 rounded">' + d.notes + '</div></div>' : '') +
+                    (notesContent ? '<div><div class="text-xs text-gray-500 mb-1">Примітки</div><div class="text-sm bg-gray-50 p-2 rounded">' + notesContent + '</div></div>' : '') +
                 '</div>';
+
+            document.getElementById('appointmentContent').innerHTML = contentHtml;
+            console.log('Content populated successfully');
 
             // Оновлюємо стан кнопки швидкого нагадування
             var btn = document.getElementById('quickReminderBtn');
@@ -539,8 +599,9 @@ function showAppointmentDetails(id) {
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Швидке нагадування "на завтра"</span>';
             }
         })
-        .catch(function() {
-            document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8 text-red-500">Помилка завантаження</div>';
+        .catch(function(error) {
+            console.error('Error loading appointment:', error);
+            document.getElementById('appointmentContent').innerHTML = '<div class="text-center py-8 text-red-500"><div>Помилка завантаження</div><div class="text-sm mt-2">' + error.message + '</div></div>';
         });
 }
 

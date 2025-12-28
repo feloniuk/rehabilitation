@@ -64,11 +64,14 @@
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
-                                <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                    <span class="text-blue-600 font-bold">
+                                @if($client->photo)
+                                    <img src="{{ asset('storage/' . $client->photo) }}"
+                                         class="flex-shrink-0 h-10 w-10 rounded-full mr-3 object-cover">
+                                @else
+                                    <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3 text-white font-bold text-sm">
                                         {{ substr($client->name, 0, 1) }}
-                                    </span>
-                                </div>
+                                    </div>
+                                @endif
                                 <div>
                                     <div class="font-medium text-gray-900">{{ $client->name }}</div>
                                     <div class="text-sm text-gray-500">{{ $client->email }}</div>
@@ -162,11 +165,14 @@
             <div class="bg-white rounded-lg shadow-md border p-4">
                 <div class="flex justify-between items-center mb-3">
                     <div class="flex items-center space-x-3">
-                        <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span class="text-blue-600 font-bold">
+                        @if($client->photo)
+                            <img src="{{ asset('storage/' . $client->photo) }}"
+                                 class="flex-shrink-0 h-10 w-10 rounded-full object-cover">
+                        @else
+                            <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
                                 {{ substr($client->name, 0, 1) }}
-                            </span>
-                        </div>
+                            </div>
+                        @endif
                         <div>
                             <h3 class="font-semibold text-gray-900">{{ $client->name }}</h3>
                             <p class="text-sm text-gray-500">{{ $client->email }}</p>

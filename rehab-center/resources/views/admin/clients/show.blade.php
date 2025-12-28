@@ -9,14 +9,24 @@
     <div class="lg:col-span-1">
         <div class="bg-white rounded-lg shadow p-6">
             <div class="text-center mb-6">
-                <div class="w-32 h-32 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                    <span class="text-4xl font-bold text-blue-600">
-                        {{ substr($client->name, 0, 1) }}
-                    </span>
-                </div>
-                
+                @if($client->photo)
+                    <div class="w-32 h-32 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden">
+                        <img src="{{ Storage::url($client->photo) }}"
+                             alt="{{ $client->name }}"
+                             class="w-full h-full object-cover">
+                    </div>
+                @else
+                    <div class="w-32 h-32 bg-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <span class="text-4xl font-bold text-blue-600">
+                            {{ substr($client->name, 0, 1) }}
+                        </span>
+                    </div>
+                @endif
+
                 <h1 class="text-2xl font-bold">{{ $client->name }}</h1>
-                <p class="text-gray-600">{{ $client->email }}</p>
+                @if($client->email)
+                    <p class="text-gray-600">{{ $client->email }}</p>
+                @endif
                 <p class="text-gray-600">{{ $client->phone }}</p>
             </div>
             

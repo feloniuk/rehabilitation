@@ -93,6 +93,7 @@ class AppointmentController extends Controller
                 'name' => $appointment->client->name,
                 'phone' => $appointment->client->phone,
                 'email' => $appointment->client->email,
+                'description' => $appointment->client->description,
             ],
             'master' => [
                 'name' => $appointment->master->name,

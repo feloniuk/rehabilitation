@@ -231,6 +231,24 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsContainer = document.getElementById('client_results');
     const hiddenInput = document.getElementById('existing_client');
 
+    function parseDescriptionWithViberLink(text) {
+        if (!text) return '';
+
+        // HTML encode text
+        var div = document.createElement('div');
+        div.textContent = text;
+        var encoded = div.innerHTML;
+
+        // Replace line breaks
+        encoded = encoded.replace(/\n/g, '<br>').replace(/\r/g, '');
+
+        // Replace Viber links
+        encoded = encoded.replace(/viber:\/\/chat\?number=([^&\s<>"']+)/g,
+            '<a href="viber://chat?number=$1" class="text-blue-600 hover:text-blue-800 hover:underline"><i class="fab fa-viber mr-1"></i>Viber</a>');
+
+        return encoded;
+    }
+
     // Перемикання типу клієнта
     document.querySelectorAll('input[name="client_type"]').forEach(radio => {
         radio.addEventListener('change', function() {
@@ -286,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         return;
                     }
 
-                    // Внутри функции, где происходит рендеринг результатов
+                    // Рендеринг результатів
                     resultsContainer.innerHTML = data.results.map(client => `
                         <label class="flex items-center p-4 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors">
                             <input type="radio"
@@ -315,12 +333,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         </label>
                     `).join('');
 
+                    // Вставляємо HTML контент для описань
+                    document.querySelectorAll('.client-description-html').forEach(el => {
+                        const encoded = el.getAttribute('data-description-html');
+                        const text = decodeURIComponent(escape(atob(encoded)));
+                        const html = parseDescriptionWithViberLink(text);
+                        el.querySelector('.description-content').innerHTML = html;
+                        el.removeAttribute('data-description-html');
+                    });
+
                     // Обробка вибору клієнта
                     document.querySelectorAll('input[name="client_radio"]').forEach(radio => {
                         radio.addEventListener('change', function() {
                             hiddenInput.value = this.value;
                             document.getElementById('client_type_hidden').value = this.value;
-                            
+
                             // Візуальна індикація вибору
                             document.querySelectorAll('input[name="client_radio"]').forEach(r => {
                                 const label = r.closest('label');
