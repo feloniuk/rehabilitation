@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
@@ -114,6 +115,109 @@ class AppointmentController extends Controller
         ]);
     }
 
+    public function edit($id)
+    {
+        $user = auth()->user();
+
+        $query = Appointment::with(['client', 'master', 'service']);
+
+        // Майстер може редагувати тільки свої записи, адмін - будь-які
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+
+        $appointment = $query->findOrFail($id);
+        $masters = User::where('role', 'master')
+            ->where('is_active', true)
+            ->get();
+
+        $services = Service::where('is_active', true)->get();
+
+        return view('admin.appointments.edit', compact('appointment', 'masters', 'services'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = auth()->user();
+
+        $query = Appointment::query();
+
+        // Майстер може редагувати тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+
+        $appointment = $query->findOrFail($id);
+
+        $rules = [
+            'master_id' => 'required|exists:users,id',
+            'service_id' => 'required|exists:services,id',
+            'appointment_date' => 'required|date',
+            'appointment_time' => 'required|date_format:H:i',
+            'price' => 'required|numeric|min:0',
+            'duration' => 'required|integer|min:1',
+            'notes' => 'nullable|string',
+            'status' => 'required|in:scheduled,completed,cancelled',
+            'allow_overlap' => 'nullable|boolean',
+        ];
+
+        $validated = $request->validate($rules);
+
+        // Час уже в правильному форматі HH:mm з JavaScript
+        $appointmentTime = $request->appointment_time;
+
+        // Перевірка що час в майбутньому (тільки якщо статус scheduled)
+        if ($request->status === 'scheduled') {
+            $appointmentDateTime = Carbon::createFromFormat(
+                'Y-m-d H:i',
+                $request->appointment_date.' '.$appointmentTime
+            );
+
+            // Дозволяємо редагувати записи які були в майбутньому, але якщо змінити на прошедший час - не дозволяємо
+            if ($appointmentDateTime->isPast()) {
+                return back()->withErrors([
+                    'appointment_date' => 'Неможливо встановити час в минулому. Виберіть час в майбутньому або змініть статус на "Завершено".',
+                ])->withInput();
+            }
+        }
+
+        // Перевірка на конфлікт часу (крім поточної записи)
+        if (! $request->boolean('allow_overlap') && (
+            $appointment->appointment_date->format('Y-m-d') !== $request->appointment_date ||
+            substr($appointment->appointment_time, 0, 5) !== $appointmentTime ||
+            $appointment->master_id != $request->master_id
+        )) {
+            $conflict = $this->checkTimeConflict(
+                $request->master_id,
+                $request->appointment_date,
+                $appointmentTime,
+                $request->duration,
+                $id
+            );
+
+            if ($conflict) {
+                return back()->withErrors([
+                    'appointment_time' => 'На цей час вже є запис. Увімкніть "Дозволити нахлест" якщо потрібно.',
+                ])->withInput();
+            }
+        }
+
+        // Оновлення запису
+        $appointment->update([
+            'master_id' => $request->master_id,
+            'service_id' => $request->service_id,
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $appointmentTime.':00',  // Додаємо секунди
+            'duration' => $request->duration,
+            'price' => $request->price,
+            'notes' => $request->notes,
+            'status' => $request->status,
+        ]);
+
+        return redirect()->route('admin.appointments.index')
+            ->with('success', 'Запис успішно оновлено');
+    }
+
     public function updateStatus(Request $request, $id)
     {
         $user = auth()->user();
@@ -165,5 +269,39 @@ class AppointmentController extends Controller
             'completed' => 'Завершено',
             'cancelled' => 'Скасовано',
         ][$status] ?? $status;
+    }
+
+    private function checkTimeConflict(
+        int $masterId,
+        string $date,
+        string $time,
+        int $duration,
+        ?int $excludeAppointmentId = null
+    ): bool {
+        $dateOnly = Carbon::parse($date)->format('Y-m-d');
+        $startTime = Carbon::createFromFormat('Y-m-d H:i', $dateOnly.' '.$time);
+        $endTime = $startTime->copy()->addMinutes($duration);
+
+        $query = Appointment::where('master_id', $masterId)
+            ->whereDate('appointment_date', $dateOnly)
+            ->where('status', 'scheduled');
+
+        // Виключаємо поточну запис при редагуванні
+        if ($excludeAppointmentId) {
+            $query->where('id', '!=', $excludeAppointmentId);
+        }
+
+        $existingAppointments = $query->get();
+
+        foreach ($existingAppointments as $appointment) {
+            $existingStart = $appointment->getStartDateTime();
+            $existingEnd = $appointment->getEndDateTime();
+
+            if ($startTime->lt($existingEnd) && $endTime->gt($existingStart)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

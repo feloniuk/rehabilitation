@@ -138,16 +138,21 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
-                                <button onclick="showAppointmentDetails({{ $appointment->id }})" 
+                                <button onclick="showAppointmentDetails({{ $appointment->id }})"
                                         class="text-blue-600 hover:text-blue-900 transition-colors"
                                         title="Деталі">
                                     <i class="fas fa-eye text-lg"></i>
                                 </button>
-                                <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}" 
+                                <a href="{{ route('admin.appointments.edit', $appointment->id) }}"
+                                   class="text-green-600 hover:text-green-900 transition-colors"
+                                   title="Редагувати">
+                                    <i class="fas fa-edit text-lg"></i>
+                                </a>
+                                <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}"
                                     class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" 
+                                    <button type="submit"
                                             class="text-red-600 hover:text-red-900 transition-colors"
                                             title="Видалити">
                                         <i class="fas fa-trash text-lg"></i>
@@ -180,16 +185,21 @@
                     </div>
                     
                     <div class="flex space-x-2">
-                        <button onclick="showAppointmentDetails({{ $appointment->id }})" 
+                        <button onclick="showAppointmentDetails({{ $appointment->id }})"
                                 class="text-blue-600"
                                 title="Деталі">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}" 
+                        <a href="{{ route('admin.appointments.edit', $appointment->id) }}"
+                           class="text-green-600"
+                           title="Редагувати">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}"
                               class="inline" onsubmit="return confirm('Ви впевнені?')">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" 
+                            <button type="submit"
                                     class="text-red-600"
                                     title="Видалити">
                                 <i class="fas fa-trash"></i>

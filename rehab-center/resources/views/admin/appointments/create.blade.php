@@ -72,13 +72,31 @@
                 </div>
 
                 <div>
-                    <label for="appointment_time" class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
                         <i class="fas fa-clock text-orange-500 mr-1"></i>
                         Час *
                     </label>
-                    <input type="time" id="appointment_time" name="appointment_time" required 
-                           value="{{ old('appointment_time', '09:00') }}"
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div class="flex gap-2 items-end">
+                        <div class="flex-1">
+                            <!-- <label for="appointment_hour" class="block text-xs text-gray-600 mb-1">Години</label> -->
+                            <input type="number" id="appointment_hour" name="appointment_hour" required
+                                   min="0" max="23" step="1"
+                                   value="{{ old('appointment_hour', substr(old('appointment_time', '09:00'), 0, 2)) }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                   placeholder="00">
+                        </div>
+                        <div class="text-lg font-semibold text-gray-500 pb-2">:</div>
+                        <div class="flex-1">
+                            <!-- <label for="appointment_minute" class="block text-xs text-gray-600 mb-1">Хвилини</label> -->
+                            <input type="number" id="appointment_minute" name="appointment_minute" required
+                                   min="0" max="59" step="1"
+                                   value="{{ old('appointment_minute', substr(old('appointment_time', '09:00'), 3, 2)) }}"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+                                   placeholder="00">
+                        </div>
+                    </div>
+                    <input type="hidden" id="appointment_time" name="appointment_time" required
+                           value="{{ old('appointment_time', '09:00') }}">
                 </div>
 
                 <div>
@@ -477,10 +495,42 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ініціалізація при завантаженні сторінки
     updateTimeRestriction();
 
+    // Форматування та валідація часу
+    const hourInput = document.getElementById('appointment_hour');
+    const minuteInput = document.getElementById('appointment_minute');
+    const timeHiddenInput = document.getElementById('appointment_time');
+
+    function formatTimeInputs() {
+        let hour = parseInt(hourInput.value) || 0;
+        let minute = parseInt(minuteInput.value) || 0;
+
+        // Валідація
+        hour = Math.max(0, Math.min(23, hour));
+        minute = Math.max(0, Math.min(59, minute));
+
+        // Форматування
+        hourInput.value = String(hour).padStart(2, '0');
+        minuteInput.value = String(minute).padStart(2, '0');
+
+        // Оновлення скритого поля
+        timeHiddenInput.value = `${hourInput.value}:${minuteInput.value}`;
+    }
+
+    hourInput.addEventListener('blur', formatTimeInputs);
+    minuteInput.addEventListener('blur', formatTimeInputs);
+    hourInput.addEventListener('change', formatTimeInputs);
+    minuteInput.addEventListener('change', formatTimeInputs);
+
+    // Ініціалізація при завантаженні
+    formatTimeInputs();
+
     // Валідація форми
     document.getElementById('appointment-form').addEventListener('submit', function(e) {
         const clientType = document.querySelector('input[name="client_type"]:checked').value;
-        
+
+        // Оновлюємо час перед відправкою
+        formatTimeInputs();
+
         if (clientType === 'existing' && !hiddenInput.value) {
             e.preventDefault();
             alert('Оберіть клієнта зі списку');

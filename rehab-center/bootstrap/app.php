@@ -15,17 +15,24 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\VerifyCsrfToken::class,
         ]);
-        
+
         // Реєстрація middleware alias
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
-        
+
         // Можна додати глобальні middleware якщо потрібно
         // $middleware->append([
         //     \App\Http\Middleware\SomeGlobalMiddleware::class,
         // ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            // При истекании CSRF токена редиректим на логин
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'CSRF token expired'], 419);
+            }
+
+            return redirect()->route('login');
+        });
     })->create();

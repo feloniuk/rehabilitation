@@ -85,7 +85,7 @@ class ManualAppointmentController extends Controller
             'master_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
             'appointment_date' => 'required|date',
-            'appointment_time' => 'required',
+            'appointment_time' => 'required|date_format:H:i',
             'price' => 'required|numeric|min:0',
             'duration' => 'required|integer|min:1',
             'notes' => 'nullable|string',
@@ -106,7 +106,7 @@ class ManualAppointmentController extends Controller
         // Перевірка що час в майбутньому
         $appointmentDateTime = Carbon::createFromFormat(
             'Y-m-d H:i',
-            $request->appointment_date.' '.substr($request->appointment_time, 0, 5)
+            $request->appointment_date.' '.$request->appointment_time
         );
 
         if ($appointmentDateTime->isPast()) {
@@ -155,7 +155,7 @@ class ManualAppointmentController extends Controller
             'master_id' => $request->master_id,
             'service_id' => $request->service_id,
             'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
+            'appointment_time' => $request->appointment_time.':00',  // Додаємо секунди
             'duration' => $request->duration,
             'price' => $request->price,
             'notes' => $request->notes,
@@ -187,7 +187,7 @@ class ManualAppointmentController extends Controller
         $dateOnly = Carbon::parse($date)->format('Y-m-d');
 
         // Тепер створюємо повний datetime
-        $startTime = Carbon::createFromFormat('Y-m-d H:i', $dateOnly.' '.substr($time, 0, 5));
+        $startTime = Carbon::createFromFormat('Y-m-d H:i', $dateOnly.' '.$time);
         $endTime = $startTime->copy()->addMinutes($duration);
 
         // Шукаємо існуючі записи на цей день

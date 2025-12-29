@@ -58,6 +58,8 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         ->name('appointments.get-service-price');
 
     Route::get('appointments/{appointment}', [AdminAppointmentController::class, 'show'])->name('appointments.show');
+    Route::get('appointments/{appointment}/edit', [AdminAppointmentController::class, 'edit'])->name('appointments.edit');
+    Route::put('appointments/{appointment}', [AdminAppointmentController::class, 'update'])->name('appointments.update');
     Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
     Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
 
