@@ -25,14 +25,34 @@ class DashboardController extends Controller
             } else {
                 $weekOffset = (int) $request->week;
             }
+
+            // Збереження offset в сесію
+            $request->session()->put('week_offset', $weekOffset);
+
+            // Редірект без параметру, щоб избежать повторної обробки при перезагрузці
+            return redirect()->route('admin.dashboard');
         }
 
-        $request->session()->put('week_offset', $weekOffset);
+        // Отримуємо offset з сесії (якщо він є)
+        $weekOffset = $request->session()->get('week_offset', 0);
 
         $stats = $this->getStats($user);
         $calendar = $this->getCalendarData($user, $weekOffset);
 
-        return view('admin.dashboard', compact('calendar', 'stats'));
+        // Отримуємо збережену дату або використовуємо індекс сьогодні
+        $selectedDateIndex = $request->session()->get('selected_date_index', $calendar['todayIndex']);
+
+        return view('admin.dashboard', compact('calendar', 'stats', 'selectedDateIndex'));
+    }
+
+    /**
+     * AJAX endpoint для збереження вибраної дати
+     */
+    public function selectDate(Request $request)
+    {
+        $request->session()->put('selected_date_index', (int) $request->input('date_index', 0));
+
+        return response()->json(['success' => true]);
     }
 
     private function getStats($user)

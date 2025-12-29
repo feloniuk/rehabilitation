@@ -313,10 +313,11 @@ var calendarData = {
         @endforeach
     ],
     timeSlots: @json($calendar['timeSlots']),
-    todayIndex: {{ $calendar['todayIndex'] }}
+    todayIndex: {{ $calendar['todayIndex'] }},
+    selectDateRoute: "{{ route('admin.select-date') }}"
 };
 
-var currentDayIndex = calendarData.todayIndex;
+var currentDayIndex = {{ $selectedDateIndex ?? 0 }};
 var currentAppointmentId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -362,7 +363,7 @@ function scrollToCurrentHour() {
 
 function selectDate(index) {
     currentDayIndex = index;
-    
+
     document.querySelectorAll('.date-btn').forEach(function(btn, i) {
         if (i === index) {
             btn.classList.add('active', 'bg-purple-500', 'text-white');
@@ -382,11 +383,25 @@ function selectDate(index) {
     });
 
     var date = new Date(calendarData.weekDates[index]);
-    document.getElementById('current-date').textContent = 
-        date.getDate().toString().padStart(2, '0') + '.' + 
+    document.getElementById('current-date').textContent =
+        date.getDate().toString().padStart(2, '0') + '.' +
         (date.getMonth() + 1).toString().padStart(2, '0');
 
     reloadTimeline(index);
+
+    // Зберігаємо вибрану дату в сесію через AJAX
+    fetch(calendarData.selectDateRoute, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            date_index: index
+        })
+    }).catch(function(error) {
+        console.error('Error saving date:', error);
+    });
 }
 
 function reloadTimeline(dayIndex) {

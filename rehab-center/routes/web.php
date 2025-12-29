@@ -38,6 +38,7 @@ Auth::routes(['register' => false]);
 // Admin routes
 Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('select-date', [DashboardController::class, 'selectDate'])->name('select-date');
 
     // Записи - доступно для всіх админів і майстрів
     Route::get('appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
