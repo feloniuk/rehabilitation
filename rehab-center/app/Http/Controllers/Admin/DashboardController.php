@@ -131,6 +131,7 @@ class DashboardController extends Controller
                 'price' => $appointment->price,
                 'status' => $appointment->status,
                 'telegram_notification_sent' => $appointment->telegram_notification_sent,
+                'is_confirmed' => $appointment->is_confirmed,
             ];
         }
 

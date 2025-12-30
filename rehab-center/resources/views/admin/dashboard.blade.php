@@ -251,14 +251,24 @@
             </button>
         </div>
         <div id="appointmentContent" class="p-4"></div>
-        <div class="p-4 border-t flex gap-2">
-            <button id="quickReminderBtn" onclick="sendQuickReminder()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                <i class="fas fa-paper-plane"></i>
-                <span>Швидке нагадування "на завтра"</span>
+        <div class="p-4 border-t flex flex-col gap-2">
+            <button id="confirmButton"
+                    onclick="toggleConfirmation()"
+                    class="w-full px-4 py-3 border-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 border-gray-300 bg-white text-gray-600 hover:bg-gray-50">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+                <span id="confirmButtonText">Підтвердити</span>
             </button>
-            <button onclick="closeModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
-                Закрити
-            </button>
+            <div class="flex gap-2">
+                <button id="quickReminderBtn" onclick="sendQuickReminder()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Швидке нагадування "на завтра"</span>
+                </button>
+                <button onclick="closeModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
+                    Закрити
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -506,6 +516,29 @@ function reloadTimeline(dayIndex) {
             if (apt.telegram_notification_sent === true) {
                 card.classList.add('border-2', 'border-red-400');
             }
+
+            // Додаємо галочку підтвердження в правому верхньому куті
+            var checkmark = document.createElement('div');
+            checkmark.className = 'absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded cursor-pointer transition-all duration-200';
+            checkmark.onclick = function(e) {
+                e.stopPropagation();
+                toggleConfirmationFromCalendar(apt.id);
+            };
+
+            if (apt.is_confirmed) {
+                checkmark.classList.add('bg-green-500', 'text-white');
+            } else {
+                checkmark.classList.add('bg-gray-300', 'text-gray-600');
+            }
+
+            checkmark.innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                </svg>
+            `;
+            checkmark.setAttribute('data-checkmark', apt.id);
+
+            card.appendChild(checkmark);
             col.appendChild(card);
         });
     });
@@ -612,6 +645,20 @@ function showAppointmentDetails(id) {
                 btn.classList.remove('bg-gray-400', 'cursor-not-allowed');
                 btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
                 btn.innerHTML = '<i class="fas fa-paper-plane"></i><span>Швидке нагадування "на завтра"</span>';
+            }
+
+            // Оновити стан кнопки підтвердження
+            var confirmButton = document.getElementById('confirmButton');
+            var confirmButtonText = document.getElementById('confirmButtonText');
+
+            if (d.is_confirmed) {
+                confirmButton.classList.remove('border-gray-300', 'bg-white', 'text-gray-600');
+                confirmButton.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                confirmButtonText.textContent = 'Підтверджено';
+            } else {
+                confirmButton.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
+                confirmButton.classList.add('border-gray-300', 'bg-white', 'text-gray-600');
+                confirmButtonText.textContent = 'Підтвердити';
             }
         })
         .catch(function(error) {
@@ -725,6 +772,111 @@ function showNotification(message, type) {
             document.body.removeChild(notification);
         }, 300);
     }, 3000);
+}
+
+function toggleConfirmation() {
+    if (!currentAppointmentId) return;
+
+    var button = document.getElementById('confirmButton');
+    var buttonText = document.getElementById('confirmButtonText');
+
+    // Блокуємо кнопку під час запиту
+    button.disabled = true;
+    button.classList.add('opacity-50', 'cursor-wait');
+
+    fetch('/admin/appointments/' + currentAppointmentId + '/toggle-confirm', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            // Оновлюємо стан кнопки в попапі
+            if (data.is_confirmed) {
+                button.classList.remove('border-gray-300', 'bg-white', 'text-gray-600');
+                button.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                buttonText.textContent = 'Підтверджено';
+            } else {
+                button.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
+                button.classList.add('border-gray-300', 'bg-white', 'text-gray-600');
+                buttonText.textContent = 'Підтвердити';
+            }
+
+            // Оновлюємо галочку на картці в календарі
+            updateAppointmentCheckmark(currentAppointmentId, data.is_confirmed);
+
+            // Показуємо toast notification
+            showNotification(data.message, 'success');
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+        showNotification('Помилка при оновленні статусу', 'error');
+    })
+    .finally(function() {
+        button.disabled = false;
+        button.classList.remove('opacity-50', 'cursor-wait');
+    });
+}
+
+function toggleConfirmationFromCalendar(appointmentId) {
+    fetch('/admin/appointments/' + appointmentId + '/toggle-confirm', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            // Оновлюємо галочку на картці
+            updateAppointmentCheckmark(appointmentId, data.is_confirmed);
+
+            // Якщо попап відкритий з цим записом - оновити кнопку
+            if (currentAppointmentId === appointmentId) {
+                var button = document.getElementById('confirmButton');
+                var buttonText = document.getElementById('confirmButtonText');
+
+                if (data.is_confirmed) {
+                    button.classList.remove('border-gray-300', 'bg-white', 'text-gray-600');
+                    button.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
+                    buttonText.textContent = 'Підтверджено';
+                } else {
+                    button.classList.remove('border-green-500', 'bg-green-50', 'text-green-700');
+                    button.classList.add('border-gray-300', 'bg-white', 'text-gray-600');
+                    buttonText.textContent = 'Підтвердити';
+                }
+            }
+
+            showNotification(data.message, 'success');
+        }
+    })
+    .catch(function(error) {
+        console.error('Error:', error);
+        showNotification('Помилка при оновленні статусу', 'error');
+    });
+}
+
+function updateAppointmentCheckmark(appointmentId, isConfirmed) {
+    var checkmark = document.querySelector('[data-checkmark="' + appointmentId + '"]');
+
+    if (checkmark) {
+        if (isConfirmed) {
+            checkmark.classList.remove('bg-gray-300', 'text-gray-600');
+            checkmark.classList.add('bg-green-500', 'text-white');
+        } else {
+            checkmark.classList.remove('bg-green-500', 'text-white');
+            checkmark.classList.add('bg-gray-300', 'text-gray-600');
+        }
+    }
 }
 
 function closeModal() {

@@ -76,28 +76,38 @@
                     @endif
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Послуга</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дата/Час</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Статус</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Дії</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 @forelse($appointments as $appointment)
-                    <tr class="hover:bg-gray-50 cursor-pointer">
+                    <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-gray-900 max-w-[75px] truncate" title="{{ $appointment->client->name }}">
-                                {{ $appointment->client->name }}
-                            </div>
-                            <div class="text-sm text-gray-500 max-w-[75px] truncate" title="{{ $appointment->client->phone }}">
-                                {{ $appointment->client->phone }}
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleConfirmationInTable({{ $appointment->id }}, this)"
+                                        class="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded cursor-pointer transition-all duration-200 {{ $appointment->is_confirmed ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600' }}"
+                                        title="{{ $appointment->is_confirmed ? 'Переспитати підтвердження' : 'Підтвердити запис' }}">
+                                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </button>
+                                <div>
+                                    <div class="font-medium text-gray-900 truncate" title="{{ $appointment->client->name }}">
+                                        {{ $appointment->client->name }}
+                                    </div>
+                                    <div class="text-sm text-gray-500 truncate" title="{{ $appointment->client->phone }}">
+                                        {{ $appointment->client->phone }}
+                                    </div>
+                                </div>
                             </div>
                         </td>
                         @if(auth()->user()->isAdmin())
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 max-w-[120px] truncate" title="{{ $appointment->master->name }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 truncate" title="{{ $appointment->master->name }}">
                                 {{ $appointment->master->name }}
                             </td>
                         @endif
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 max-w-[75px] truncate" title="{{ $appointment->service->name }}">
+                            <div class="text-sm text-gray-900 truncate" title="{{ $appointment->service->name }}">
                                 {{ $appointment->service->name }}
                             </div>
                             <div class="text-xs text-gray-500">{{ $appointment->duration }} хв</div>
@@ -105,36 +115,6 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ $appointment->appointment_date->format('d.m.Y') }}</div>
                             <div class="text-xs text-gray-500">{{ substr($appointment->appointment_time, 0, 5) }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @switch($appointment->status)
-                                @case('scheduled')
-                                    <span style="
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                        Заплановано
-                                    </span>
-                                    @break
-                                @case('completed')
-                                    <span style="
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                        Завершено
-                                    </span>
-                                    @break
-                                @default
-                                    <span style="
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                        Скасовано
-                                    </span>
-                            @endswitch
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
@@ -163,7 +143,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="{{ auth()->user()->isAdmin() ? '6' : '5' }}" 
+                        <td colspan="{{ auth()->user()->isAdmin() ? '5' : '4' }}" 
                             class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-calendar-times text-4xl mb-3"></i>
                             <p>Записів не знайдено</p>
@@ -179,9 +159,18 @@
         @forelse($appointments as $appointment)
             <div class="bg-white rounded-lg shadow-md border p-4">
                 <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <h3 class="font-semibold text-gray-900">{{ $appointment->client->name }}</h3>
-                        <p class="text-sm text-gray-500">{{ $appointment->client->phone }}</p>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleConfirmationInTable({{ $appointment->id }}, this)"
+                                class="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded cursor-pointer transition-all duration-200 {{ $appointment->is_confirmed ? 'bg-green-500 text-white' : 'bg-gray-300 text-gray-600' }}"
+                                title="{{ $appointment->is_confirmed ? 'Переспитати підтвердження' : 'Підтвердити запис' }}">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">{{ $appointment->client->name }}</h3>
+                            <p class="text-sm text-gray-500">{{ $appointment->client->phone }}</p>
+                        </div>
                     </div>
                     
                     <div class="flex space-x-2">
@@ -225,25 +214,6 @@
                             {{ $appointment->appointment_date->format('d.m.Y') }} 
                             {{ substr($appointment->appointment_time, 0, 5) }}
                         </span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-gray-600">Статус:</span>
-                        @switch($appointment->status)
-                            @case('scheduled')
-                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                    Заплановано
-                                </span>
-                                @break
-                            @case('completed')
-                                <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                                    Завершено
-                                </span>
-                                @break
-                            @default
-                                <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">
-                                    Скасовано
-                                </span>
-                        @endswitch
                     </div>
                 </div>
             </div>
@@ -376,6 +346,52 @@ document.addEventListener('keydown', function(e) {
         closeModal();
     }
 });
+
+function toggleConfirmationInTable(appointmentId, buttonElement) {
+    fetch(`/admin/appointments/${appointmentId}/toggle-confirm`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Оновлюємо стиль кнопки
+            if (data.is_confirmed) {
+                buttonElement.classList.remove('bg-gray-300', 'text-gray-600');
+                buttonElement.classList.add('bg-green-500', 'text-white');
+            } else {
+                buttonElement.classList.remove('bg-green-500', 'text-white');
+                buttonElement.classList.add('bg-gray-300', 'text-gray-600');
+            }
+            // Показуємо notification
+            showNotification(data.message, 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Помилка при оновленні статусу', 'error');
+    });
+}
+
+function showNotification(message, type = 'success') {
+    const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-[60] flex items-center gap-2`;
+    notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i><span>${message}</span>`;
+
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.transition = 'opacity 0.3s';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 300);
+    }, 3000);
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     const deleteForms = document.querySelectorAll('form[onsubmit]');

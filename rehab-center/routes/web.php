@@ -62,6 +62,7 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     Route::get('appointments/{appointment}/edit', [AdminAppointmentController::class, 'edit'])->name('appointments.edit');
     Route::put('appointments/{appointment}', [AdminAppointmentController::class, 'update'])->name('appointments.update');
     Route::patch('appointments/{appointment}/status', [AdminAppointmentController::class, 'updateStatus'])->name('appointments.updateStatus');
+    Route::patch('appointments/{appointment}/toggle-confirm', [AdminAppointmentController::class, 'toggleConfirm'])->name('appointments.toggle-confirm');
     Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
 
     // Admin only routes

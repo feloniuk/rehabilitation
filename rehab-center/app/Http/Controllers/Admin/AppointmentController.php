@@ -111,6 +111,7 @@ class AppointmentController extends Controller
             'status_text' => $this->getStatusText($appointment->status),
             'notes' => $appointment->notes,
             'telegram_notification_sent' => $appointment->telegram_notification_sent,
+            'is_confirmed' => $appointment->is_confirmed,
             'created_at' => $appointment->created_at->format('d.m.Y H:i'),
         ]);
     }
@@ -241,6 +242,30 @@ class AppointmentController extends Controller
             'message' => 'Статус запису оновлено',
             'status' => $appointment->status,
             'status_text' => $this->getStatusText($appointment->status),
+        ]);
+    }
+
+    public function toggleConfirm($id)
+    {
+        $user = auth()->user();
+
+        $query = Appointment::query();
+
+        // Майстер може змінювати тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+
+        $appointment = $query->findOrFail($id);
+        $appointment->is_confirmed = ! $appointment->is_confirmed;
+        $appointment->save();
+
+        return response()->json([
+            'success' => true,
+            'is_confirmed' => $appointment->is_confirmed,
+            'message' => $appointment->is_confirmed
+                ? 'Запис підтверджено'
+                : 'Підтвердження знято',
         ]);
     }
 
