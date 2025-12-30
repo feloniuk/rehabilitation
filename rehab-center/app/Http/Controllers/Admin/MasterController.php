@@ -189,7 +189,7 @@ class MasterController extends Controller
     public function index()
     {
         $masters = User::where('role', 'master')
-                      ->with('masterServices')
+                      ->withCount('masterServices')
                       ->paginate(10);
 
         return view('admin.masters.index', compact('masters'));
