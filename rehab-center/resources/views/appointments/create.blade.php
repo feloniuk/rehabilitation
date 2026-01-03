@@ -267,9 +267,9 @@
                             Назад
                         </a>
                         
-                        <button type="submit" 
+                        <button type="submit"
                                 id="submit-btn"
-                                class="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-pink-600 hover:to-rose-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
+                                class="bg-gradient-to-r from-pink-500 to-rose-600 text-white px-4 py-2 md:px-8 md:py-4 rounded-xl font-semibold hover:from-pink-600 hover:to-rose-700 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
                             <span id="btn-text">
                                 <i class="fas fa-check-circle mr-2"></i>
                                 Підтвердити запис
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     slots.forEach(slot => {
                         const slotBtn = document.createElement('button');
                         slotBtn.type = 'button';
-                        slotBtn.className = 'px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-pink-500 hover:bg-pink-50 transition-colors';
+                        slotBtn.className = 'time-slot-btn px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors';
                         slotBtn.textContent = slot;
                         slotBtn.onclick = () => selectTimeSlot(slot);
                         slotsGrid.appendChild(slotBtn);
@@ -403,13 +403,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Time slot selection
     function selectTimeSlot(time) {
         timeSelect.value = time;
-        // Update visual selection
-        slotsGrid.querySelectorAll('button').forEach(btn => {
-            btn.classList.remove('border-pink-500', 'bg-pink-50', 'text-pink-700');
-            btn.classList.add('border-gray-300');
+        // Update visual selection - remove selection from all, add to selected
+        slotsGrid.querySelectorAll('.time-slot-btn').forEach(btn => {
+            btn.classList.remove('selected');
             if (btn.textContent === time) {
-                btn.classList.add('border-pink-500', 'bg-pink-100', 'text-pink-700');
-                btn.classList.remove('border-gray-300');
+                btn.classList.add('selected');
             }
         });
     }
@@ -457,28 +455,49 @@ document.addEventListener('DOMContentLoaded', function() {
     .sticky {
         position: sticky;
     }
-    
+
     @media (max-width: 1024px) {
         .sticky {
             position: relative;
         }
     }
-    
+
+    /* Fix date input on iOS */
+    input[type="date"] {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* Time slot buttons - prevent iOS hover state sticking */
+    .time-slot-btn {
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+    }
+
+    .time-slot-btn.selected {
+        border-color: #ec4899 !important;
+        background-color: #fce7f3 !important;
+        color: #be185d !important;
+    }
+
     /* Custom scrollbar for textarea */
     textarea::-webkit-scrollbar {
         width: 8px;
     }
-    
+
     textarea::-webkit-scrollbar-track {
         background: #f1f5f9;
         border-radius: 4px;
     }
-    
+
     textarea::-webkit-scrollbar-thumb {
         background: #cbd5e1;
         border-radius: 4px;
     }
-    
+
     textarea::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
     }
