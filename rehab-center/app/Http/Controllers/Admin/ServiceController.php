@@ -1,17 +1,19 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends Controller
 {
     public function index()
     {
-        $services = Service::withCount('masterServices')->paginate(10);
+        $services = Service::withCount('masterServices')->paginate(10)->withQueryString();
+
         return view('admin.services.index', compact('services'));
     }
 
@@ -53,23 +55,24 @@ class ServiceController extends Controller
             try {
                 $path = $request->file('photo')->store('services', 'public');
                 $service->update(['photo' => $path]);
-                
+
                 // Перевірка що файл дійсно збережено
-                if (!Storage::disk('public')->exists($path)) {
+                if (! Storage::disk('public')->exists($path)) {
                     Log::error("Service photo not saved: {$path}");
                 }
             } catch (\Exception $e) {
-                Log::error("Error saving service photo: " . $e->getMessage());
+                Log::error('Error saving service photo: '.$e->getMessage());
             }
         }
 
         return redirect()->route('admin.services.index')
-                        ->with('success', 'Послугу успішно створено');
+            ->with('success', 'Послугу успішно створено');
     }
 
     public function edit($id)
     {
         $service = Service::findOrFail($id);
+
         return view('admin.services.edit', compact('service'));
     }
 
@@ -102,7 +105,6 @@ class ServiceController extends Controller
             }
         }
 
-        
         if ($request->has('faqs')) {
             $service->faqs()->delete(); // Удаляем старые
             foreach ($request->faqs as $faqData) {
@@ -117,39 +119,39 @@ class ServiceController extends Controller
                 if ($service->photo) {
                     Storage::disk('public')->delete($service->photo);
                 }
-                
+
                 // Зберігаємо нове
                 $path = $request->file('photo')->store('services', 'public');
                 $updateData['photo'] = $path;
-                
+
                 // Перевірка збереження
-                if (!Storage::disk('public')->exists($path)) {
+                if (! Storage::disk('public')->exists($path)) {
                     Log::error("Service photo not saved: {$path}");
                 }
             } catch (\Exception $e) {
-                Log::error("Error saving service photo: " . $e->getMessage());
+                Log::error('Error saving service photo: '.$e->getMessage());
             }
         }
 
         $service->update($updateData);
 
         return redirect()->route('admin.services.index')
-                        ->with('success', 'Послугу оновлено');
+            ->with('success', 'Послугу оновлено');
     }
 
     public function destroy($id)
     {
         $service = Service::findOrFail($id);
-        
+
         // Видаляємо фото якщо є
         if ($service->photo) {
             Storage::disk('public')->delete($service->photo);
         }
-        
+
         $service->faqs()->delete();
         $service->delete();
 
         return redirect()->route('admin.services.index')
-                        ->with('success', 'Послугу видалено');
+            ->with('success', 'Послугу видалено');
     }
 }

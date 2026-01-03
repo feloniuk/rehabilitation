@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Service;
 use App\Models\MasterService;
+use App\Models\Service;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class MasterController extends Controller
 {
@@ -34,7 +34,7 @@ class MasterController extends Controller
         $selectedServices = [];
         if ($request->has('services')) {
             foreach ($request->services as $serviceId => $serviceData) {
-                if (isset($serviceData['price']) && !empty($serviceData['price'])) {
+                if (isset($serviceData['price']) && ! empty($serviceData['price'])) {
                     $selectedServices[$serviceId] = $serviceData;
                 }
             }
@@ -42,7 +42,7 @@ class MasterController extends Controller
 
         if (empty($selectedServices)) {
             return back()->withErrors(['services' => 'Оберіть хоча б одну послугу та вкажіть ціну.'])
-                        ->withInput();
+                ->withInput();
         }
 
         $masterData = [
@@ -67,13 +67,13 @@ class MasterController extends Controller
             try {
                 $path = $request->file('photo')->store('masters', 'public');
                 $master->update(['photo' => $path]);
-                
+
                 // Перевірка що файл дійсно збережено
-                if (!Storage::disk('public')->exists($path)) {
+                if (! Storage::disk('public')->exists($path)) {
                     Log::error("Photo not saved: {$path}");
                 }
             } catch (\Exception $e) {
-                Log::error("Error saving photo: " . $e->getMessage());
+                Log::error('Error saving photo: '.$e->getMessage());
             }
         }
 
@@ -87,7 +87,7 @@ class MasterController extends Controller
         }
 
         return redirect()->route('admin.masters.index')
-                        ->with('success', 'Майстра успішно створено');
+            ->with('success', 'Майстра успішно створено');
     }
 
     public function update(Request $request, $id)
@@ -96,10 +96,10 @@ class MasterController extends Controller
 
         // Собираем все чекбоксы услуг вручную
         $serviceCheckboxes = collect($request->all())
-            ->filter(function($value, $key) {
+            ->filter(function ($value, $key) {
                 return str_starts_with($key, 'service_checkbox_');
             })
-            ->filter(function($value) {
+            ->filter(function ($value) {
                 return $value == '1';
             });
 
@@ -107,12 +107,12 @@ class MasterController extends Controller
         $selectedServices = [];
         foreach ($request->input('services', []) as $serviceId => $serviceData) {
             $checkboxKey = "service_checkbox_{$serviceId}";
-            
+
             if (
-                isset($request[$checkboxKey]) && 
-                $request[$checkboxKey] == '1' && 
-                isset($serviceData['price']) && 
-                $serviceData['price'] !== null && 
+                isset($request[$checkboxKey]) &&
+                $request[$checkboxKey] == '1' &&
+                isset($serviceData['price']) &&
+                $serviceData['price'] !== null &&
                 $serviceData['price'] !== ''
             ) {
                 $selectedServices[$serviceId] = $serviceData;
@@ -123,7 +123,7 @@ class MasterController extends Controller
         if ($selectedServices === []) {
             return back()
                 ->withErrors([
-                    'services' => 'Потрібно вибрати хоча б одну послугу з встановленою ціною!'
+                    'services' => 'Потрібно вибрати хоча б одну послугу з встановленою ціною!',
                 ])
                 ->withInput()
                 ->with('error', 'Оберіть та вкажіть ціну принаймні для однієї послуги');
@@ -153,17 +153,17 @@ class MasterController extends Controller
                 if ($master->photo) {
                     Storage::disk('public')->delete($master->photo);
                 }
-                
+
                 // Сохраняем новую
                 $path = $request->file('photo')->store('masters', 'public');
                 $updateData['photo'] = $path;
-                
+
                 // Проверка сохранения
-                if (!Storage::disk('public')->exists($path)) {
+                if (! Storage::disk('public')->exists($path)) {
                     Log::error("Photo not saved: {$path}");
                 }
             } catch (\Exception $e) {
-                Log::error("Error saving photo: " . $e->getMessage());
+                Log::error('Error saving photo: '.$e->getMessage());
             }
         }
 
@@ -183,14 +183,15 @@ class MasterController extends Controller
         }
 
         return redirect()->route('admin.masters.index')
-                        ->with('success', 'Дані майстра оновлено');
+            ->with('success', 'Дані майстра оновлено');
     }
 
     public function index()
     {
         $masters = User::where('role', 'master')
-                      ->withCount('masterServices')
-                      ->paginate(10);
+            ->withCount('masterServices')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('admin.masters.index', compact('masters'));
     }
@@ -206,10 +207,10 @@ class MasterController extends Controller
     public function show($id)
     {
         $master = User::where('role', 'master')
-                     ->with(['masterServices.service', 'masterAppointments' => function($query) {
-                         $query->orderBy('appointment_date', 'desc')->limit(10);
-                     }, 'masterAppointments.client'])
-                     ->findOrFail($id);
+            ->with(['masterServices.service', 'masterAppointments' => function ($query) {
+                $query->orderBy('appointment_date', 'desc')->limit(10);
+            }, 'masterAppointments.client'])
+            ->findOrFail($id);
 
         return view('admin.masters.show', compact('master'));
     }
@@ -217,8 +218,8 @@ class MasterController extends Controller
     public function edit($id)
     {
         $master = User::where('role', 'master')
-                     ->with('masterServices')
-                     ->findOrFail($id);
+            ->with('masterServices')
+            ->findOrFail($id);
 
         $services = Service::where('is_active', true)->get();
 
@@ -236,7 +237,7 @@ class MasterController extends Controller
         $master->delete();
 
         return redirect()->route('admin.masters.index')
-                        ->with('success', 'Майстра видалено');
+            ->with('success', 'Майстра видалено');
     }
 
     private function getDefaultSchedule()

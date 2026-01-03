@@ -44,7 +44,8 @@ class NotificationController extends Controller
             ->where('status', 'scheduled')
             ->orderBy('appointment_date')
             ->orderBy('appointment_time')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         // Статистика розсилок
         $stats = [
@@ -96,7 +97,8 @@ class NotificationController extends Controller
     {
         $logs = NotificationLog::with(['appointment.client', 'appointment.service', 'template'])
             ->orderBy('created_at', 'desc')
-            ->paginate(50);
+            ->paginate(50)
+            ->withQueryString();
 
         return view('admin.notifications.logs', compact('logs'));
     }
@@ -106,7 +108,9 @@ class NotificationController extends Controller
      */
     public function templates()
     {
-        $templates = NotificationTemplate::orderBy('created_at', 'desc')->paginate(20);
+        $templates = NotificationTemplate::orderBy('created_at', 'desc')
+            ->paginate(20)
+            ->withQueryString();
         $placeholders = NotificationTemplate::getAvailablePlaceholders();
 
         return view('admin.notifications.templates', compact('templates', 'placeholders'));

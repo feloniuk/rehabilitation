@@ -58,7 +58,8 @@ class AppointmentController extends Controller
 
         $appointments = $query->orderBy('appointment_date', 'desc')
             ->orderBy('appointment_time', 'desc')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         // Дані для фільтрів
         $masters = $user->isAdmin()
