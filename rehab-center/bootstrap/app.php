@@ -28,11 +28,30 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
-            // При истекании CSRF токена редиректим на логин
+            // Логируємо CSRF помилку для дебагу
+            \Illuminate\Support\Facades\Log::warning('CSRF Token Mismatch (419 Error)', [
+                'url' => $request->url(),
+                'method' => $request->method(),
+                'user_id' => auth()->id(),
+                'session_id' => session()->getId(),
+                'session_driver' => config('session.driver'),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'timestamp' => now()->toIso8601String(),
+            ]);
+
+            // При истекании CSRF токена редиректим на логин з повідомленням
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'CSRF token expired'], 419);
+                return response()->json([
+                    'message' => 'CSRF token expired. Please refresh and try again.',
+                    'status' => 419,
+                ], 419);
             }
 
-            return redirect()->route('login');
+            // Зберігаємо намір повернутися сюди після логіну
+            session()->put('redirect_after_login', $request->url());
+
+            return redirect()->route('login')
+                ->with('warning', 'Ваша сесія закінчилася. Будь ласка, залогініться ще раз.');
         });
     })->create();

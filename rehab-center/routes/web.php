@@ -131,3 +131,21 @@ Route::get('/{slug}', function ($slug) {
 
     return view('pages.show', compact('page'));
 })->name('pages.show');
+
+// DEBUG маршрут для перевірки конфігурації (тільки для продакшену)
+Route::get('/debug/config', function () {
+    if (! auth()->check() || ! auth()->user()->isAdmin()) {
+        abort(403, 'Unauthorized');
+    }
+
+    return response()->json([
+        'session_driver' => config('session.driver'),
+        'session_lifetime' => config('session.lifetime'),
+        'app_debug' => config('app.debug'),
+        'app_env' => config('app.env'),
+        'csrf_token_length' => strlen(csrf_token()),
+        'session_id' => session()->getId(),
+        'session_files_count' => count(glob(storage_path('framework/sessions/*'))),
+        'timestamp' => now()->toIso8601String(),
+    ], 200, [], JSON_PRETTY_PRINT);
+})->name('debug.config');
