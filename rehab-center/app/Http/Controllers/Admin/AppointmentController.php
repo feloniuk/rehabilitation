@@ -284,8 +284,7 @@ class AppointmentController extends Controller
         $appointment = $query->findOrFail($id);
         $appointment->delete();
 
-        return redirect()->route('admin.appointments.index')
-            ->with('success', 'Запис видалено');
+        return back()->with('success', 'Запис видалено');
     }
 
     private function getStatusText($status)

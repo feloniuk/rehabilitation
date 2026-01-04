@@ -151,7 +151,6 @@ class ServiceController extends Controller
         $service->faqs()->delete();
         $service->delete();
 
-        return redirect()->route('admin.services.index')
-            ->with('success', 'Послугу видалено');
+        return back()->with('success', 'Послугу видалено');
     }
 }

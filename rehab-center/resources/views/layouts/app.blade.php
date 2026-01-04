@@ -301,22 +301,45 @@
 
     <!-- Scripts -->
     <script>
+        // Helper function to close mobile menu
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) {
+                menu.classList.add('hidden');
+            }
+        }
+
         // Mobile menu toggle
         document.getElementById('mobile-menu-btn').addEventListener('click', function() {
             const menu = document.getElementById('mobile-menu');
             menu.classList.toggle('hidden');
         });
 
-        // Smooth scrolling for anchor links
+        // Close menu when clicking on any link in mobile menu
+        document.getElementById('mobile-menu').querySelectorAll('a, button').forEach(item => {
+            item.addEventListener('click', function() {
+                closeMobileMenu();
+            });
+        });
+
+        // Smooth scrolling for anchor links and close mobile menu
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+                const href = this.getAttribute('href');
+                // Проверяем что это якорь (не просто #)
+                if (href && href !== '#') {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        // Закрываем мобильное меню
+                        closeMobileMenu();
+
+                        // Smooth scroll to target
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
                 }
             });
         });

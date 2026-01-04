@@ -72,8 +72,7 @@ class PageController extends Controller
         $block = TextBlock::findOrFail($id);
         $block->delete();
 
-        return redirect()->route('admin.pages.edit-home')
-            ->with('success', 'Текстовий блок видалено');
+        return back()->with('success', 'Текстовий блок видалено');
     }
 
     public function create()
@@ -132,7 +131,6 @@ class PageController extends Controller
         $page = Page::findOrFail($id);
         $page->delete();
 
-        return redirect()->route('admin.pages.index')
-            ->with('success', 'Сторінку видалено');
+        return back()->with('success', 'Сторінку видалено');
     }
 }

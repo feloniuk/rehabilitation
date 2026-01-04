@@ -166,8 +166,7 @@ class ClientController extends Controller
         $client->clientAppointments()->delete();
         $client->delete();
 
-        return redirect()->route('admin.clients.index')
-            ->with('success', 'Клієнта видалено');
+        return back()->with('success', 'Клієнта видалено');
     }
 
     /**

@@ -236,8 +236,7 @@ class MasterController extends Controller
 
         $master->delete();
 
-        return redirect()->route('admin.masters.index')
-            ->with('success', 'Майстра видалено');
+        return back()->with('success', 'Майстра видалено');
     }
 
     private function getDefaultSchedule()

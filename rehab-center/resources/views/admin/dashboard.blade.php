@@ -39,165 +39,137 @@
     </div>
 
 <!-- 👥 Блок співробітників + таблиця часу -->
-<div class="timeline-wrapper" style="height: calc(100vh - 340px);">
-    <div class="flex flex-col" style="height: inherit;">
-        
-        <!-- Шапка з майстрами (sticky) -->
-        <div class="staff-header bg-white border-b sticky z-10" style="top: 57px;">
-            <div class="flex">
-                <!-- Колонка часу (ліва) -->
-                <div class="flex-shrink-0 w-16 border-r bg-gray-50"></div>
-                
-                <!-- Майстри -->
-                @foreach($calendar['masters'] as $master)
-                    <div class="flex-1 staff-column border-r last:border-r-0" style="margin-right: 8px;">
-                        <div class="p-3 text-center">
-                            @if($master->photo)
-                                <img src="{{ asset('storage/' . $master->photo) }}" 
-                                     class="w-10 h-10 rounded-full mx-auto mb-2 object-cover">
-                            @else
-                                <div class="w-10 h-10 rounded-full mx-auto mb-2 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
-                                    {{ substr($master->name, 0, 1) }}
-                                </div>
-                            @endif
-                            <div class="text-xs font-semibold text-gray-900 truncate">{{ $master->name }}</div>
-                            @if($master->specialty)
-                                <div class="text-[10px] text-gray-500 truncate">{{ $master->specialty }}</div>
-                            @endif
+<div class="calendar-scroll-wrapper">
+    <div class="calendar-table">
+        <!-- Шапка з майстрами (sticky top) -->
+        <div class="calendar-header">
+            <!-- Кут: порожня клітинка над колонкою часу -->
+            <div class="time-column-header"></div>
+            <!-- Майстри -->
+            @foreach($calendar['masters'] as $master)
+                <div class="master-header-cell">
+                    @if($master->photo)
+                        <img src="{{ asset('storage/' . $master->photo) }}"
+                             class="w-10 h-10 rounded-full mx-auto mb-2 object-cover">
+                    @else
+                        <div class="w-10 h-10 rounded-full mx-auto mb-2 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">
+                            {{ substr($master->name, 0, 1) }}
                         </div>
+                    @endif
+                    <div class="text-xs font-semibold text-gray-900 truncate">{{ $master->name }}</div>
+                    @if($master->specialty)
+                        <div class="text-[10px] text-gray-500 truncate">{{ $master->specialty }}</div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+
+        <!-- Тіло таблиці -->
+        <div class="calendar-body">
+            <!-- Колонка часу (sticky left) -->
+            <div class="time-column">
+                @foreach($calendar['timeSlots'] as $timeSlot)
+                    <div class="time-cell">
+                        <span class="text-[11px] font-medium text-gray-600">{{ $timeSlot }}</span>
                     </div>
                 @endforeach
             </div>
-        </div>
 
-        <!-- 🕐 Таблиця часу (scrollable) -->
-        <div class="timeline-container overflow-y-auto flex-1">
-            <div class="flex">
-                <!-- Колонка часу -->
-                <div class="flex-shrink-0 w-16 border-r bg-gray-50">
-                    @foreach($calendar['timeSlots'] as $timeSlot)
-                        <div class="time-slot h-20 border-b flex items-start justify-center pt-1">
-                            <span class="text-[11px] font-medium text-gray-600">{{ $timeSlot }}</span>
+            <!-- Колонки майстрів -->
+            @foreach($calendar['masters'] as $masterIndex => $master)
+                <div class="master-column"
+                     data-master-id="{{ $master->id }}"
+                     data-master-index="{{ $masterIndex }}">
+                    @php
+                        $dateKey = $calendar['weekDates'][0]->format('Y-m-d');
+                        $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
+                    @endphp
+
+                    <!-- Сітка часових слотів -->
+                    @foreach($calendar['timeSlots'] as $slotIndex => $timeSlot)
+                        <div class="time-slot-cell"
+                             data-time-slot="{{ $timeSlot }}"
+                             data-slot-index="{{ $slotIndex }}">
+                        </div>
+                    @endforeach
+
+                    <!-- Записи майстра -->
+                    @foreach($dayAppointments as $aptIndex => $apt)
+                        @php
+                            $startTime = \Carbon\Carbon::parse($apt['time']);
+                            $endTime = $startTime->copy()->addMinutes($apt['duration']);
+
+                            $dayStartTime = \Carbon\Carbon::createFromFormat('H:i', $calendar['timeSlots'][0]);
+                            $dayStartMinutes = $dayStartTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
+                            $aptStartMinutes = $startTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
+                            $minutesFromDayStart = $aptStartMinutes - $dayStartMinutes;
+
+                            $pixelsPerMinute = 80 / 30;
+                            $topPx = $minutesFromDayStart * $pixelsPerMinute;
+                            $heightPx = $apt['duration'] * $pixelsPerMinute;
+
+                            $colors = [
+                                ['from' => '#8B5CF6', 'to' => '#6366F1'],
+                                ['from' => '#3B82F6', 'to' => '#2563EB'],
+                                ['from' => '#10B981', 'to' => '#059669'],
+                                ['from' => '#F59E0B', 'to' => '#D97706'],
+                                ['from' => '#EF4444', 'to' => '#DC2626'],
+                            ];
+                            $color = $colors[($masterIndex + $aptIndex) % count($colors)];
+
+                            $overlappingCount = 0;
+                            $positionInOverlap = 0;
+
+                            foreach($dayAppointments as $otherIndex => $otherApt) {
+                                $otherStart = \Carbon\Carbon::parse($otherApt['time']);
+                                $otherEnd = $otherStart->copy()->addMinutes($otherApt['duration']);
+
+                                if ($startTime->lt($otherEnd) && $endTime->gt($otherStart)) {
+                                    $overlappingCount++;
+                                    if ($otherIndex < $aptIndex) {
+                                        $positionInOverlap++;
+                                    }
+                                }
+                            }
+
+                            $widthPercent = $overlappingCount > 1 ? (100 / $overlappingCount) : 100;
+                            $leftPercent = $positionInOverlap * $widthPercent;
+                        @endphp
+
+                        <div class="appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
+                             data-appointment-id="{{ $apt['id'] }}"
+                             style="top: {{ $topPx }}px;
+                                    height: {{ $heightPx }}px;
+                                    background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }});
+                                    z-index: {{ 5 + $aptIndex }};
+                                    left: {{ $leftPercent }}%;
+                                    width: calc({{ $widthPercent }}% - 4px);"
+                             onclick="showAppointmentDetails({{ $apt['id'] }})">
+
+                            <div class="text-white text-xs font-bold mb-1">
+                                {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
+                                @if($apt['telegram_notification_sent'] === true)<span class="ml-1">📨</span>@endif
+                            </div>
+
+                            <div class="text-white text-sm font-semibold mb-1 truncate flex items-center">
+                                {{ $apt['client_name'] }}
+                                @if(!empty($apt['client_telegram']))
+                                    <a href="https://t.me/{{ $apt['client_telegram'] }}" target="_blank"
+                                       onclick="event.stopPropagation()"
+                                       class="ml-1 text-white hover:text-blue-200 flex-shrink-0"
+                                       title="@{{ $apt['client_telegram'] }}">
+                                        <i class="fab fa-telegram"></i>
+                                    </a>
+                                @endif
+                            </div>
+
+                            <div class="text-white text-xs opacity-90 truncate">
+                                {{ $apt['service_name'] }}
+                            </div>
                         </div>
                     @endforeach
                 </div>
-
-                <!-- Колонки майстрів -->
-                @foreach($calendar['masters'] as $masterIndex => $master)
-                    <div class="flex-1 staff-column border-r last:border-r-0 relative" 
-                         data-master-id="{{ $master->id }}"
-                         data-master-index="{{ $masterIndex }}">
-                        @php
-                            $dateKey = $calendar['weekDates'][0]->format('Y-m-d');
-                            $dayAppointments = collect($calendar['scheduleByMaster'][$master->id]['appointments_by_date'][$dateKey] ?? []);
-                        @endphp
-
-                        <!-- Сітка часових слотів -->
-                        @foreach($calendar['timeSlots'] as $slotIndex => $timeSlot)
-                            <div class="time-slot h-20 border-b border-dashed border-gray-200 relative" 
-                                 data-time-slot="{{ $timeSlot }}"
-                                 data-slot-index="{{ $slotIndex }}">
-                            </div>
-                        @endforeach
-
-                        <!-- ОКРЕМО: рендеримо всі записи цього майстра в абсолютному позиціонуванні -->
-                        @foreach($dayAppointments as $aptIndex => $apt)
-                            @php
-                                // Обчислюємо позицію картки
-                                $startTime = \Carbon\Carbon::parse($apt['time']);
-                                $endTime = $startTime->copy()->addMinutes($apt['duration']);
-                                
-                                // Знаходимо початковий слот (перший слот >= startTime)
-                                $slotStartMinutes = null;
-                                foreach($calendar['timeSlots'] as $idx => $slot) {
-                                    $slotTime = \Carbon\Carbon::createFromFormat('H:i', $slot);
-                                    if ($slotTime->lte($startTime)) {
-                                        $slotStartMinutes = $slotTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
-                                    }
-                                }
-                                
-                                // Початок дня (перший слот)
-                                $dayStartTime = \Carbon\Carbon::createFromFormat('H:i', $calendar['timeSlots'][0]);
-                                $dayStartMinutes = $dayStartTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
-                                
-                                // Початок запису в хвилинах від початку дня
-                                $aptStartMinutes = $startTime->diffInMinutes(\Carbon\Carbon::createFromFormat('H:i', '00:00'));
-                                
-                                // Offset від початку дня
-                                $minutesFromDayStart = $aptStartMinutes - $dayStartMinutes;
-                                
-                                // Висота одного слота = 80px (h-20)
-                                // Один слот = 30 хвилин
-                                $pixelsPerMinute = 80 / 30; // 2.666px per minute
-                                
-                                $topPx = $minutesFromDayStart * $pixelsPerMinute;
-                                $heightPx = $apt['duration'] * $pixelsPerMinute;
-                                
-                                $colors = [
-                                    ['from' => '#8B5CF6', 'to' => '#6366F1'],
-                                    ['from' => '#3B82F6', 'to' => '#2563EB'],
-                                    ['from' => '#10B981', 'to' => '#059669'],
-                                    ['from' => '#F59E0B', 'to' => '#D97706'],
-                                    ['from' => '#EF4444', 'to' => '#DC2626'],
-                                ];
-                                $color = $colors[($masterIndex + $aptIndex) % count($colors)];
-                                
-                                // Виявляємо нахлести з іншими записами
-                                $overlappingCount = 0;
-                                $positionInOverlap = 0;
-                                
-                                foreach($dayAppointments as $otherIndex => $otherApt) {
-                                    $otherStart = \Carbon\Carbon::parse($otherApt['time']);
-                                    $otherEnd = $otherStart->copy()->addMinutes($otherApt['duration']);
-                                    
-                                    // Перевірка перетину: A.start < B.end AND A.end > B.start
-                                    if ($startTime->lt($otherEnd) && $endTime->gt($otherStart)) {
-                                        $overlappingCount++;
-                                        if ($otherIndex < $aptIndex) {
-                                            $positionInOverlap++;
-                                        }
-                                    }
-                                }
-                                
-                                $widthPercent = $overlappingCount > 1 ? (100 / $overlappingCount) : 100;
-                                $leftPercent = $positionInOverlap * $widthPercent;
-                            @endphp
-                            
-                            <div class="appointment-card absolute rounded-lg shadow-sm p-2 cursor-pointer hover:shadow-md transition-shadow"
-                                 data-appointment-id="{{ $apt['id'] }}"
-                                 style="top: {{ $topPx }}px;
-                                        height: {{ $heightPx }}px; 
-                                        background: linear-gradient(135deg, {{ $color['from'] }}, {{ $color['to'] }}); 
-                                        z-index: {{ 5 + $aptIndex }}; 
-                                        left: {{ $leftPercent }}%;
-                                        width: calc({{ $widthPercent }}% - 4px);"
-                                 onclick="showAppointmentDetails({{ $apt['id'] }})">
-                                
-                                <div class="text-white text-xs font-bold mb-1">
-                                    {{ substr($apt['time'], 0, 5) }} – {{ $endTime->format('H:i') }}
-                                    @if($apt['telegram_notification_sent'] === true)<span class="ml-1">📨</span>@endif
-                                </div>
-
-                                <div class="text-white text-sm font-semibold mb-1 truncate flex items-center">
-                                    {{ $apt['client_name'] }}
-                                    @if(!empty($apt['client_telegram']))
-                                        <a href="https://t.me/{{ $apt['client_telegram'] }}" target="_blank"
-                                           onclick="event.stopPropagation()"
-                                           class="ml-1 text-white hover:text-blue-200 flex-shrink-0"
-                                           title="@{{ $apt['client_telegram'] }}">
-                                            <i class="fab fa-telegram"></i>
-                                        </a>
-                                    @endif
-                                </div>
-
-                                <div class="text-white text-xs opacity-90 truncate">
-                                    {{ $apt['service_name'] }}
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @endforeach
-            </div>
+            @endforeach
         </div>
     </div>
 </div>
@@ -275,6 +247,12 @@
 
 @push('styles')
 <style>
+/* Заборона горизонтальної прокрутки сторінки */
+#calendar-container {
+    max-width: 100%;
+    overflow: hidden;
+}
+
 .hide-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -283,26 +261,135 @@
     display: none;
 }
 
-.staff-column {
-    min-width: 160px;
+/* Основний контейнер календаря */
+.calendar-scroll-wrapper {
+    overflow: auto;
+    max-height: calc(100vh - 280px);
+    min-height: 200px;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background: #fff;
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
-.time-slot {
+/* Для landscape на мобільних */
+@media (max-height: 500px) {
+    .calendar-scroll-wrapper {
+        max-height: calc(100vh - 160px);
+        min-height: 150px;
+    }
+}
+
+/* Таблиця календаря */
+.calendar-table {
+    display: flex;
+    flex-direction: column;
+    min-width: max-content;
+}
+
+/* Шапка з майстрами */
+.calendar-header {
+    display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #f9fafb;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.time-column-header {
+    flex-shrink: 0;
+    width: 56px;
+    min-width: 56px;
+    background: #f3f4f6;
+    border-right: 1px solid #e5e7eb;
+    position: sticky;
+    left: 0;
+    z-index: 25;
+}
+
+.master-header-cell {
+    flex: 1;
+    min-width: 140px;
+    padding: 12px 8px;
+    text-align: center;
+    border-right: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+.master-header-cell:last-child {
+    border-right: none;
+}
+
+/* Тіло таблиці */
+.calendar-body {
+    display: flex;
     position: relative;
 }
 
+/* Колонка часу (sticky left) */
+.time-column {
+    flex-shrink: 0;
+    width: 56px;
+    min-width: 56px;
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    position: sticky;
+    left: 0;
+    z-index: 15;
+}
+
+.time-cell {
+    height: 80px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 4px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #f9fafb;
+}
+
+/* Колонки майстрів */
+.master-column {
+    flex: 1;
+    min-width: 140px;
+    position: relative;
+    border-right: 1px solid #e5e7eb;
+}
+
+.master-column:last-child {
+    border-right: none;
+}
+
+.time-slot-cell {
+    height: 80px;
+    border-bottom: 1px dashed #e5e7eb;
+    position: relative;
+}
+
+/* Картки записів */
 .appointment-card {
     overflow: hidden;
 }
 
-.timeline-wrapper {
-    display: flex;
-    flex-direction: column;
-}
+/* Мобільна адаптація */
+@media (max-width: 640px) {
+    .master-header-cell {
+        min-width: 120px;
+        padding: 8px 4px;
+    }
 
-.timeline-container {
-    flex: 1;
-    overflow-y: auto;
+    .master-column {
+        min-width: 120px;
+    }
+
+    .time-column-header,
+    .time-column {
+        width: 48px;
+        min-width: 48px;
+    }
 }
 </style>
 @endpush
@@ -365,9 +452,9 @@ function scrollToCurrentHour() {
     var scrollPosition = targetSlotIndex * slotHeightPx;
 
     // Скролимо контейнер
-    var timelineContainer = document.querySelector('.timeline-container');
-    if (timelineContainer) {
-        timelineContainer.scrollTop = scrollPosition;
+    var calendarWrapper = document.querySelector('.calendar-scroll-wrapper');
+    if (calendarWrapper) {
+        calendarWrapper.scrollTop = scrollPosition;
     }
 }
 
@@ -416,7 +503,7 @@ function selectDate(index) {
 
 function reloadTimeline(dayIndex) {
     var dateKey = calendarData.weekDates[dayIndex];
-    var masterColumns = document.querySelectorAll('.staff-column[data-master-id]');
+    var masterColumns = document.querySelectorAll('.master-column[data-master-id]');
     
     masterColumns.forEach(function(col) {
         var masterId = parseInt(col.dataset.masterId);

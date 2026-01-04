@@ -56,6 +56,11 @@
                 opacity: 1;
                 visibility: visible;
             }
+
+            main.content {
+                width: 100%;
+                max-width: 100vw;
+            }
         }
 
         /* Desktop sidebar */
@@ -75,7 +80,18 @@
             .content {
                 margin-left: 280px;
                 width: calc(100% - 280px);
+                overflow-x: hidden;
             }
+        }
+
+        /* Заборона горизонтальної прокрутки сторінки */
+        body {
+            overflow-x: hidden;
+        }
+
+        main.content {
+            overflow-x: hidden;
+            max-width: 100%;
         }
 
         /* Pagination styles */

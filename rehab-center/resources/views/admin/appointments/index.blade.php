@@ -393,17 +393,6 @@ function showNotification(message, type = 'success') {
     }, 3000);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    const deleteForms = document.querySelectorAll('form[onsubmit]');
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            const confirmed = confirm(this.getAttribute('onsubmit').replace('return ', ''));
-            if (!confirmed) {
-                e.preventDefault();
-            }
-        });
-    });
-});
 </script>
 @endpush
 @endsection
