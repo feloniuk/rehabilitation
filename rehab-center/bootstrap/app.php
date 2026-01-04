@@ -40,7 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 'timestamp' => now()->toIso8601String(),
             ]);
 
-            // При истекании CSRF токена редиректим на логин з повідомленням
+            // При истекании CSRF токена возвращаем кастомную страницу
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'CSRF token expired. Please refresh and try again.',
@@ -48,10 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ], 419);
             }
 
-            // Зберігаємо намір повернутися сюди після логіну
-            session()->put('redirect_after_login', $request->url());
-
-            return redirect()->route('login')
-                ->with('warning', 'Ваша сесія закінчилася. Будь ласка, залогініться ще раз.');
+            // Возвращаем кастомную страницу ошибки 419
+            return response()->view('errors.419', [], 419);
         });
     })->create();
