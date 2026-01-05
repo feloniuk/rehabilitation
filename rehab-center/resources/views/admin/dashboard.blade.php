@@ -17,24 +17,15 @@
             </span>
         </div>
         <div class="flex gap-2">
-            <form method="GET" action="{{ route('admin.dashboard') }}" class="inline">
-                <input type="hidden" name="week" value="previous">
-                <button type="submit" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
-                    <i class="fas fa-chevron-left text-gray-600"></i>
-                </button>
-            </form>
-            <form method="GET" action="{{ route('admin.dashboard') }}" class="inline">
-                <input type="hidden" name="week" value="0">
-                <button type="submit" class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
-                    Сьогодні
-                </button>
-            </form>
-            <form method="GET" action="{{ route('admin.dashboard') }}" class="inline">
-                <input type="hidden" name="week" value="next">
-                <button type="submit" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
-                    <i class="fas fa-chevron-right text-gray-600"></i>
-                </button>
-            </form>
+            <button onclick="navigateWeek('previous')" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+                <i class="fas fa-chevron-left text-gray-600"></i>
+            </button>
+            <button onclick="navigateToday()" class="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
+                Сьогодні
+            </button>
+            <button onclick="navigateWeek('next')" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
+                <i class="fas fa-chevron-right text-gray-600"></i>
+            </button>
         </div>
     </div>
 
@@ -416,11 +407,148 @@ var calendarData = {
 
 var currentDayIndex = {{ $selectedDateIndex ?? 0 }};
 var currentAppointmentId = null;
+var currentWeekOffset = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
     selectDate(currentDayIndex);
     scrollToCurrentHour();
 });
+
+function navigateWeek(direction) {
+    var loadingBtn = event.target.closest('button');
+    loadingBtn.disabled = true;
+    loadingBtn.style.opacity = '0.5';
+
+    fetch("{{ route('admin.load-calendar') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            direction: direction,
+            week_offset: currentWeekOffset
+        })
+    })
+    .then(function(response) {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            currentWeekOffset = data.weekOffset;
+            updateCalendar(data.calendar, data.selectedDateIndex);
+            scrollToCurrentHour();
+        }
+    })
+    .catch(function(error) {
+        console.error('Error loading calendar:', error);
+        showNotification('Помилка при завантаженні календаря', 'error');
+    })
+    .finally(function() {
+        loadingBtn.disabled = false;
+        loadingBtn.style.opacity = '1';
+    });
+}
+
+function navigateToday() {
+    var loadingBtn = event.target.closest('button');
+    loadingBtn.disabled = true;
+    loadingBtn.style.opacity = '0.5';
+
+    fetch("{{ route('admin.load-calendar') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            direction: 'today',
+            week_offset: currentWeekOffset
+        })
+    })
+    .then(function(response) {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            currentWeekOffset = data.weekOffset;
+            updateCalendar(data.calendar, data.selectedDateIndex);
+            scrollToCurrentHour();
+        }
+    })
+    .catch(function(error) {
+        console.error('Error loading calendar:', error);
+        showNotification('Помилка при завантаженні календаря', 'error');
+    })
+    .finally(function() {
+        loadingBtn.disabled = false;
+        loadingBtn.style.opacity = '1';
+    });
+}
+
+function updateCalendar(calendar, selectedDateIndex) {
+    // Оновлюємо дані calendarData
+    calendarData.scheduleByMaster = calendar.scheduleByMaster;
+    calendarData.weekDates = calendar.weekDates; // weekDates вже в форматі Y-m-d
+    calendarData.todayIndex = calendar.todayIndex;
+
+    // Оновлюємо заголовок
+    var firstDateStr = calendarData.weekDates[0];
+    var firstDate = new Date(firstDateStr + 'T00:00:00');
+    document.getElementById('current-date').textContent =
+        firstDate.getDate().toString().padStart(2, '0') + '.' +
+        (firstDate.getMonth() + 1).toString().padStart(2, '0');
+
+    // Оновлюємо кнопки дат у нижній панелі
+    updateDateButtons(calendarData.weekDates, calendar.todayIndex, selectedDateIndex);
+
+    // Перезавантажуємо календар з новим днем
+    currentDayIndex = selectedDateIndex;
+    reloadTimeline(selectedDateIndex);
+    // Третій параметр true = пропустити AJAX збереження, бо loadCalendar вже зберіг дату
+    selectDate(selectedDateIndex, true);
+}
+
+function updateDateButtons(weekDates, todayIndex, selectedIndex) {
+    var dateButtons = document.querySelectorAll('.date-btn');
+    dateButtons.forEach(function(btn) {
+        btn.remove();
+    });
+
+    var datePanel = document.querySelector('.flex.overflow-x-auto.hide-scrollbar');
+    if (!datePanel) return;
+
+    var dayNames = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'нд'];
+
+    weekDates.forEach(function(dateStr, index) {
+        var date = new Date(dateStr + 'T00:00:00');
+        var dayIndex = date.getDay();
+        var dayName = dayNames[dayIndex === 0 ? 6 : dayIndex - 1];
+
+        var isSelected = index === selectedIndex;
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'date-btn flex-1 min-w-[60px] py-3 text-center border-r last:border-r-0 transition-colors ' +
+            (isSelected ? 'bg-purple-500 text-white active' : 'hover:bg-purple-200');
+        btn.setAttribute('data-date-index', index);
+        btn.onclick = function() { selectDate(index); };
+
+        var smallText = document.createElement('div');
+        smallText.className = 'text-[10px] font-medium ' + (isSelected ? 'text-purple-100' : 'text-gray-500');
+        smallText.textContent = dayName.toUpperCase();
+
+        var dayNum = document.createElement('div');
+        dayNum.className = 'text-lg font-bold mt-1';
+        dayNum.textContent = date.getDate().toString().padStart(2, '0');
+
+        btn.appendChild(smallText);
+        btn.appendChild(dayNum);
+        datePanel.appendChild(btn);
+    });
+}
 
 function scrollToCurrentHour() {
     // Отримуємо поточний час (без хвилин)
@@ -458,7 +586,7 @@ function scrollToCurrentHour() {
     }
 }
 
-function selectDate(index) {
+function selectDate(index, skipSave) {
     currentDayIndex = index;
 
     document.querySelectorAll('.date-btn').forEach(function(btn, i) {
@@ -479,26 +607,28 @@ function selectDate(index) {
         }
     });
 
-    var date = new Date(calendarData.weekDates[index]);
+    var date = new Date(calendarData.weekDates[index] + 'T00:00:00');
     document.getElementById('current-date').textContent =
         date.getDate().toString().padStart(2, '0') + '.' +
         (date.getMonth() + 1).toString().padStart(2, '0');
 
     reloadTimeline(index);
 
-    // Зберігаємо вибрану дату в сесію через AJAX
-    fetch(calendarData.selectDateRoute, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({
-            date_index: index
-        })
-    }).catch(function(error) {
-        console.error('Error saving date:', error);
-    });
+    // Зберігаємо вибрану дату в сесію через AJAX тільки якщо це не було пропущено
+    if (!skipSave) {
+        fetch(calendarData.selectDateRoute, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                date_index: index
+            })
+        }).catch(function(error) {
+            console.error('Error saving date:', error);
+        });
+    }
 }
 
 function reloadTimeline(dayIndex) {

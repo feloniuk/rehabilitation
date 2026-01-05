@@ -16,6 +16,7 @@ class DashboardController extends Controller
 
         // Обробка навігації по тижнях
         $weekOffset = 0;
+        $selectedDateIndex = null;
 
         if ($request->has('week')) {
             if ($request->week === 'previous') {
@@ -28,6 +29,16 @@ class DashboardController extends Controller
 
             // Збереження offset в сесію
             $request->session()->put('week_offset', $weekOffset);
+
+            // Обробка вибраної дати при навігації
+            if ($request->has('reset_date_index')) {
+                // Для кнопки "Сьогодні" - не встановлюємо індекс, його встановимо після обчислення todayIndex
+                $request->session()->forget('selected_date_index');
+            } elseif ($request->has('selected_date_index')) {
+                // Для стрілочок навігації - встановлюємо переданий індекс
+                $selectedDateIndex = (int) $request->input('selected_date_index');
+                $request->session()->put('selected_date_index', $selectedDateIndex);
+            }
 
             // Редірект без параметру, щоб избежать повторної обробки при перезагрузці
             return redirect()->route('admin.dashboard');
@@ -53,6 +64,54 @@ class DashboardController extends Controller
         $request->session()->put('selected_date_index', (int) $request->input('date_index', 0));
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * AJAX endpoint для завантаження календаря при навігації
+     */
+    public function loadCalendar(Request $request)
+    {
+        $user = auth()->user();
+
+        // Обробка навігації по тижнях
+        $direction = $request->input('direction'); // 'previous', 'next', або 'today'
+        $currentWeekOffset = (int) $request->input('week_offset', 0);
+
+        $weekOffset = $currentWeekOffset;
+        $selectedDateIndex = null;
+
+        if ($direction === 'previous') {
+            $weekOffset = $currentWeekOffset - 1;
+            $selectedDateIndex = 6; // Воскресенье
+        } elseif ($direction === 'next') {
+            $weekOffset = $currentWeekOffset + 1;
+            $selectedDateIndex = 0; // Понедельник
+        } elseif ($direction === 'today') {
+            $weekOffset = 0;
+            $selectedDateIndex = null; // Будет использовано todayIndex
+        }
+
+        // Збереження offset в сесію
+        $request->session()->put('week_offset', $weekOffset);
+
+        if ($selectedDateIndex !== null) {
+            $request->session()->put('selected_date_index', $selectedDateIndex);
+        } else {
+            $request->session()->forget('selected_date_index');
+        }
+
+        $calendar = $this->getCalendarData($user, $weekOffset);
+        $finalSelectedDateIndex = $request->session()->get('selected_date_index', $calendar['todayIndex']);
+
+        // Преобразуємо weekDates в строки формату Y-m-d для JSON
+        $calendar['weekDates'] = collect($calendar['weekDates'])->map(fn($date) => $date->format('Y-m-d'))->toArray();
+
+        return response()->json([
+            'success' => true,
+            'calendar' => $calendar,
+            'selectedDateIndex' => $finalSelectedDateIndex,
+            'weekOffset' => $weekOffset,
+        ]);
     }
 
     private function getStats($user)
