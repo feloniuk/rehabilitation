@@ -9,6 +9,7 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $currentTenant = app('currentTenant');
         $services = Service::where('is_active', true)->get();
         $masters = User::where('role', 'master')
                       ->where('is_active', true)
@@ -20,6 +21,6 @@ class HomeController extends Controller
             'coordinates' => Setting::get('center_coordinates', '50.4501,30.5234') // Kyiv default
         ];
 
-        return view('home', compact('services', 'masters', 'mapSettings'));
+        return view('home', compact('services', 'masters', 'mapSettings', 'currentTenant'));
     }
 }

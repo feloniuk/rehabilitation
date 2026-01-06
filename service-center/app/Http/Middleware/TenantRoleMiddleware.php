@@ -30,9 +30,10 @@ class TenantRoleMiddleware
             abort(403, 'Контекст організації не визначено');
         }
 
-        // Super admins have access to everything
+        // Super admins cannot access tenant admin panels
+        // They only have access to /super-admin routes
         if ($user->isSuperAdmin()) {
-            return $next($request);
+            abort(403, 'Super админи не можуть доступатися до панелі організацій. Використовуйте /super-admin');
         }
 
         $userRole = $user->roleInTenant($tenant);

@@ -153,7 +153,7 @@
                             </div>
 
                             <!-- Кнопка - фіксована -->
-                            <a href="{{ route('services.show', $service->id) }}"
+                            <a href="{{ route('tenant.services.show', ['tenant' => $currentTenant->slug, 'service' => $service->id]) }}"
                                class="block w-full bg-pink-600 text-white px-6 py-3 rounded-full font-semibold text-center hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 flex-shrink-0">
                                 Записатися
                             </a>
@@ -250,11 +250,11 @@
                         @endif
 
                         <div class="flex gap-2">
-                            <a href="{{ route('masters.show', $master->id) }}"
+                            <a href="{{ route('tenant.masters.show', ['tenant' => $currentTenant->slug, 'master' => $master->id]) }}"
                                class="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-full font-medium text-center hover:bg-gray-200 transition-colors text-sm">
                                 Детальніше
                             </a>
-                            <a href="{{ route('masters.show', $master->id) }}#services"
+                            <a href="{{ route('tenant.masters.show', ['tenant' => $currentTenant->slug, 'master' => $master->id]) }}#services"
                                class="flex-1 bg-pink-600 text-white px-4 py-2 rounded-full font-medium text-center hover:bg-pink-700 transition-colors text-sm">
                                 Записатися
                             </a>
