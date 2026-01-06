@@ -176,11 +176,11 @@
             <div class="error-code">Помилка 419: Page Expired</div>
 
             <div class="action-buttons">
-                <a href="{{ route('login') }}" class="btn btn-primary">
+                <a href="{{ route('platform.login') }}" class="btn btn-primary">
                     <i class="fas fa-sign-in-alt"></i>
                     Перейти на сторінку входу
                 </a>
-                <a href="{{ route('home') }}" class="btn btn-secondary">
+                <a href="{{ route('platform.home') }}" class="btn btn-secondary">
                     <i class="fas fa-home"></i>
                     На головну сторінку
                 </a>

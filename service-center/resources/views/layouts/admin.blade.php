@@ -1,3 +1,6 @@
+@php
+    $tenant = app('currentTenant');
+@endphp
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -145,19 +148,19 @@
                 </div>
 
                 <nav class="py-4">
-                    <a href="{{ route('admin.dashboard') }}" 
+                    <a href="{{ route('tenant.admin.dashboard', ['tenant' => $tenant->slug]) }}" 
                        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.dashboard') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-tachometer-alt w-6"></i>
                         <span class="ml-3">Головна</span>
                     </a>
                     
-                    <a href="{{ route('admin.appointments.index') }}" 
+                    <a href="{{ route('tenant.admin.appointments.index', ['tenant' => $tenant->slug]) }}" 
                        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.index') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-calendar-check w-6"></i>
                         <span class="ml-3">Записи</span>
                     </a>
                     
-                    <a href="{{ route('admin.appointments.manual.create') }}" 
+                    <a href="{{ route('tenant.admin.appointments.manual.create', ['tenant' => $tenant->slug]) }}" 
                        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.appointments.manual.*') ? 'bg-gray-700 text-white' : '' }}">
                         <i class="fas fa-plus-circle w-6"></i>
                         <span class="ml-3">Створити запис</span>
@@ -166,25 +169,25 @@
                     @if(auth()->user()->isAdmin())
                         <div class="border-t border-gray-700 my-2"></div>
                         
-                        <a href="{{ route('admin.masters.index') }}" 
+                        <a href="{{ route('tenant.admin.masters.index', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.masters.*') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-users w-6"></i>
                             <span class="ml-3">Майстри</span>
                         </a>
 
-                        <a href="{{ route('admin.clients.index') }}" 
+                        <a href="{{ route('tenant.admin.clients.index', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.clients.*') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-users w-6"></i>
                             <span class="ml-3">Клієнти</span>
                         </a>
                         
-                        <a href="{{ route('admin.services.index') }}" 
+                        <a href="{{ route('tenant.admin.services.index', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.services.*') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-concierge-bell w-6"></i>
                             <span class="ml-3">Послуги</span>
                         </a>
                         
-                        <a href="{{ route('admin.pages.index') }}" 
+                        <a href="{{ route('tenant.admin.pages.index', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.pages.*') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-file-alt w-6"></i>
                             <span class="ml-3">Сторінки</span>
@@ -192,19 +195,19 @@
                         
                         <div class="border-t border-gray-700 my-2"></div>
                         
-                        <a href="{{ route('admin.notifications.index') }}" 
+                        <a href="{{ route('tenant.admin.notifications.index', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.notifications.index') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-paper-plane w-6"></i>
                             <span class="ml-3">Розсилки</span>
                         </a>
                         
-                        <a href="{{ route('admin.notifications.templates') }}" 
+                        <a href="{{ route('tenant.admin.notifications.templates', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.notifications.templates') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-file-alt w-6"></i>
                             <span class="ml-3">Шаблони</span>
                         </a>
                         
-                        <a href="{{ route('admin.notifications.logs') }}" 
+                        <a href="{{ route('tenant.admin.notifications.logs', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.notifications.logs') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-history w-6"></i>
                             <span class="ml-3">Історія розсилок</span>
@@ -212,7 +215,7 @@
                         
                         <div class="border-t border-gray-700 my-2"></div>
                         
-                        <a href="{{ route('admin.settings.index') }}" 
+                        <a href="{{ route('tenant.admin.settings.index', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('admin.settings.*') ? 'bg-gray-700 text-white' : '' }}">
                             <i class="fas fa-cog w-6"></i>
                             <span class="ml-3">Налаштування</span>
@@ -220,13 +223,13 @@
                     @endif
                     
                     <div class="border-t border-gray-700 mt-4 pt-4">
-                        <a href="{{ route('home') }}" 
+                        <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}" 
                            class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
                             <i class="fas fa-external-link-alt w-6"></i>
                             <span class="ml-3">На сайт</span>
                         </a>
                         
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('platform.logout') }}">
                             @csrf
                             <button type="submit" 
                                     class="flex items-center w-full px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white">
@@ -256,7 +259,7 @@
                         <div class="text-gray-600 hidden md:block">
                             {{ auth()->user()->name }}
                         </div>
-                        <a href="{{ route('home') }}" class="text-gray-600 hover:text-gray-900">
+                        <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}" class="text-gray-600 hover:text-gray-900">
                             <i class="fas fa-home text-xl"></i>
                         </a>
                     </div>

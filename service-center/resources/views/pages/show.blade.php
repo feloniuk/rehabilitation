@@ -7,7 +7,7 @@
     <!-- Breadcrumb -->
     <nav class="mb-8">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-            <li><a href="{{ route('home') }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
+            <li><a href="{{ route('tenant.home', ['tenant' => app('currentTenant')->slug]) }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
             <li class="text-gray-700">{{ $page->title }}</li>
         </ol>
