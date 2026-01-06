@@ -1,3 +1,6 @@
+@php
+    $tenant = app('currentTenant');
+@endphp
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -87,7 +90,7 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo -->
                 <div class="flex items-center space-x-2">
-                    <a href="{{ route('home') }}" class="text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors">
+                    <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}" class="text-2xl font-bold text-pink-600 hover:text-pink-700 transition-colors">
                         {{-- <i class="fas fa-leaf mr-2"></i> --}}
                         {{ \App\Models\Setting::get('center_name', 'Реабілітаційний центр') }}
                     </a>
@@ -95,19 +98,19 @@
 
                 <!-- Desktop Navigation -->
                 <div class="hidden md:flex items-center space-x-8">
-                    <a href="{{ route('home') }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
+                    <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Головна
                     </a>
-                    <a href="{{ route('home') }}#services" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
+                    <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}#services" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Послуги
                     </a>
-                    <a href="{{ route('home') }}#masters" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
+                    <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}#masters" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Спеціалісти
                     </a>
-                    <a href="{{ route('pages.show', 'about') }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
+                    <a href="{{ route('tenant.pages.show', ['tenant' => $tenant->slug, 'slug' => 'about']) }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Про нас
                     </a>
-                    <a href="{{ route('pages.show', 'contacts') }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
+                    <a href="{{ route('tenant.pages.show', ['tenant' => $tenant->slug, 'slug' => 'contacts']) }}" class="text-gray-700 hover:text-pink-600 font-medium transition-colors">
                         Контакти
                     </a>
 
@@ -122,11 +125,11 @@
                             <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                                 <div class="py-2">
                                     
-                                    <a href="{{ route('admin.dashboard') }}" type="submit" class="w-full text-left px-1 py-2 text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('tenant.admin.dashboard', ['tenant' => $tenant->slug]) }}" type="submit" class="w-full text-left px-1 py-2 text-gray-700 hover:bg-gray-50">
                                             <i class="fas fa-tachometer-alt mr-1"></i>
                                                 Панель управління
                                     </a>
-                                    <form method="POST" action="{{ route('logout') }}">
+                                    <form method="POST" action="{{ route('platform.logout') }}">
                                         @csrf
                                         <button type="submit" class="w-full text-left px-1 py-2 text-gray-700 hover:bg-gray-50">
                                             <i class="fas fa-sign-out-alt mr-2"></i>
@@ -151,29 +154,29 @@
         <!-- Mobile menu -->
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-200">
             <div class="px-4 py-4 space-y-3">
-                <a href="{{ route('home') }}" class="block text-gray-700 hover:text-pink-600 font-medium">
+                <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Головна
                 </a>
-                <a href="{{ route('home') }}#services" class="block text-gray-700 hover:text-pink-600 font-medium">
+                <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}#services" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Послуги
                 </a>
-                <a href="{{ route('home') }}#masters" class="block text-gray-700 hover:text-pink-600 font-medium">
+                <a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}#masters" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Спеціалісти
                 </a>
-                <a href="{{ route('pages.show', 'about') }}" class="block text-gray-700 hover:text-pink-600 font-medium">
+                <a href="{{ route('tenant.pages.show', ['tenant' => $tenant->slug, 'slug' => 'about']) }}" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Про нас
                 </a>
-                <a href="{{ route('pages.show', 'contacts') }}" class="block text-gray-700 hover:text-pink-600 font-medium">
+                <a href="{{ route('tenant.pages.show', ['tenant' => $tenant->slug, 'slug' => 'contacts']) }}" class="block text-gray-700 hover:text-pink-600 font-medium">
                     Контакти
                 </a>
-                
+
                 @auth
-                    @if(auth()->user()->isAdmin() || auth()->user()->isMaster())
-                        <a href="{{ route('admin.dashboard') }}" class="block bg-pink-600 text-white px-4 py-2 rounded-lg font-medium">
+                    @if(auth()->user()->roleInTenant($tenant) && in_array(auth()->user()->roleInTenant($tenant), ['owner', 'admin', 'master']))
+                        <a href="{{ route('tenant.admin.dashboard', ['tenant' => $tenant->slug]) }}" class="block bg-pink-600 text-white px-4 py-2 rounded-lg font-medium">
                             Панель управління
                         </a>
                     @endif
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('platform.logout') }}">
                         @csrf
                         <button type="submit" class="w-full text-left text-gray-700 hover:text-pink-600 font-medium">
                             Вийти
@@ -246,11 +249,11 @@
                 <div>
                     <h4 class="text-lg font-semibold mb-6">Швидкі посилання</h4>
                     <ul class="space-y-3">
-                        <li><a href="{{ route('home') }}" class="text-gray-300 hover:text-pink-400 transition-colors">Головна</a></li>
-                        <li><a href="{{ route('pages.show', 'about') }}" class="text-gray-300 hover:text-pink-400 transition-colors">Про нас</a></li>
-                        <li><a href="{{ route('home') }}#services" class="text-gray-300 hover:text-pink-400 transition-colors">Послуги</a></li>
-                        <li><a href="{{ route('home') }}#masters" class="text-gray-300 hover:text-pink-400 transition-colors">Спеціалісти</a></li>
-                        <li><a href="{{ route('pages.show', 'contacts') }}" class="text-gray-300 hover:text-pink-400 transition-colors">Контакти</a></li>
+                        <li><a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}" class="text-gray-300 hover:text-pink-400 transition-colors">Головна</a></li>
+                        <li><a href="{{ route('tenant.pages.show', ['tenant' => $tenant->slug, 'slug' => 'about']) }}" class="text-gray-300 hover:text-pink-400 transition-colors">Про нас</a></li>
+                        <li><a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}#services" class="text-gray-300 hover:text-pink-400 transition-colors">Послуги</a></li>
+                        <li><a href="{{ route('tenant.home', ['tenant' => $tenant->slug]) }}#masters" class="text-gray-300 hover:text-pink-400 transition-colors">Спеціалісти</a></li>
+                        <li><a href="{{ route('tenant.pages.show', ['tenant' => $tenant->slug, 'slug' => 'contacts']) }}" class="text-gray-300 hover:text-pink-400 transition-colors">Контакти</a></li>
                     </ul>
                 </div>
 
