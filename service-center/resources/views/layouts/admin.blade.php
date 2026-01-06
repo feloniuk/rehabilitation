@@ -1,5 +1,6 @@
 @php
     $tenant = app('currentTenant');
+    $userRole = auth()->user()->roleInTenant($tenant);
 @endphp
 <!DOCTYPE html>
 <html lang="uk">
