@@ -47,9 +47,6 @@ Route::name('platform.')->group(function () {
     });
 });
 
-// Alias for login route (Laravel expects 'login' route name)
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-
 /*
 |--------------------------------------------------------------------------
 | Super Admin Routes
