@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(xargs:*)",
+      "Bash(php artisan migrate:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nFix Vite build configuration and install missing dependencies\n\n- Convert vite.config.js to ESM syntax with import/export\n- Convert postcss.config.js to ESM syntax\n- Add \"type\": \"module\" to package.json for ESM support\n- Install axios dependency for JavaScript bootstrap\n\nThis enables proper npm build process to generate manifest.json\nfor production asset serving.\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

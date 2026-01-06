@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  .text-pink-600 {
+    color: rgb(255, 164, 193) !important; /* Ваш новый цвет */
+  }
+}
