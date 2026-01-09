@@ -161,7 +161,7 @@
                 <i class="fas fa-phone mr-2"></i>
                 Зателефонувати
             </a>
-            <a href="{{ route('home') }}#services"
+            <a href="{{ route('tenant.home', ['tenant' => app('currentTenant')->slug]) }}#services"
                class="inline-flex items-center justify-center border-2 border-white text-white px-8 py-3 rounded-xl font-bold hover:bg-white hover:text-pink-600 transition-colors">
                 <i class="fas fa-calendar-plus mr-2"></i>
                 Записатися онлайн

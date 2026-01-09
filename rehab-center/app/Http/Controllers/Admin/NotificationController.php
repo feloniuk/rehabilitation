@@ -130,6 +130,7 @@ class NotificationController extends Controller
             'name' => $request->name,
             'message' => $request->message,
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ]);
 
         return redirect()->route('admin.notifications.templates')

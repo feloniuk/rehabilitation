@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
-    protected $fillable = ['name', 'description', 'duration', 'photo', 'is_active'];
+    protected $fillable = ['name', 'description', 'duration', 'photo', 'is_active', 'tenant_id'];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -20,7 +20,7 @@ class Service extends Model
     public function masters()
     {
         return $this->belongsToMany(User::class, 'master_services', 'service_id', 'master_id')
-                    ->withPivot('price', 'duration');
+            ->withPivot('price', 'duration');
     }
 
     public function faqs()
@@ -37,15 +37,16 @@ class Service extends Model
     {
         return $this->hasMany(Appointment::class);
     }
-    
+
     /**
      * Отримати URL фото
      */
     public function getPhotoUrlAttribute()
     {
         if ($this->photo) {
-            return asset('storage/' . $this->photo);
+            return asset('storage/'.$this->photo);
         }
+
         return null;
     }
 }

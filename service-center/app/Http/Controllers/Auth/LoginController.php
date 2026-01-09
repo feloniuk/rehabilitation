@@ -26,10 +26,14 @@ class LoginController extends Controller
         $user = auth()->user();
 
         if ($user && ($user->isAdmin() || $user->isMaster())) {
-            return route('admin.dashboard');
+            // Redirect to first tenant's admin dashboard
+            $tenant = $user->tenants()->first();
+            if ($tenant) {
+                return route('tenant.admin.dashboard', ['tenant' => $tenant->slug]);
+            }
         }
 
-        return route('home');
+        return route('platform.home');
     }
 
     /**

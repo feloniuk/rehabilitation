@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-4xl">
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="{{ route('admin.pages.update', $page->id) }}">
+        <form method="POST" action="{{ route('tenant.admin.pages.update', ['tenant' => app('currentTenant')->slug, 'page' => $page->id]) }}">
             @csrf
             @method('PUT')
 
@@ -53,7 +53,7 @@
             </div>
 
             <div class="flex justify-end space-x-4">
-                <a href="{{ route('admin.pages.index') }}"
+                <a href="{{ route('tenant.admin.pages.index', ['tenant' => app('currentTenant')->slug]) }}"
                    class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
                     Скасувати
                 </a>

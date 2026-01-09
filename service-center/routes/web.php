@@ -87,11 +87,10 @@ Route::prefix('{tenant}')->middleware(['tenant'])->name('tenant.')->group(functi
         ->name('masters.available-slots');
 
     // Dynamic pages
-    Route::get('/page/{slug}', function ($tenant, $slug) {
-        $page = \App\Models\Page::findBySlug($slug);
-        if (!$page) {
-            abort(404);
-        }
+    Route::get('/{slug}', function ($tenant, $slug) {
+        // GlobalScope from BelongsToTenant trait filters by current tenant automatically
+        $page = \App\Models\Page::where('slug', $slug)->where('is_active', true)->firstOrFail();
+
         return view('pages.show', compact('page'));
     })->name('pages.show');
 
@@ -166,6 +165,7 @@ Route::prefix('{tenant}')->middleware(['tenant'])->name('tenant.')->group(functi
             Route::post('notifications/templates', [NotificationController::class, 'storeTemplate'])->name('notifications.templates.store');
             Route::get('notifications/templates/{id}/edit', function ($tenant, $id) {
                 $template = \App\Models\NotificationTemplate::findOrFail($id);
+
                 return response()->json($template);
             })->name('notifications.templates.edit');
             Route::put('notifications/templates/{id}', [NotificationController::class, 'updateTemplate'])->name('notifications.templates.update');
@@ -199,7 +199,7 @@ Route::prefix('{tenant}')->middleware(['tenant'])->name('tenant.')->group(functi
 
 // DEBUG route
 Route::get('/debug/config', function () {
-    if (!auth()->check() || !auth()->user()->isSuperAdmin()) {
+    if (! auth()->check() || ! auth()->user()->isSuperAdmin()) {
         abort(403, 'Unauthorized');
     }
 

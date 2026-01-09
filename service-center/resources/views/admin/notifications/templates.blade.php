@@ -57,7 +57,7 @@
                                         title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </button>
-                                <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}" 
+                                <form method="POST" action="{{ route('tenant.admin.notifications.templates.delete', ['tenant' => app('currentTenant')->slug, 'template' => $template->id]) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені, що хочете видалити цей шаблон?')">
                                     @csrf
                                     @method('DELETE')
@@ -105,7 +105,7 @@
                                 title="Редагувати">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <form method="POST" action="{{ route('admin.notifications.templates.delete', $template->id) }}" 
+                        <form method="POST" action="{{ route('tenant.admin.notifications.templates.delete', ['tenant' => app('currentTenant')->slug, 'template' => $template->id]) }}" 
                               class="inline" onsubmit="return confirm('Ви впевнені, що хочете видалити цей шаблон?')">
                             @csrf
                             @method('DELETE')
@@ -254,7 +254,8 @@ function editTemplate(id) {
     title.textContent = 'Редагувати шаблон';
     nameInput.value = template.name;
     messageInput.value = template.message;
-    form.action = `/admin/notifications/templates/${id}`;
+    const tenantSlug = '{{ app('currentTenant')->slug }}';
+    form.action = `/${tenantSlug}/admin/notifications/templates/${id}`;
     
     const modal = document.getElementById('template-edit-modal');
     modal.classList.remove('hidden');
@@ -270,7 +271,7 @@ function showCreateModal() {
     title.textContent = 'Створити шаблон';
     nameInput.value = '';
     messageInput.value = '';
-    form.action = '{{ route("admin.notifications.templates.store") }}';
+    form.action = '{{ route("tenant.admin.notifications.templates.store", ["tenant" => app("currentTenant")->slug]) }}';
     
     const modal = document.getElementById('template-edit-modal');
     modal.classList.remove('hidden');

@@ -75,6 +75,7 @@ class ClientController extends Controller
             'password' => Hash::make(str()->random(16)),
             'role' => 'client',
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         if ($request->hasFile('photo')) {

@@ -49,12 +49,12 @@
         <div class="flex items-center space-x-4 w-full md:w-auto">
             <h3 class="text-lg font-semibold flex-grow">Швидкі дії</h3>
             <div class="flex space-x-2 w-full md:w-auto">
-                <a href="{{ route('admin.notifications.templates') }}" 
+                <a href="{{ route('tenant.admin.notifications.templates', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full md:w-auto text-center flex items-center justify-center">
                     <i class="fas fa-file-alt mr-2"></i>
                     Шаблони
                 </a>
-                <a href="{{ route('admin.notifications.logs') }}" 
+                <a href="{{ route('tenant.admin.notifications.logs', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors w-full md:w-auto text-center flex items-center justify-center">
                     <i class="fas fa-history mr-2"></i>
                     Історія
@@ -74,7 +74,7 @@
         <p class="text-sm text-gray-600 mt-1">Оберіть шаблон та записи для відправки нагадувань</p>
     </div>
 
-    <form method="POST" action="{{ route('admin.notifications.send') }}" id="notification-form">
+    <form method="POST" action="{{ route('tenant.admin.notifications.send', ['tenant' => app('currentTenant')->slug]) }}" id="notification-form">
         @csrf
 
         <div class="p-4 space-y-4">

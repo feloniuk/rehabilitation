@@ -11,9 +11,9 @@ use Illuminate\Validation\Rule;
 
 class ClientController extends Controller
 {
-    public function index(Request $request)
+    public function index($tenant, Request $request)
     {
-        $query = User::where('role', 'client')
+        $query = User::clients()->ofTenant()
             ->withCount('clientAppointments');
 
         // Фільтр по пошуковому запиту
@@ -37,12 +37,12 @@ class ClientController extends Controller
         return view('admin.clients.index', compact('clients'));
     }
 
-    public function create()
+    public function create($tenant)
     {
         return view('admin.clients.create');
     }
 
-    public function store(Request $request)
+    public function store($tenant, Request $request)
     {
         $normalizedPhone = PhoneHelper::normalize($request->phone);
 
@@ -75,6 +75,7 @@ class ClientController extends Controller
             'password' => Hash::make(str()->random(16)),
             'role' => 'client',
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         if ($request->hasFile('photo')) {
@@ -83,13 +84,16 @@ class ClientController extends Controller
 
         $client = User::create($data);
 
-        return redirect()->route('admin.clients.index')
+        // Attach client to tenant with role
+        $client->tenants()->attach(app('currentTenant')->id, ['role' => 'client']);
+
+        return redirect()->route('tenant.admin.clients.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Клієнта успішно створено');
     }
 
-    public function show($id)
+    public function show($tenant, $id)
     {
-        $client = User::where('role', 'client')
+        $client = User::clients()->ofTenant()
             ->with(['clientAppointments' => function ($query) {
                 $query->orderBy('appointment_date', 'desc')->limit(10);
             }, 'clientAppointments.service', 'clientAppointments.master'])
@@ -98,16 +102,16 @@ class ClientController extends Controller
         return view('admin.clients.show', compact('client'));
     }
 
-    public function edit($id)
+    public function edit($tenant, $id)
     {
-        $client = User::where('role', 'client')->findOrFail($id);
+        $client = User::clients()->ofTenant()->findOrFail($id);
 
         return view('admin.clients.edit', compact('client'));
     }
 
-    public function update(Request $request, $id)
+    public function update($tenant, Request $request, $id)
     {
-        $client = User::where('role', 'client')->findOrFail($id);
+        $client = User::clients()->ofTenant()->findOrFail($id);
         $normalizedPhone = PhoneHelper::normalize($request->phone);
 
         $request->validate([
@@ -154,13 +158,13 @@ class ClientController extends Controller
 
         $client->update($data);
 
-        return redirect()->route('admin.clients.index')
+        return redirect()->route('tenant.admin.clients.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Дані клієнта оновлено');
     }
 
-    public function destroy($id)
+    public function destroy($tenant, $id)
     {
-        $client = User::where('role', 'client')->findOrFail($id);
+        $client = User::clients()->ofTenant()->findOrFail($id);
 
         // Видаляємо старі записи
         $client->clientAppointments()->delete();

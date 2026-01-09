@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = ['key', 'value', 'tenant_id'];
 
@@ -18,13 +18,14 @@ class Setting extends Model
      */
     public static function get($key, $default = null)
     {
-        $tenant = app('currentTenant');
+        $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
         $cacheKey = $tenant
             ? "tenant_{$tenant->id}_setting_{$key}"
             : "setting_{$key}";
 
         return Cache::remember($cacheKey, 3600, function () use ($key, $default) {
             $setting = static::where('key', $key)->first();
+
             return $setting ? $setting->value : $default;
         });
     }
@@ -34,7 +35,7 @@ class Setting extends Model
      */
     public static function set($key, $value)
     {
-        $tenant = app('currentTenant');
+        $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
 
         // Clear cache
         $cacheKey = $tenant

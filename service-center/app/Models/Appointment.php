@@ -9,12 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Appointment extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
     protected $fillable = [
         'client_id', 'master_id', 'service_id', 'appointment_date',
         'appointment_time', 'duration', 'price', 'status', 'notes', 'telegram_notification_sent',
-        'is_confirmed',
+        'is_confirmed', 'tenant_id',
     ];
 
     protected $casts = [

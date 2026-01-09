@@ -402,7 +402,7 @@ var calendarData = {
     ],
     timeSlots: @json($calendar['timeSlots']),
     todayIndex: {{ $calendar['todayIndex'] }},
-    selectDateRoute: "{{ route('admin.select-date') }}"
+    selectDateRoute: "{{ route('tenant.admin.select-date', ['tenant' => app('currentTenant')->slug]) }}"
 };
 
 var currentDayIndex = {{ $selectedDateIndex ?? 0 }};
@@ -419,7 +419,7 @@ function navigateWeek(direction) {
     loadingBtn.disabled = true;
     loadingBtn.style.opacity = '0.5';
 
-    fetch("{{ route('admin.load-calendar') }}", {
+    fetch("{{ route('tenant.admin.load-calendar', ['tenant' => app('currentTenant')->slug]) }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -456,7 +456,7 @@ function navigateToday() {
     loadingBtn.disabled = true;
     loadingBtn.style.opacity = '0.5';
 
-    fetch("{{ route('admin.load-calendar') }}", {
+    fetch("{{ route('tenant.admin.load-calendar', ['tenant' => app('currentTenant')->slug]) }}", {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

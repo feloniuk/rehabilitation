@@ -193,11 +193,11 @@
 
         {{-- Действия --}}
         <div class="flex justify-end gap-3">
-            <a href="{{ route('admin.master-notification-logs.index') }}"
+            <a href="{{ route('tenant.admin.master-notification-logs.index', ['tenant' => app('currentTenant')->slug]) }}"
                class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors">
                 <i class="fas fa-arrow-left mr-2"></i>Вернуться к логам
             </a>
-            <a href="{{ route('admin.appointments.index') }}"
+            <a href="{{ route('tenant.admin.appointments.index', ['tenant' => app('currentTenant')->slug]) }}"
                class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
                 <i class="fas fa-calendar mr-2"></i>Просмотреть запись
             </a>

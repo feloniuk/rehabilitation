@@ -7,9 +7,9 @@
     <!-- Breadcrumb -->
     <nav class="mb-8">
         <ol class="flex items-center space-x-2 text-sm text-gray-500">
-            <li><a href="{{ route('home') }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
+            <li><a href="{{ route('tenant.home', ['tenant' => app('currentTenant')->slug]) }}" class="hover:text-pink-600 transition-colors">Головна</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
-            <li><a href="{{ route('home') }}#services" class="hover:text-pink-600 transition-colors">Послуги</a></li>
+            <li><a href="{{ route('tenant.home', ['tenant' => app('currentTenant')->slug]) }}#services" class="hover:text-pink-600 transition-colors">Послуги</a></li>
             <li><i class="fas fa-chevron-right text-xs"></i></li>
             <li class="text-gray-700">{{ $service->name }}</li>
         </ol>
@@ -180,13 +180,13 @@
 
                             <!-- Action Buttons -->
                             <div class="space-y-3">
-                                <a href="{{ route('appointment.create', ['master_id' => $master->id, 'service_id' => $service->id]) }}" 
+                                <a href="{{ route('tenant.appointment.create', ['tenant' => app('currentTenant')->slug, 'master_id' => $master->id, 'service_id' => $service->id]) }}" 
                                    class="block w-full bg-pink-600 text-white text-center px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                                     <i class="fas fa-calendar-plus mr-2"></i>
                                     Записатися
                                 </a>
                                 
-                                <a href="{{ route('masters.show', $master->id) }}" 
+                                <a href="{{ route('tenant.masters.show', ['tenant' => app('currentTenant')->slug, 'master' => $master->id]) }}" 
                                    class="block w-full border-2 border-pink-600 text-pink-600 text-center px-6 py-3 rounded-xl font-semibold hover:bg-pink-600 hover:text-white transition-all duration-300">
                                     <i class="fas fa-user mr-2"></i>
                                     Детальніше
@@ -202,7 +202,7 @@
                     </div>
                     <h3 class="text-xl font-semibold text-gray-800 mb-2">Спеціалісти недоступні</h3>
                     <p class="text-gray-600 mb-6">На даний момент немає доступних спеціалістів для цієї послуги</p>
-                    <a href="{{ route('home') }}" 
+                    <a href="{{ route('tenant.home', ['tenant' => app('currentTenant')->slug]) }}"
                        class="inline-flex items-center bg-pink-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-pink-700 transition-colors">
                         <i class="fas fa-arrow-left mr-2"></i>
                         Повернутися на головну

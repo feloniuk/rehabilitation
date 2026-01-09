@@ -59,6 +59,7 @@ class MasterController extends Controller
             'experience_years' => $request->experience_years ?? 0,
             'clients_count' => $request->clients_count ?? 0,
             'certificates_count' => $request->certificates_count ?? 0,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         $master = User::create($masterData);
@@ -141,6 +142,7 @@ class MasterController extends Controller
             'experience_years' => $request->experience_years ?? 0,
             'clients_count' => $request->clients_count ?? 0,
             'certificates_count' => $request->certificates_count ?? 0,
+            
         ];
 
         if ($request->filled('password')) {

@@ -128,7 +128,7 @@
         <!-- Booking Form -->
         <div class="lg:col-span-3">
             <div class="bg-white rounded-2xl shadow-xl p-8">
-                <form method="POST" action="{{ route('appointment.store') }}" id="booking-form">
+                <form method="POST" action="{{ route('tenant.appointment.store', ['tenant' => app('currentTenant')->slug]) }}" id="booking-form">
                     @csrf
                     <input type="hidden" name="master_id" value="{{ $master->id }}">
                     <input type="hidden" name="service_id" value="{{ $service->id }}">
@@ -261,7 +261,7 @@
 
                     <!-- Submit Button -->
                     <div class="flex items-center justify-between">
-                        <a href="{{ route('masters.show', $master->id) }}" 
+                        <a href="{{ route('tenant.masters.show', ['tenant' => app('currentTenant')->slug, 'master' => $master->id]) }}" 
                            class="text-gray-600 hover:text-gray-800 font-medium flex items-center">
                             <i class="fas fa-arrow-left mr-2"></i>
                             Назад
@@ -351,7 +351,8 @@ document.addEventListener('DOMContentLoaded', function() {
         slotsPreview.classList.add('hidden');
 
         // Fetch available slots
-        fetch(`/masters/${masterId}/available-slots/${selectedDate}/${serviceId}`)
+        const tenantSlug = '{{ app('currentTenant')->slug }}';
+        fetch(`/${tenantSlug}/masters/${masterId}/available-slots/${selectedDate}/${serviceId}`)
             .then(response => response.json())
             .then(slots => {
                 timeSelect.innerHTML = '<option value="">Оберіть час</option>';

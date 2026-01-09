@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index($tenant, Request $request)
     {
         $user = auth()->user();
 
@@ -41,7 +41,7 @@ class DashboardController extends Controller
             }
 
             // Редірект без параметру, щоб избежать повторної обробки при перезагрузці
-            return redirect()->route('admin.dashboard');
+            return redirect()->route('tenant.admin.dashboard');
         }
 
         // Отримуємо offset з сесії (якщо він є)
@@ -59,7 +59,7 @@ class DashboardController extends Controller
     /**
      * AJAX endpoint для збереження вибраної дати
      */
-    public function selectDate(Request $request)
+    public function selectDate($tenant, Request $request)
     {
         $request->session()->put('selected_date_index', (int) $request->input('date_index', 0));
 
@@ -69,7 +69,7 @@ class DashboardController extends Controller
     /**
      * AJAX endpoint для завантаження календаря при навігації
      */
-    public function loadCalendar(Request $request)
+    public function loadCalendar($tenant, Request $request)
     {
         $user = auth()->user();
 
@@ -104,7 +104,7 @@ class DashboardController extends Controller
         $finalSelectedDateIndex = $request->session()->get('selected_date_index', $calendar['todayIndex']);
 
         // Преобразуємо weekDates в строки формату Y-m-d для JSON
-        $calendar['weekDates'] = collect($calendar['weekDates'])->map(fn($date) => $date->format('Y-m-d'))->toArray();
+        $calendar['weekDates'] = collect($calendar['weekDates'])->map(fn ($date) => $date->format('Y-m-d'))->toArray();
 
         return response()->json([
             'success' => true,
@@ -141,7 +141,7 @@ class DashboardController extends Controller
         $endDate = now()->addWeeks($weekOffset)->endOfWeek();
 
         // Отримуємо всіх активних майстрів
-        $mastersQuery = User::where('role', 'master')
+        $mastersQuery = User::masters()->ofTenant()
             ->where('is_active', true);
 
         if ($user->isMaster()) {

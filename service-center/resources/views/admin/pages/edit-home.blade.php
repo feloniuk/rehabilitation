@@ -6,7 +6,7 @@
 @section('content')
 
 <div class="mb-6">
-    <a href="{{ route('admin.pages.index') }}" class="text-blue-600 hover:text-blue-800">
+    <a href="{{ route('tenant.admin.pages.index', ['tenant' => app('currentTenant')->slug]) }}" class="text-blue-600 hover:text-blue-800">
         <i class="fas fa-arrow-left mr-2"></i>
         Повернутись до списку сторінок
     </a>
@@ -21,7 +21,7 @@
             </h2>
             <p class="text-pink-100">Редагуйте текстові блоки що відображаються на головній сторінці сайту</p>
         </div>
-        <a href="{{ route('home') }}" target="_blank"
+        <a href="{{ route('tenant.home', ['tenant' => app('currentTenant')->slug]) }}" target="_blank"
            class="bg-white text-pink-600 px-6 py-3 rounded-lg font-semibold hover:bg-pink-50 transition-colors">
             <i class="fas fa-external-link-alt mr-2"></i>
             Переглянути сайт
@@ -35,7 +35,7 @@
             <h3 class="text-lg font-semibold">Текстові блоки</h3>
             <p class="text-sm text-gray-600">Всього блоків: {{ $blocks->total() }}</p>
         </div>
-        <a href="{{ route('admin.pages.blocks.create') }}" 
+        <a href="{{ route('tenant.admin.pages.blocks.create', ['tenant' => app('currentTenant')->slug]) }}" 
            class="bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition-colors">
             <i class="fas fa-plus mr-2"></i>Додати блок
         </a>
@@ -88,7 +88,7 @@
                                        title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </button>
-                                <form method="POST" action="{{ route('admin.pages.blocks.destroy', $block->id) }}" 
+                                <form method="POST" action="{{ route('tenant.admin.pages.blocks.destroy', ['tenant' => app('currentTenant')->slug, 'block' => $block->id]) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
@@ -212,7 +212,8 @@
 @push('scripts')
 <script>
 function openEditModal(id, title, key, type, content, order) {
-    document.getElementById('edit-form').action = `/admin/pages/home/blocks/${id}`;
+    const tenantSlug = '{{ app('currentTenant')->slug }}';
+    document.getElementById('edit-form').action = `/${tenantSlug}/admin/pages/home/blocks/${id}`;
     document.getElementById('edit-title').value = title;
     document.getElementById('edit-key').value = key;
     document.getElementById('edit-type').value = type;

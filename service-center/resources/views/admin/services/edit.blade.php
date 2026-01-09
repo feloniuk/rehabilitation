@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow p-6">
-    <form method="POST" action="{{ route('admin.services.update', $service->id) }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('tenant.admin.services.update', ['tenant' => app('currentTenant')->slug, 'service' => $service->id]) }}" enctype="multipart/form-data">
         @csrf
         @method('PUT')
 
@@ -142,7 +142,7 @@
 
 
         <div class="flex justify-between items-center">
-            <a href="{{ route('admin.services.index') }}" 
+            <a href="{{ route('tenant.admin.services.index', ['tenant' => app('currentTenant')->slug]) }}" 
                class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                 Скасувати
             </a>
@@ -158,7 +158,7 @@
 @if($service->photo)
 <form id="delete-photo-form" 
       method="POST" 
-      action="{{ route('admin.services.update', $service->id) }}" 
+      action="{{ route('tenant.admin.services.update', ['tenant' => app('currentTenant')->slug, 'service' => $service->id]) }}" 
       class="hidden">
     @csrf
     @method('PUT')

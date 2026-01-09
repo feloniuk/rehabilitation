@@ -40,7 +40,7 @@
             </div>
 
             <div class="flex space-x-2">
-                <a href="{{ route('admin.clients.edit', $client->id) }}" 
+                <a href="{{ route('tenant.admin.clients.edit', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                    class="flex-1 text-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                     Редагувати
                 </a>

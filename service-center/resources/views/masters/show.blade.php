@@ -171,7 +171,7 @@
                                                 <div class="text-sm text-gray-500">за сеанс</div>
                                             </div>
                                             
-                                            <a href="{{ route('appointment.create', ['master_id' => $master->id, 'service_id' => $masterService->service->id]) }}" 
+                                            <a href="{{ route('tenant.appointment.create', ['tenant' => app('currentTenant')->slug, 'master_id' => $master->id, 'service_id' => $masterService->service->id]) }}" 
                                                class="inline-block bg-pink-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-pink-700 transition-all duration-300 transform hover:scale-105 shadow-lg">
                                                 <i class="fas fa-calendar-plus mr-2"></i>
                                                 Записатися

@@ -14,7 +14,7 @@
             </h3>
             <p class="text-sm text-gray-600">Текстові блоки та контент головної сторінки</p>
         </div>
-        <a href="{{ route('admin.pages.edit-home') }}" 
+        <a href="{{ route('tenant.admin.pages.edit-home', ['tenant' => app('currentTenant')->slug]) }}" 
            class="mt-2 md:mt-0 bg-pink-600 text-white px-4 py-2 rounded hover:bg-pink-700 transition-colors w-full md:w-auto text-center">
             <i class="fas fa-edit mr-2"></i>Редагувати головну
         </a>
@@ -29,7 +29,7 @@
                 <i class="fas fa-file-alt text-blue-600 mr-2"></i>
                 Додаткові сторінки
             </h3>
-            <a href="{{ route('admin.pages.create') }}" 
+            <a href="{{ route('tenant.admin.pages.create', ['tenant' => app('currentTenant')->slug]) }}" 
                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full md:w-auto text-center flex items-center justify-center">
                 <i class="fas fa-plus mr-2"></i>Додати сторінку
             </a>
@@ -79,17 +79,17 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
-                                <a href="{{ route('pages.show', $page->slug) }}" target="_blank"
-                                   class="text-green-600 hover:text-green-900 transition-colors" 
+                                <a href="{{ route('tenant.pages.show', ['tenant' => app('currentTenant')->slug, 'page' => $page->slug]) }}" target="_blank"
+                                   class="text-green-600 hover:text-green-900 transition-colors"
                                    title="Переглянути на сайті">
                                     <i class="fas fa-external-link-alt text-lg"></i>
                                 </a>
-                                <a href="{{ route('admin.pages.edit', $page->id) }}" 
+                                <a href="{{ route('tenant.admin.pages.edit', ['tenant' => app('currentTenant')->slug, 'page' => $page->id]) }}" 
                                    class="text-indigo-600 hover:text-indigo-900 transition-colors"
                                    title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.pages.destroy', $page->id) }}" 
+                                <form method="POST" action="{{ route('tenant.admin.pages.destroy', ['tenant' => app('currentTenant')->slug, 'page' => $page->id]) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
@@ -107,7 +107,7 @@
                         <td colspan="4" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-inbox text-3xl mb-2"></i>
                             <p>Додаткових сторінок ще немає</p>
-                            <a href="{{ route('admin.pages.create') }}" 
+                            <a href="{{ route('tenant.admin.pages.create', ['tenant' => app('currentTenant')->slug]) }}" 
                                class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
                                 <i class="fas fa-plus mr-1"></i>Додати сторінку
                             </a>
@@ -131,17 +131,17 @@
                     </div>
                     
                     <div class="flex space-x-2">
-                        <a href="{{ route('pages.show', $page->slug) }}" target="_blank"
+                        <a href="{{ route('tenant.pages.show', ['tenant' => app('currentTenant')->slug, 'page' => $page->slug]) }}" target="_blank"
                            class="text-green-600"
                            title="Переглянути на сайті">
                             <i class="fas fa-external-link-alt"></i>
                         </a>
-                        <a href="{{ route('admin.pages.edit', $page->id) }}" 
+                        <a href="{{ route('tenant.admin.pages.edit', ['tenant' => app('currentTenant')->slug, 'page' => $page->id]) }}" 
                            class="text-indigo-600"
                            title="Редагувати">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <form method="POST" action="{{ route('admin.pages.destroy', $page->id) }}" 
+                        <form method="POST" action="{{ route('tenant.admin.pages.destroy', ['tenant' => app('currentTenant')->slug, 'page' => $page->id]) }}" 
                               class="inline" onsubmit="return confirm('Ви впевнені?')">
                             @csrf
                             @method('DELETE')
@@ -173,7 +173,7 @@
             <div class="text-center py-8 text-gray-500">
                 <i class="fas fa-inbox text-3xl mb-2"></i>
                 <p>Додаткових сторінок ще немає</p>
-                <a href="{{ route('admin.pages.create') }}" 
+                <a href="{{ route('tenant.admin.pages.create', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
                     <i class="fas fa-plus mr-1"></i>Додати сторінку
                 </a>

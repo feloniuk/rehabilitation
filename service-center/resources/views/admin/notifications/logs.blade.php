@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="mb-6">
-    <a href="{{ route('admin.notifications.index') }}" 
+    <a href="{{ route('tenant.admin.notifications.index', ['tenant' => app('currentTenant')->slug]) }}" 
        class="text-blue-600 hover:text-blue-800 flex items-center">
         <i class="fas fa-arrow-left mr-2"></i>
         Повернутись до розсилок

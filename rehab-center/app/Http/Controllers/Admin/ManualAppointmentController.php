@@ -160,6 +160,7 @@ class ManualAppointmentController extends Controller
             'price' => $request->price,
             'notes' => $request->notes,
             'status' => 'scheduled',
+            'tenant_id' => app('currentTenant')->id,
         ]);
 
         $masterTelegramBotService->sendMasterNotification($appointment);

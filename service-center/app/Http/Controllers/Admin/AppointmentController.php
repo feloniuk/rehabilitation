@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
-    public function index(Request $request)
+    public function index($tenant, Request $request)
     {
         $user = auth()->user();
 
@@ -63,7 +63,7 @@ class AppointmentController extends Controller
 
         // Дані для фільтрів
         $masters = $user->isAdmin()
-            ? User::where('role', 'master')->where('is_active', true)->get()
+            ? User::masters()->ofTenant()->where('is_active', true)->get()
             : collect(); // Майстру не потрібен список майстрів
 
         $services = Service::where('is_active', true)->get();
@@ -76,7 +76,7 @@ class AppointmentController extends Controller
         return view('admin.appointments.index', compact('appointments', 'masters', 'services', 'statuses'));
     }
 
-    public function show($id)
+    public function show($tenant, $id)
     {
         $user = auth()->user();
 
@@ -117,7 +117,7 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function edit($id)
+    public function edit($tenant, $id)
     {
         $user = auth()->user();
 
@@ -129,16 +129,15 @@ class AppointmentController extends Controller
         }
 
         $appointment = $query->findOrFail($id);
-        $masters = User::where('role', 'master')
-            ->where('is_active', true)
-            ->get();
+        $masters = User::masters()->ofTenant()->where('is_active', true)->get();
 
+        // GlobalScope from BelongsToTenant trait filters by current tenant automatically
         $services = Service::where('is_active', true)->get();
 
         return view('admin.appointments.edit', compact('appointment', 'masters', 'services'));
     }
 
-    public function update(Request $request, $id)
+    public function update($tenant, Request $request, $id)
     {
         $user = auth()->user();
 
@@ -216,11 +215,11 @@ class AppointmentController extends Controller
             'status' => $request->status,
         ]);
 
-        return redirect()->route('admin.appointments.index')
+        return redirect()->route('tenant.admin.appointments.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Запис успішно оновлено');
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus($tenant, Request $request, $id)
     {
         $user = auth()->user();
 
@@ -246,7 +245,7 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function toggleConfirm($id)
+    public function toggleConfirm($tenant, $id)
     {
         $user = auth()->user();
 
@@ -270,7 +269,7 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy($tenant, $id)
     {
         $user = auth()->user();
 

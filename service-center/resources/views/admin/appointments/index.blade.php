@@ -7,7 +7,7 @@
 <div class="bg-white rounded-lg shadow">
     {{-- Фільтри --}}
     <div class="px-4 py-4 border-b bg-gray-50">
-        <form method="GET" action="{{ route('admin.appointments.index') }}" 
+        <form method="GET" action="{{ route('tenant.admin.appointments.index', ['tenant' => app('currentTenant')->slug]) }}" 
               class="grid grid-cols-1 md:grid-cols-4 gap-4">
             {{-- Клієнт --}}
             <div class="md:col-span-2">
@@ -57,7 +57,7 @@
                         class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm w-full md:w-auto">
                     <i class="fas fa-search mr-1"></i>Фільтрувати
                 </button>
-                <a href="{{ route('admin.appointments.index') }}" 
+                <a href="{{ route('tenant.admin.appointments.index', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm w-full md:w-auto text-center">
                     <i class="fas fa-times mr-1"></i>Скинути
                 </a>
@@ -123,12 +123,12 @@
                                         title="Деталі">
                                     <i class="fas fa-eye text-lg"></i>
                                 </button>
-                                <a href="{{ route('admin.appointments.edit', $appointment->id) }}"
+                                <a href="{{ route('tenant.admin.appointments.edit', ['tenant' => app('currentTenant')->slug, 'appointment' => $appointment->id]) }}"
                                    class="text-green-600 hover:text-green-900 transition-colors"
                                    title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}"
+                                <form method="POST" action="{{ route('tenant.admin.appointments.destroy', ['tenant' => app('currentTenant')->slug, 'appointment' => $appointment->id]) }}"
                                     class="inline" onsubmit="return confirm('Ви впевнені?')">
                                     @csrf
                                     @method('DELETE')
@@ -179,12 +179,12 @@
                                 title="Деталі">
                             <i class="fas fa-eye"></i>
                         </button>
-                        <a href="{{ route('admin.appointments.edit', $appointment->id) }}"
+                        <a href="{{ route('tenant.admin.appointments.edit', ['tenant' => app('currentTenant')->slug, 'appointment' => $appointment->id]) }}"
                            class="text-green-600"
                            title="Редагувати">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <form method="POST" action="{{ route('admin.appointments.destroy', $appointment->id) }}"
+                        <form method="POST" action="{{ route('tenant.admin.appointments.destroy', ['tenant' => app('currentTenant')->slug, 'appointment' => $appointment->id]) }}"
                               class="inline" onsubmit="return confirm('Ви впевнені?')">
                             @csrf
                             @method('DELETE')
@@ -252,21 +252,23 @@
 
 @push('scripts')
 <script>
+const tenantSlug = '{{ app('currentTenant')->slug }}';
+
 function showAppointmentDetails(id) {
     const modal = document.getElementById('appointmentModal');
     const content = document.getElementById('appointmentContent');
-    
+
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
+
     content.innerHTML = `
         <div class="text-center py-8">
             <i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i>
             <p class="text-gray-500 mt-2">Завантаження...</p>
         </div>
     `;
-    
-    fetch(`/admin/appointments/${id}`)
+
+    fetch(`/${tenantSlug}/admin/appointments/${id}`)
         .then(response => response.json())
         .then(data => {
             content.innerHTML = `
@@ -348,7 +350,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 function toggleConfirmationInTable(appointmentId, buttonElement) {
-    fetch(`/admin/appointments/${appointmentId}/toggle-confirm`, {
+    fetch(`/${tenantSlug}/admin/appointments/${appointmentId}/toggle-confirm`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',

@@ -8,7 +8,7 @@
     <div class="px-4 py-4 border-b flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
         <div class="flex items-center space-x-4 w-full md:w-auto">
             <h3 class="text-lg font-semibold flex-grow">Список клієнтів</h3>
-            <a href="{{ route('admin.clients.create') }}"
+            <a href="{{ route('tenant.admin.clients.create', ['tenant' => app('currentTenant')->slug]) }}"
                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full md:w-auto text-center flex items-center justify-center">
                 <i class="fas fa-plus mr-2"></i>Додати клієнта
             </a>
@@ -17,7 +17,7 @@
 
     {{-- Фільтри --}}
     <div class="px-4 py-4 border-b bg-gray-50">
-        <form method="GET" action="{{ route('admin.clients.index') }}" class="flex flex-col md:flex-row gap-4">
+        <form method="GET" action="{{ route('tenant.admin.clients.index', ['tenant' => app('currentTenant')->slug]) }}" class="flex flex-col md:flex-row gap-4">
             <div class="flex-1">
                 <div class="relative">
                     <input type="text" name="search" value="{{ request('search') }}"
@@ -38,7 +38,7 @@
                     <i class="fas fa-filter mr-2"></i>Фільтр
                 </button>
                 @if(request('search') || request('status'))
-                    <a href="{{ route('admin.clients.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
+                    <a href="{{ route('tenant.admin.clients.index', ['tenant' => app('currentTenant')->slug]) }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
                         <i class="fas fa-times mr-2"></i>Скинути
                     </a>
                 @endif
@@ -120,17 +120,17 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
-                                <a href="{{ route('admin.clients.show', $client->id) }}" 
+                                <a href="{{ route('tenant.admin.clients.show', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                                    class="text-blue-600 hover:text-blue-900 transition-colors"
                                    title="Деталі">
                                     <i class="fas fa-eye text-lg"></i>
                                 </a>
-                                <a href="{{ route('admin.clients.edit', $client->id) }}" 
+                                <a href="{{ route('tenant.admin.clients.edit', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                                    class="text-indigo-600 hover:text-indigo-900 transition-colors"
                                    title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.clients.destroy', $client->id) }}" 
+                                <form method="POST" action="{{ route('tenant.admin.clients.destroy', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені? Це видалить всі записи клієнта!')">
                                     @csrf
                                     @method('DELETE')
@@ -148,7 +148,7 @@
                         <td colspan="6" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-users-slash text-4xl mb-3 text-gray-400"></i>
                             <p>Клієнтів не знайдено</p>
-                            <a href="{{ route('admin.clients.create') }}"
+                            <a href="{{ route('tenant.admin.clients.create', ['tenant' => app('currentTenant')->slug]) }}"
                                class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
                                 <i class="fas fa-plus mr-1"></i>Додати першого клієнта
                             </a>
@@ -180,17 +180,17 @@
                     </div>
                     
                     <div class="flex space-x-2">
-                        <a href="{{ route('admin.clients.show', $client->id) }}" 
+                        <a href="{{ route('tenant.admin.clients.show', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                            class="text-blue-600"
                            title="Деталі">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="{{ route('admin.clients.edit', $client->id) }}" 
+                        <a href="{{ route('tenant.admin.clients.edit', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                            class="text-indigo-600"
                            title="Редагувати">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <form method="POST" action="{{ route('admin.clients.destroy', $client->id) }}" 
+                        <form method="POST" action="{{ route('tenant.admin.clients.destroy', ['tenant' => app('currentTenant')->slug, 'client' => $client->id]) }}" 
                               class="inline" onsubmit="return confirm('Ви впевнені?')">
                             @csrf
                             @method('DELETE')
@@ -241,7 +241,7 @@
             <div class="text-center py-8 text-gray-500">
                 <i class="fas fa-users-slash text-4xl mb-3 text-gray-400"></i>
                 <p>Клієнтів не знайдено</p>
-                <a href="{{ route('admin.clients.create') }}" 
+                <a href="{{ route('tenant.admin.clients.create', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
                     <i class="fas fa-plus mr-1"></i>Додати першого клієнта
                 </a>

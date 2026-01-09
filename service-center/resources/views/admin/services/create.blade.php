@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="bg-white rounded-lg shadow p-6">
-    <form method="POST" action="{{ route('admin.services.store') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ route('tenant.admin.services.store', ['tenant' => app('currentTenant')->slug]) }}" enctype="multipart/form-data">
         @csrf
 
         <div class="mb-6">
@@ -84,7 +84,7 @@
         </div>
 
         <div class="flex justify-between items-center">
-            <a href="{{ route('admin.services.index') }}" 
+            <a href="{{ route('tenant.admin.services.index', ['tenant' => app('currentTenant')->slug]) }}" 
                class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
                 Скасувати
             </a>

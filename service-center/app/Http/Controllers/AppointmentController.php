@@ -12,12 +12,13 @@ use Illuminate\Http\Request;
 
 class AppointmentController extends Controller
 {
-    public function create(Request $request)
+    public function create($tenant, Request $request)
     {
         $masterId = $request->get('master_id');
         $serviceId = $request->get('service_id');
 
-        $master = User::where('role', 'master')->findOrFail($masterId);
+        $master = User::masters()->ofTenant()->findOrFail($masterId);
+        // GlobalScope from BelongsToTenant trait filters by current tenant automatically
         $service = Service::findOrFail($serviceId);
         $masterService = MasterService::where('master_id', $masterId)
             ->where('service_id', $serviceId)
@@ -26,7 +27,7 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('master', 'service', 'masterService'));
     }
 
-    public function store(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
+    public function store($tenant, Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -42,11 +43,12 @@ class AppointmentController extends Controller
         $normalizedPhone = PhoneHelper::normalize($request->phone);
 
         $client = User::firstOrCreate(
-            ['phone' => $normalizedPhone],
+            ['phone' => $normalizedPhone, 'tenant_id' => app('currentTenant')->id],
             [
                 'name' => $request->name,
                 'role' => 'client',
                 'password' => bcrypt(str()->random(12)),
+                'tenant_id' => app('currentTenant')->id,
             ]
         );
 
@@ -71,10 +73,10 @@ class AppointmentController extends Controller
 
         $masterTelegramBotService->sendMasterNotification($appointment);
 
-        return redirect()->route('appointment.success')->with('appointment_id', $appointment->id);
+        return redirect()->route('tenant.appointment.success', ['tenant' => app('currentTenant')->slug])->with('appointment_id', $appointment->id);
     }
 
-    public function success()
+    public function success($tenant)
     {
         $appointmentId = session('appointment_id');
         $appointment = $appointmentId ? Appointment::with(['master', 'service'])->find($appointmentId) : null;
@@ -82,15 +84,15 @@ class AppointmentController extends Controller
         return view('appointments.success', compact('appointment'));
     }
 
-    public function cancel($id)
+    public function cancel($tenant, $appointment)
     {
-        $appointment = Appointment::findOrFail($id);
+        $appointmentModel = Appointment::findOrFail($appointment);
 
-        if (! $appointment->canBeCancelled()) {
+        if (! $appointmentModel->canBeCancelled()) {
             return back()->with('error', 'Неможливо скасувати запис менше ніж за 24 години до прийому');
         }
 
-        $appointment->update(['status' => 'cancelled']);
+        $appointmentModel->update(['status' => 'cancelled']);
 
         return back()->with('success', 'Запис успішно скасовано');
     }

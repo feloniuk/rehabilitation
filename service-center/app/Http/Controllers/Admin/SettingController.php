@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -7,8 +8,7 @@ use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
-
-    public function index()
+    public function index($tenant)
     {
         $settings = [
             'center_name' => Setting::get('center_name', 'Реабілітаційний центр'),
@@ -22,7 +22,7 @@ class SettingController extends Controller
         return view('admin.settings.index', compact('settings'));
     }
 
-    public function update(Request $request)
+    public function update($tenant, Request $request)
     {
         $request->validate([
             'center_name' => 'required|string|max:255',
@@ -37,7 +37,7 @@ class SettingController extends Controller
             Setting::set($key, $value);
         }
 
-        return redirect()->route('admin.settings.index')
-                        ->with('success', 'Налаштування збережено');
+        return redirect()->route('tenant.admin.settings.index', ['tenant' => app('currentTenant')->slug])
+            ->with('success', 'Налаштування збережено');
     }
 }

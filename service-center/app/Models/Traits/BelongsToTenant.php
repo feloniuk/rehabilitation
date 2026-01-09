@@ -15,15 +15,15 @@ trait BelongsToTenant
     {
         // Auto-assign tenant_id when creating
         static::creating(function ($model) {
-            if (!$model->tenant_id && $tenant = app('currentTenant')) {
+            if (! $model->tenant_id && app()->has('currentTenant') && $tenant = app('currentTenant')) {
                 $model->tenant_id = $tenant->id;
             }
         });
 
         // Add global scope to filter by current tenant
         static::addGlobalScope('tenant', function (Builder $builder) {
-            if ($tenant = app('currentTenant')) {
-                $builder->where($builder->getModel()->getTable() . '.tenant_id', $tenant->id);
+            if (app()->has('currentTenant') && $tenant = app('currentTenant')) {
+                $builder->where($builder->getModel()->getTable().'.tenant_id', $tenant->id);
             }
         });
     }
@@ -42,7 +42,8 @@ trait BelongsToTenant
     public function scopeForTenant(Builder $query, Tenant|int $tenant): Builder
     {
         $tenantId = $tenant instanceof Tenant ? $tenant->id : $tenant;
-        return $query->where($this->getTable() . '.tenant_id', $tenantId);
+
+        return $query->where($this->getTable().'.tenant_id', $tenantId);
     }
 
     /**

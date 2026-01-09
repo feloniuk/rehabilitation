@@ -93,6 +93,7 @@ class PageController extends Controller
             'slug' => $request->slug,
             'content' => $request->content,
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ]);
 
         return redirect()->route('admin.pages.index')

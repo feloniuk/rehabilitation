@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-4xl">
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="{{ route('admin.masters.update', $master->id) }}" enctype="multipart/form-data">
+        <form method="POST" action="{{ route('tenant.admin.masters.update', ['tenant' => app('currentTenant')->slug, 'master' => $master->id]) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -261,7 +261,7 @@
             </div>
 
             <div class="flex justify-end space-x-4">
-                <a href="{{ route('admin.masters.index') }}" 
+                <a href="{{ route('tenant.admin.masters.index', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
                     Скасувати
                 </a>

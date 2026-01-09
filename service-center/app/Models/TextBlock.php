@@ -17,13 +17,14 @@ class TextBlock extends Model
      */
     public static function get($key, $default = '')
     {
-        $tenant = app('currentTenant');
+        $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
         $cacheKey = $tenant
             ? "tenant_{$tenant->id}_text_block_{$key}"
             : "text_block_{$key}";
 
         return Cache::remember($cacheKey, 3600, function () use ($key, $default) {
             $block = static::where('key', $key)->first();
+
             return $block ? $block->content : $default;
         });
     }
@@ -33,14 +34,14 @@ class TextBlock extends Model
      */
     public static function set($key, $content, $title = null, $type = 'text')
     {
-        $tenant = app('currentTenant');
+        $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
 
         $block = static::updateOrCreate(
             ['key' => $key, 'tenant_id' => $tenant?->id],
             [
                 'title' => $title ?? $key,
                 'content' => $content,
-                'type' => $type
+                'type' => $type,
             ]
         );
 
@@ -61,7 +62,7 @@ class TextBlock extends Model
         parent::boot();
 
         static::saved(function ($block) {
-            $tenant = app('currentTenant');
+            $tenant = app()->has('currentTenant') ? app('currentTenant') : null;
             $cacheKey = $tenant
                 ? "tenant_{$tenant->id}_text_block_{$block->key}"
                 : "text_block_{$block->key}";

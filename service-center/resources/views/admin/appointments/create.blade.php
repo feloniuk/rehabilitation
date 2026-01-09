@@ -8,7 +8,7 @@
 @section('content')
 <div class="max-w-4xl">
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="{{ route('admin.appointments.manual.store') }}" id="appointment-form">
+        <form method="POST" action="{{ route('tenant.admin.appointments.manual.store', ['tenant' => app('currentTenant')->slug]) }}" id="appointment-form">
             @csrf
 
             <input type="hidden" name="client_type" id="client_type_hidden" value="{{ old('client_type', 'existing') }}">
@@ -226,7 +226,7 @@
 
             {{-- Кнопки --}}
             <div class="flex justify-end space-x-4">
-                <a href="{{ route('admin.appointments.index') }}" 
+                <a href="{{ route('tenant.admin.appointments.index', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition-colors">
                     <i class="fas fa-times mr-2"></i>
                     Скасувати
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         searchTimeout = setTimeout(() => {
-            fetch(`{{ route('admin.appointments.search-clients') }}?q=${encodeURIComponent(query)}`)
+            fetch(`{{ route('tenant.admin.appointments.search-clients', ['tenant' => app('currentTenant')->slug]) }}?q=${encodeURIComponent(query)}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.results.length === 0) {
@@ -413,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
         serviceSelect.disabled = true;
         serviceSelect.innerHTML = '<option value="">Завантаження послуг...</option>';
 
-        fetch(`{{ route('admin.appointments.get-master-services') }}?master_id=${masterId}`)
+        fetch(`{{ route('tenant.admin.appointments.get-master-services', ['tenant' => app('currentTenant')->slug]) }}?master_id=${masterId}`)
             .then(response => response.json())
             .then(services => {
                 serviceSelect.disabled = false;

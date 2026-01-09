@@ -3,54 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'Super Admin Панель')</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Super Admin - ServiceCenter')</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+        .sidebar-scroll::-webkit-scrollbar-track { background: #374151; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 2px; }
+        @media (max-width: 1023px) {
+            .sidebar { position: fixed; top: 0; left: 0; width: 280px; height: 100vh; background-color: #1F2937; transform: translateX(-100%); transition: transform 0.3s ease-in-out; z-index: 50; overflow-y: auto; }
+            .sidebar.open { transform: translateX(0); }
+            .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; transition: opacity 0.3s ease; z-index: 40; }
+            .sidebar-overlay.open { opacity: 1; visibility: visible; }
+            main.content { width: 100%; max-width: 100vw; }
+        }
+        @media (min-width: 1024px) {
+            .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; overflow-y: auto; background-color: #1F2937; z-index: 30; transition: transform 0.3s ease; }
+            .content { margin-left: 280px; width: calc(100% - 280px); overflow-x: hidden; }
+        }
+        body { overflow-x: hidden; }
+        main.content { overflow-x: hidden; max-width: 100%; }
+    </style>
+    @stack('styles')
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <nav class="bg-gray-900 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <a href="{{ route('super-admin.dashboard') }}" class="text-xl font-bold">
-                        Super Admin
-                    </a>
-                    <div class="hidden md:ml-10 md:flex md:space-x-8">
-                        <a href="{{ route('super-admin.dashboard') }}" class="text-gray-300 hover:text-white px-3 py-2">
-                            Dashboard
-                        </a>
-                        <a href="{{ route('super-admin.tenants.index') }}" class="text-gray-300 hover:text-white px-3 py-2">
-                            Організації
-                        </a>
+<body class="bg-gray-100 antialiased">
+    <div class="flex min-h-screen relative">
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside id="sidebar" class="sidebar bg-gray-800 text-white sidebar-scroll">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-white">Super Admin</h2>
+                    <button onclick="toggleSidebar()" class="lg:hidden text-gray-300 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                </div>
+                <nav class="py-4">
+                    <a href="{{ route('super-admin.dashboard') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('super-admin.dashboard') ? 'bg-gray-700 text-white' : '' }}"><i class="fas fa-chart-line w-6"></i><span class="ml-3">Dashboard</span></a>
+                    <a href="{{ route('super-admin.tenants.index') }}" class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white {{ request()->routeIs('super-admin.tenants.*') ? 'bg-gray-700 text-white' : '' }}"><i class="fas fa-building w-6"></i><span class="ml-3">Організації</span></a>
+                    <div class="border-t border-gray-700 mt-4 pt-4">
+                        <form method="POST" action="{{ route('platform.logout') }}">@csrf<button type="submit" class="flex items-center w-full px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white"><i class="fas fa-sign-out-alt w-6"></i><span class="ml-3">Вийти</span></button></form>
                     </div>
+                </nav>
+            </div>
+        </aside>
+        <main class="flex-1 lg:ml-[280px] content">
+            <header class="sticky top-0 z-20 bg-white shadow-sm border-b lg:border-b-0">
+                <div class="px-4 py-3 flex items-center justify-between">
+                    <button onclick="toggleSidebar()" class="lg:hidden text-gray-600 hover:text-gray-900 mr-4"><i class="fas fa-bars text-xl"></i></button>
+                    <h1 class="text-lg lg:text-2xl font-semibold text-gray-800 truncate flex-grow">@yield('page-title', 'Super Admin')</h1>
+                    <div class="flex items-center space-x-2"><div class="text-gray-600 hidden md:block">{{ auth()->user()->name }}</div></div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-400">{{ auth()->user()->name }}</span>
-                    <form method="POST" action="{{ route('platform.logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="text-gray-300 hover:text-white">
-                            Вийти
-                        </button>
-                    </form>
-                </div>
+            </header>
+            <div class="p-4 lg:p-6 bg-gray-100 min-h-screen">
+                @if(session('success'))<div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 flex items-center"><i class="fas fa-check-circle mr-3"></i>{{ session('success') }}</div>@endif
+                @if(session('error'))<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 flex items-center"><i class="fas fa-exclamation-triangle mr-3"></i>{{ session('error') }}</div>@endif
+                @if(session('info'))<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 flex items-center"><i class="fas fa-info-circle mr-3"></i>{{ session('info') }}</div>@endif
+                @yield('content')
             </div>
-        </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-        @if(session('success'))
-            <div class="mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        @yield('content')
-    </main>
+        </main>
+    </div>
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+        document.querySelectorAll('#sidebar a').forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 1024) { toggleSidebar(); }
+            });
+        });
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('sidebar-overlay').classList.remove('open');
+            }
+        });
+    </script>
+    @stack('scripts')
 </body>
 </html>

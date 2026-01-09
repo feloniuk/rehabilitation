@@ -37,7 +37,7 @@
                     <button type="submit" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                         <i class="fas fa-filter mr-2"></i>Фильтр
                     </button>
-                    <a href="{{ route('admin.master-notification-logs.index') }}"
+                    <a href="{{ route('tenant.admin.master-notification-logs.index', ['tenant' => app('currentTenant')->slug]) }}"
                        class="flex-1 bg-gray-500 text-white px-4 py-2 rounded text-center hover:bg-gray-600">
                         <i class="fas fa-redo mr-2"></i>Сброс
                     </a>
@@ -121,7 +121,7 @@
                                 {{ $log->created_at?->format('d.m.Y H:i:s') ?? '—' }}
                             </td>
                             <td class="px-4 py-3">
-                                <a href="{{ route('admin.master-notification-logs.show', $log) }}"
+                                <a href="{{ route('tenant.admin.master-notification-logs.show', ['tenant' => app('currentTenant')->slug, 'log' => $log]) }}"
                                    class="text-blue-600 hover:text-blue-800 font-medium">
                                     <i class="fas fa-eye mr-1"></i>Просмотр
                                 </a>

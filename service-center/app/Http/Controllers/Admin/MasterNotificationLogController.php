@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class MasterNotificationLogController extends Controller
 {
-    public function index(Request $request)
+    public function index($tenant, Request $request)
     {
         $query = MasterNotificationLog::with(['master', 'appointment.service'])
             ->orderBy('created_at', 'desc');
@@ -42,7 +42,7 @@ class MasterNotificationLogController extends Controller
         return view('admin.master-notification-logs.index', compact('logs', 'totalLogs', 'sentLogs', 'failedLogs'));
     }
 
-    public function show(MasterNotificationLog $log)
+    public function show($tenant, MasterNotificationLog $log)
     {
         $log->load(['master', 'appointment.service', 'appointment.client']);
 

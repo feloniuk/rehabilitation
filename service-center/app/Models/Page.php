@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class Page extends Model
 {
-    use HasFactory, BelongsToTenant;
+    use BelongsToTenant, HasFactory;
 
-    protected $fillable = ['slug', 'title', 'content', 'is_active'];
+    protected $fillable = ['slug', 'title', 'content', 'is_active', 'tenant_id'];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -18,6 +18,7 @@ class Page extends Model
 
     public static function findBySlug($slug)
     {
-        return static::where('slug', $slug)->where('is_active', true)->first();
+        // GlobalScope будет применен автоматически через BelongsToTenant trait
+        return static::where('slug', $slug)->where('is_active', true)->firstOrFail();
     }
 }

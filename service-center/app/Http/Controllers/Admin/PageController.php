@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class PageController extends Controller
 {
-    public function index()
+    public function index($tenant)
     {
         $pages = Page::paginate(10);
 
@@ -20,7 +20,7 @@ class PageController extends Controller
     }
 
     // Метод для редагування головної сторінки (текстових блоків)
-    public function editHome()
+    public function editHome($tenant)
     {
         $blocks = TextBlock::orderBy('order')->paginate(20)->withQueryString();
 
@@ -28,7 +28,7 @@ class PageController extends Controller
     }
 
     // Метод для оновлення текстового блоку
-    public function updateBlock(Request $request, $id)
+    public function updateBlock($tenant, Request $request, $id)
     {
         $block = TextBlock::findOrFail($id);
 
@@ -41,17 +41,17 @@ class PageController extends Controller
 
         $block->update($request->all());
 
-        return redirect()->route('admin.pages.edit-home')
+        return redirect()->route('tenant.admin.pages.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Текстовий блок оновлено');
     }
 
     // Метод для створення нового блоку
-    public function createBlock()
+    public function createBlock($tenant)
     {
         return view('admin.pages.create-block');
     }
 
-    public function storeBlock(Request $request)
+    public function storeBlock($tenant, Request $request)
     {
         $request->validate([
             'key' => 'required|string|max:255|unique:text_blocks',
@@ -61,13 +61,13 @@ class PageController extends Controller
             'order' => 'nullable|integer',
         ]);
 
-        TextBlock::create($request->all());
+        TextBlock::create(array_merge($request->all(), ['tenant_id' => app('currentTenant')->id]));
 
-        return redirect()->route('admin.pages.edit-home')
+        return redirect()->route('tenant.admin.pages.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Текстовий блок створено');
     }
 
-    public function destroyBlock($id)
+    public function destroyBlock($tenant, $id)
     {
         $block = TextBlock::findOrFail($id);
         $block->delete();
@@ -75,12 +75,12 @@ class PageController extends Controller
         return back()->with('success', 'Текстовий блок видалено');
     }
 
-    public function create()
+    public function create($tenant)
     {
         return view('admin.pages.create');
     }
 
-    public function store(Request $request)
+    public function store($tenant, Request $request)
     {
         $request->validate([
             'title' => 'required|string|max:255',
@@ -93,20 +93,21 @@ class PageController extends Controller
             'slug' => $request->slug,
             'content' => $request->content,
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ]);
 
-        return redirect()->route('admin.pages.index')
+        return redirect()->route('tenant.admin.pages.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Сторінку створено');
     }
 
-    public function edit($id)
+    public function edit($tenant, $id)
     {
         $page = Page::findOrFail($id);
 
         return view('admin.pages.edit', compact('page'));
     }
 
-    public function update(Request $request, $id)
+    public function update($tenant, Request $request, $id)
     {
         $page = Page::findOrFail($id);
 
@@ -122,11 +123,11 @@ class PageController extends Controller
             'is_active' => $request->has('is_active'),
         ]);
 
-        return redirect()->route('admin.pages.index')
+        return redirect()->route('tenant.admin.pages.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Сторінку оновлено');
     }
 
-    public function destroy($id)
+    public function destroy($tenant, $id)
     {
         $page = Page::findOrFail($id);
         $page->delete();

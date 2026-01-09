@@ -10,7 +10,7 @@
                 Увійти до системи
             </h2>
         </div>
-        <form class="mt-8 space-y-6" method="POST" action="{{ route('login') }}">
+        <form class="mt-8 space-y-6" method="POST" action="{{ route('tenant.login', ['tenant' => app('currentTenant')->slug]) }}">
             @csrf
             
             <div class="rounded-md shadow-sm -space-y-px">

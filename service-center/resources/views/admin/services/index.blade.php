@@ -8,7 +8,7 @@
     <div class="px-4 py-4 border-b flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0">
         <div class="flex items-center space-x-4 w-full md:w-auto">
             <h3 class="text-lg font-semibold flex-grow">Список послуг</h3>
-            <a href="{{ route('admin.services.create') }}" 
+            <a href="{{ route('tenant.admin.services.create', ['tenant' => app('currentTenant')->slug]) }}" 
                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full md:w-auto text-center flex items-center justify-center">
                 <i class="fas fa-plus mr-2"></i>Додати послугу
             </a>
@@ -81,12 +81,12 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
-                                <a href="{{ route('admin.services.edit', $service->id) }}" 
+                                <a href="{{ route('tenant.admin.services.edit', ['tenant' => app('currentTenant')->slug, 'service' => $service->id]) }}" 
                                    class="text-indigo-600 hover:text-indigo-900 transition-colors"
                                    title="Редагувати">
                                     <i class="fas fa-edit text-lg"></i>
                                 </a>
-                                <form method="POST" action="{{ route('admin.services.destroy', $service->id) }}" 
+                                <form method="POST" action="{{ route('tenant.admin.services.destroy', ['tenant' => app('currentTenant')->slug, 'service' => $service->id]) }}" 
                                       class="inline" onsubmit="return confirm('Ви впевнені? Це видалить послугу та всі пов\'язані записи!')">
                                     @csrf
                                     @method('DELETE')
@@ -104,7 +104,7 @@
                         <td colspan="5" class="px-6 py-8 text-center text-gray-500">
                             <i class="fas fa-spa text-4xl mb-3 text-gray-400"></i>
                             <p>Послуг не знайдено</p>
-                            <a href="{{ route('admin.services.create') }}" 
+                            <a href="{{ route('tenant.admin.services.create', ['tenant' => app('currentTenant')->slug]) }}" 
                                class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
                                 <i class="fas fa-plus mr-1"></i>Додати першу послугу
                             </a>
@@ -134,12 +134,12 @@
                     </div>
                     
                     <div class="flex space-x-2">
-                        <a href="{{ route('admin.services.edit', $service->id) }}" 
+                        <a href="{{ route('tenant.admin.services.edit', ['tenant' => app('currentTenant')->slug, 'service' => $service->id]) }}" 
                            class="text-indigo-600"
                            title="Редагувати">
                             <i class="fas fa-edit"></i>
                         </a>
-                        <form method="POST" action="{{ route('admin.services.destroy', $service->id) }}" 
+                        <form method="POST" action="{{ route('tenant.admin.services.destroy', ['tenant' => app('currentTenant')->slug, 'service' => $service->id]) }}" 
                               class="inline" onsubmit="return confirm('Ви впевнені?')">
                             @csrf
                             @method('DELETE')
@@ -179,7 +179,7 @@
             <div class="text-center py-8 text-gray-500">
                 <i class="fas fa-spa text-4xl mb-3 text-gray-400"></i>
                 <p>Послуг не знайдено</p>
-                <a href="{{ route('admin.services.create') }}" 
+                <a href="{{ route('tenant.admin.services.create', ['tenant' => app('currentTenant')->slug]) }}" 
                    class="text-blue-600 hover:text-blue-800 text-sm mt-2 inline-block">
                     <i class="fas fa-plus mr-1"></i>Додати першу послугу
                 </a>

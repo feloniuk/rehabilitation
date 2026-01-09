@@ -10,19 +10,19 @@ use Illuminate\Support\Facades\Storage;
 
 class ServiceController extends Controller
 {
-    public function index()
+    public function index($tenant)
     {
         $services = Service::withCount('masterServices')->paginate(10)->withQueryString();
 
         return view('admin.services.index', compact('services'));
     }
 
-    public function create()
+    public function create($tenant)
     {
         return view('admin.services.create');
     }
 
-    public function store(Request $request)
+    public function store($tenant, Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -39,6 +39,7 @@ class ServiceController extends Controller
             'description' => $request->description,
             'duration' => $request->duration,
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         $service = Service::create($serviceData);
@@ -65,18 +66,18 @@ class ServiceController extends Controller
             }
         }
 
-        return redirect()->route('admin.services.index')
+        return redirect()->route('tenant.admin.services.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Послугу успішно створено');
     }
 
-    public function edit($id)
+    public function edit($tenant, $id)
     {
         $service = Service::findOrFail($id);
 
         return view('admin.services.edit', compact('service'));
     }
 
-    public function update(Request $request, $id)
+    public function update($tenant, Request $request, $id)
     {
         $service = Service::findOrFail($id);
 
@@ -135,11 +136,11 @@ class ServiceController extends Controller
 
         $service->update($updateData);
 
-        return redirect()->route('admin.services.index')
+        return redirect()->route('tenant.admin.services.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Послугу оновлено');
     }
 
-    public function destroy($id)
+    public function destroy($tenant, $id)
     {
         $service = Service::findOrFail($id);
 

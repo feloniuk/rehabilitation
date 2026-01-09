@@ -6,7 +6,7 @@
 @section('content')
 <div class="max-w-3xl">
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" action="{{ route('admin.settings.update') }}">
+        <form method="POST" action="{{ route('tenant.admin.settings.update', ['tenant' => app('currentTenant')->slug]) }}">
             @csrf
             @method('PUT')
 

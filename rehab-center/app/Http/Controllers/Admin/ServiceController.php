@@ -39,6 +39,7 @@ class ServiceController extends Controller
             'description' => $request->description,
             'duration' => $request->duration,
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         $service = Service::create($serviceData);

@@ -21,7 +21,7 @@ class NotificationController extends Controller
     /**
      * Головна сторінка модуля розсилок
      */
-    public function index()
+    public function index($tenant)
     {
 
         if (! $this->telegramService->isConfigured()) {
@@ -47,7 +47,7 @@ class NotificationController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Статистика розсилок
+        // Статистика розсилок (фільтрація по tenant через глобальний scope)
         $stats = [
             'total_sent' => NotificationLog::where('status', 'sent')->count(),
             'total_failed' => NotificationLog::where('status', 'failed')->count(),
@@ -66,7 +66,7 @@ class NotificationController extends Controller
     /**
      * Відправка розсилки
      */
-    public function send(Request $request)
+    public function send($tenant, Request $request)
     {
         $request->validate([
             'template_id' => 'required|exists:notification_templates,id',
@@ -82,10 +82,10 @@ class NotificationController extends Controller
                 $template
             );
 
-            return redirect()->route('admin.notifications.index')
+            return redirect()->route('tenant.admin.notifications.index', ['tenant' => app('currentTenant')->slug])
                 ->with('success', "Розсилку завершено. Успішно: {$results['success']}, Помилки: {$results['failed']}");
         } catch (\Exception $e) {
-            return redirect()->route('admin.notifications.index')
+            return redirect()->route('tenant.admin.notifications.index', ['tenant' => app('currentTenant')->slug])
                 ->with('error', 'Помилка розсилки: '.$e->getMessage());
         }
     }
@@ -93,7 +93,7 @@ class NotificationController extends Controller
     /**
      * Історія розсилок
      */
-    public function logs()
+    public function logs($tenant)
     {
         $logs = NotificationLog::with(['appointment.client', 'appointment.service', 'template'])
             ->orderBy('created_at', 'desc')
@@ -106,7 +106,7 @@ class NotificationController extends Controller
     /**
      * Управління шаблонами
      */
-    public function templates()
+    public function templates($tenant)
     {
         $templates = NotificationTemplate::orderBy('created_at', 'desc')
             ->paginate(20)
@@ -119,7 +119,7 @@ class NotificationController extends Controller
     /**
      * Створення шаблону
      */
-    public function storeTemplate(Request $request)
+    public function storeTemplate($tenant, Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -130,16 +130,17 @@ class NotificationController extends Controller
             'name' => $request->name,
             'message' => $request->message,
             'is_active' => true,
+            'tenant_id' => app('currentTenant')->id,
         ]);
 
-        return redirect()->route('admin.notifications.templates')
+        return redirect()->route('tenant.admin.notifications.templates', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Шаблон успішно створено');
     }
 
     /**
      * Оновлення шаблону
      */
-    public function updateTemplate(Request $request, $id)
+    public function updateTemplate($tenant, Request $request, $id)
     {
         $template = NotificationTemplate::findOrFail($id);
 
@@ -153,26 +154,26 @@ class NotificationController extends Controller
             'message' => $request->message,
         ]);
 
-        return redirect()->route('admin.notifications.templates')
+        return redirect()->route('tenant.admin.notifications.templates', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Шаблон оновлено');
     }
 
     /**
      * Видалення шаблону
      */
-    public function deleteTemplate($id)
+    public function deleteTemplate($tenant, $id)
     {
         $template = NotificationTemplate::findOrFail($id);
         $template->delete();
 
-        return redirect()->route('admin.notifications.templates')
+        return redirect()->route('tenant.admin.notifications.templates', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Шаблон видалено');
     }
 
     /**
      * Попередній перегляд шаблону
      */
-    public function previewTemplate(Request $request)
+    public function previewTemplate($tenant, Request $request)
     {
         $request->validate([
             'template_id' => 'required|exists:notification_templates,id',
@@ -191,7 +192,7 @@ class NotificationController extends Controller
     /**
      * Швидке нагадування "на завтра"
      */
-    public function quickReminder(Request $request, $appointmentId)
+    public function quickReminder($tenant, Request $request, $appointmentId)
     {
         try {
             $appointment = Appointment::with(['client', 'master', 'service'])

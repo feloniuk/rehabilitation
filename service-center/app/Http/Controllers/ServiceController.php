@@ -7,20 +7,21 @@ use App\Models\User;
 
 class ServiceController extends Controller
 {
-    public function show($id)
+    public function show($tenant, $service)
     {
-        $service = Service::where('is_active', true)->findOrFail($id);
+        // GlobalScope from BelongsToTenant trait filters by current tenant automatically
+        $serviceModel = Service::where('is_active', true)->findOrFail($service);
 
-        $masters = User::where('role', 'master')
-                      ->where('is_active', true)
-                      ->whereHas('masterServices', function($query) use ($id) {
-                          $query->where('service_id', $id);
-                      })
-                      ->with(['masterServices' => function($query) use ($id) {
-                          $query->where('service_id', $id);
-                      }])
-                      ->get();
+        $masters = User::masters()->ofTenant()
+            ->where('is_active', true)
+            ->whereHas('masterServices', function ($query) use ($service) {
+                $query->where('service_id', $service);
+            })
+            ->with(['masterServices' => function ($query) use ($service) {
+                $query->where('service_id', $service);
+            }])
+            ->get();
 
-        return view('services.show', compact('service', 'masters'));
+        return view('services.show', ['service' => $serviceModel, 'masters' => $masters]);
     }
 }

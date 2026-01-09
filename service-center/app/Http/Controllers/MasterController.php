@@ -8,28 +8,28 @@ use Carbon\Carbon;
 
 class MasterController extends Controller
 {
-    public function show($id)
+    public function show($tenant, $master)
     {
-        $master = User::where('role', 'master')
+        $masterUser = User::masters()->ofTenant()
             ->where('is_active', true)
             ->with('masterServices.service')
-            ->findOrFail($id);
+            ->findOrFail($master);
 
-        return view('masters.show', compact('master'));
+        return view('masters.show', ['master' => $masterUser]);
     }
 
-    public function getAvailableSlots($id, $date, $serviceId)
+    public function getAvailableSlots($tenant, $master, $date, $serviceId)
     {
-        $master = User::where('role', 'master')->findOrFail($id);
+        $masterUser = User::masters()->ofTenant()->findOrFail($master);
         $requestDate = Carbon::parse($date);
         $dayName = strtolower($requestDate->format('l'));
 
-        if (! $master->isWorkingOnDay($dayName)) {
+        if (! $masterUser->isWorkingOnDay($dayName)) {
             return response()->json([]);
         }
 
-        $workingHours = $master->getWorkingHours($dayName);
-        $masterService = $master->masterServices()
+        $workingHours = $masterUser->getWorkingHours($dayName);
+        $masterService = $masterUser->masterServices()
             ->where('service_id', $serviceId)
             ->first();
 
@@ -40,7 +40,7 @@ class MasterController extends Controller
         // ИСПРАВЛЕНИЕ: приводим duration к integer
         $duration = (int) $masterService->getDuration();
 
-        $existingAppointments = Appointment::where('master_id', $id)
+        $existingAppointments = Appointment::where('master_id', $master)
             ->where('appointment_date', $date)
             ->where('status', 'scheduled')
             ->get();

@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class MasterController extends Controller
 {
-    public function store(Request $request)
+    public function store($tenant, Request $request)
     {
         $request->validate([
             'name' => 'required|string|max:255',
@@ -59,9 +59,13 @@ class MasterController extends Controller
             'experience_years' => $request->experience_years ?? 0,
             'clients_count' => $request->clients_count ?? 0,
             'certificates_count' => $request->certificates_count ?? 0,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         $master = User::create($masterData);
+
+        // Attach master to tenant with role
+        $master->tenants()->attach(app('currentTenant')->id, ['role' => 'master']);
 
         if ($request->hasFile('photo')) {
             try {
@@ -86,13 +90,13 @@ class MasterController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.masters.index')
+        return redirect()->route('tenant.admin.masters.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Майстра успішно створено');
     }
 
-    public function update(Request $request, $id)
+    public function update($tenant, Request $request, $id)
     {
-        $master = User::where('role', 'master')->findOrFail($id);
+        $master = User::masters()->ofTenant()->findOrFail($id);
 
         // Собираем все чекбоксы услуг вручную
         $serviceCheckboxes = collect($request->all())
@@ -141,6 +145,7 @@ class MasterController extends Controller
             'experience_years' => $request->experience_years ?? 0,
             'clients_count' => $request->clients_count ?? 0,
             'certificates_count' => $request->certificates_count ?? 0,
+            'tenant_id' => app('currentTenant')->id,
         ];
 
         if ($request->filled('password')) {
@@ -182,13 +187,13 @@ class MasterController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.masters.index')
+        return redirect()->route('tenant.admin.masters.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Дані майстра оновлено');
     }
 
-    public function index()
+    public function index($tenant)
     {
-        $masters = User::where('role', 'master')
+        $masters = User::masters()->ofTenant()
             ->withCount('masterServices')
             ->paginate(10)
             ->withQueryString();
@@ -196,7 +201,7 @@ class MasterController extends Controller
         return view('admin.masters.index', compact('masters'));
     }
 
-    public function create()
+    public function create($tenant)
     {
         $services = Service::where('is_active', true)->get();
         $defaultSchedule = $this->getDefaultSchedule();
@@ -204,9 +209,9 @@ class MasterController extends Controller
         return view('admin.masters.create', compact('services', 'defaultSchedule'));
     }
 
-    public function show($id)
+    public function show($tenant, $id)
     {
-        $master = User::where('role', 'master')
+        $master = User::masters()->ofTenant()
             ->with(['masterServices.service', 'masterAppointments' => function ($query) {
                 $query->orderBy('appointment_date', 'desc')->limit(10);
             }, 'masterAppointments.client'])
@@ -215,9 +220,9 @@ class MasterController extends Controller
         return view('admin.masters.show', compact('master'));
     }
 
-    public function edit($id)
+    public function edit($tenant, $id)
     {
-        $master = User::where('role', 'master')
+        $master = User::masters()->ofTenant()
             ->with('masterServices')
             ->findOrFail($id);
 
@@ -226,9 +231,9 @@ class MasterController extends Controller
         return view('admin.masters.edit', compact('master', 'services'));
     }
 
-    public function destroy($id)
+    public function destroy($tenant, $id)
     {
-        $master = User::where('role', 'master')->findOrFail($id);
+        $master = User::masters()->ofTenant()->findOrFail($id);
 
         if ($master->photo) {
             Storage::disk('public')->delete($master->photo);

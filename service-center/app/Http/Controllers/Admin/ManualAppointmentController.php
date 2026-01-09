@@ -17,11 +17,9 @@ class ManualAppointmentController extends Controller
     /**
      * Форма створення запису адміністратором
      */
-    public function create()
+    public function create($tenant)
     {
-        $masters = User::where('role', 'master')
-            ->where('is_active', true)
-            ->get();
+        $masters = User::masters()->ofTenant()->where('is_active', true)->get();
 
         $services = Service::where('is_active', true)->get();
 
@@ -31,13 +29,13 @@ class ManualAppointmentController extends Controller
     /**
      * API для пошуку клієнтів (для Select2)
      */
-    public function searchClients(Request $request)
+    public function searchClients($tenant, Request $request)
     {
         $search = $request->get('q', '');
         $page = $request->get('page', 1);
         $perPage = 15;
 
-        $query = User::where('role', 'client')
+        $query = User::clients()->ofTenant()
             ->select('id', 'name', 'phone', 'email', 'description', 'telegram_username')
             ->orderBy('name', 'asc');
 
@@ -79,7 +77,7 @@ class ManualAppointmentController extends Controller
     /**
      * Збереження запису (з можливістю вручну вказати час)
      */
-    public function store(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
+    public function store($tenant, Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $rules = [
             'master_id' => 'required|exists:users,id',
@@ -144,9 +142,13 @@ class ManualAppointmentController extends Controller
                     'email' => $request->new_client_email,
                     'role' => 'client',
                     'password' => bcrypt(str()->random(12)),
+                    'tenant_id' => app('currentTenant')->id,
                 ]
             );
             $clientId = $client->id;
+
+            // Attach client to tenant (sync without detaching existing)
+            $client->tenants()->syncWithoutDetaching([app('currentTenant')->id => ['role' => 'client']]);
         }
 
         // Створення запису
@@ -160,11 +162,12 @@ class ManualAppointmentController extends Controller
             'price' => $request->price,
             'notes' => $request->notes,
             'status' => 'scheduled',
+            'tenant_id' => app('currentTenant')->id,
         ]);
 
         $masterTelegramBotService->sendMasterNotification($appointment);
 
-        return redirect()->route('admin.appointments.index')
+        return redirect()->route('tenant.admin.appointments.index', ['tenant' => app('currentTenant')->slug])
             ->with('success', 'Запис успішно створено');
     }
 
@@ -213,7 +216,7 @@ class ManualAppointmentController extends Controller
     /**
      * API для отримання ціни послуги майстра
      */
-    public function getServicePrice(Request $request)
+    public function getServicePrice($tenant, Request $request)
     {
         $masterId = $request->input('master_id');
         $serviceId = $request->input('service_id');
@@ -232,7 +235,7 @@ class ManualAppointmentController extends Controller
         ]);
     }
 
-    public function getMasterServices(Request $request)
+    public function getMasterServices($tenant, Request $request)
     {
         $masterId = $request->input('master_id');
 
