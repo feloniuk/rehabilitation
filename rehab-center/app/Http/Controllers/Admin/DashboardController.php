@@ -104,7 +104,7 @@ class DashboardController extends Controller
         $finalSelectedDateIndex = $request->session()->get('selected_date_index', $calendar['todayIndex']);
 
         // Преобразуємо weekDates в строки формату Y-m-d для JSON
-        $calendar['weekDates'] = collect($calendar['weekDates'])->map(fn($date) => $date->format('Y-m-d'))->toArray();
+        $calendar['weekDates'] = collect($calendar['weekDates'])->map(fn ($date) => $date->format('Y-m-d'))->toArray();
 
         return response()->json([
             'success' => true,
@@ -194,8 +194,8 @@ class DashboardController extends Controller
             ];
         }
 
-        // Генеруємо фіксовані часові слоти з 8:00 до 22:00 з кроком 30 хвилин
-        $timeSlots = $this->generateTimeSlots('08:00', '22:00', 30);
+        // Генеруємо фіксовані часові слоти з 10:00 до 21:00 з кроком 30 хвилин
+        $timeSlots = $this->generateTimeSlots('10:00', '21:00', 30);
 
         // Генеруємо дати тижня
         $weekDates = [];
