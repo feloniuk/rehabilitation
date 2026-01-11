@@ -82,7 +82,7 @@ class AppointmentController extends Controller
         return view('appointments.success', compact('appointment'));
     }
 
-    public function cancel($id)
+    public function cancel($id, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $appointment = Appointment::findOrFail($id);
 
@@ -91,6 +91,8 @@ class AppointmentController extends Controller
         }
 
         $appointment->update(['status' => 'cancelled']);
+
+        $masterTelegramBotService->sendCancellationNotification($appointment);
 
         return back()->with('success', 'Запис успішно скасовано');
     }

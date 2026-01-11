@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Appointment;
 use App\Models\Service;
 use App\Models\User;
+use App\Services\MasterTelegramBotNotificationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -138,7 +139,7 @@ class AppointmentController extends Controller
         return view('admin.appointments.edit', compact('appointment', 'masters', 'services'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $id, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $user = auth()->user();
 
@@ -150,6 +151,7 @@ class AppointmentController extends Controller
         }
 
         $appointment = $query->findOrFail($id);
+        $oldStatus = $appointment->status;
 
         $rules = [
             'master_id' => 'required|exists:users,id',
@@ -216,11 +218,16 @@ class AppointmentController extends Controller
             'status' => $request->status,
         ]);
 
+        // Відправляємо повідомлення майстру якщо статус змінився на "скасовано"
+        if ($oldStatus !== 'cancelled' && $request->status === 'cancelled') {
+            $masterTelegramBotService->sendCancellationNotification($appointment);
+        }
+
         return redirect()->route('admin.appointments.index')
             ->with('success', 'Запис успішно оновлено');
     }
 
-    public function updateStatus(Request $request, $id)
+    public function updateStatus(Request $request, $id, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $user = auth()->user();
 
@@ -236,7 +243,14 @@ class AppointmentController extends Controller
         }
 
         $appointment = $query->findOrFail($id);
+        $oldStatus = $appointment->status;
+
         $appointment->update(['status' => $request->status]);
+
+        // Відправляємо повідомлення майстру якщо статус змінився на "скасовано"
+        if ($oldStatus !== 'cancelled' && $request->status === 'cancelled') {
+            $masterTelegramBotService->sendCancellationNotification($appointment);
+        }
 
         return response()->json([
             'success' => true,
