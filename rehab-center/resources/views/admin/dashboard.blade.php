@@ -358,6 +358,18 @@
     height: 80px;
     border-bottom: 1px dashed #e5e7eb;
     position: relative;
+    background: #fff;
+}
+
+/* Нерабочий час (до початку та після закінчення робочого дня) */
+.time-slot-cell.non-working {
+    background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 10px,
+        #e5e7eb 10px,
+        #e5e7eb 12px
+    );
 }
 
 /* Картки записів */
@@ -396,7 +408,8 @@ var calendarData = {
             id: {{ $master->id }},
             name: "{{ addslashes($master->name) }}",
             photo: "{{ $master->photo ?? '' }}",
-            specialty: "{{ addslashes($master->specialty ?? '') }}"
+            specialty: "{{ addslashes($master->specialty ?? '') }}",
+            work_schedule: @json($master->work_schedule ?? [])
         }@if(!$loop->last),@endif
         @endforeach
     ],
@@ -634,23 +647,64 @@ function selectDate(index, skipSave) {
 function reloadTimeline(dayIndex) {
     var dateKey = calendarData.weekDates[dayIndex];
     var masterColumns = document.querySelectorAll('.master-column[data-master-id]');
-    
+
     masterColumns.forEach(function(col) {
         var masterId = parseInt(col.dataset.masterId);
         var masterIdx = parseInt(col.dataset.masterIndex);
-        
+
         // Видаляємо всі старі картки
         col.querySelectorAll('.appointment-card').forEach(function(card) {
             card.remove();
         });
-        
+
         var masterData = calendarData.scheduleByMaster[masterId];
-        
-        if (!masterData || !masterData.appointments_by_date || !masterData.appointments_by_date[dateKey]) {
+        var appointments = (masterData && masterData.appointments_by_date && masterData.appointments_by_date[dateKey])
+            ? masterData.appointments_by_date[dateKey]
+            : [];
+
+        // Знаходимо час першого та останнього запису
+        var firstAppointmentStart = null;
+        var lastAppointmentEnd = null;
+
+        if (appointments.length > 0) {
+            appointments.forEach(function(apt) {
+                var timeParts = apt.time.substring(0, 5).split(':');
+                var aptStartMinutes = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
+                var aptEndMinutes = aptStartMinutes + parseInt(apt.duration);
+
+                if (firstAppointmentStart === null || aptStartMinutes < firstAppointmentStart) {
+                    firstAppointmentStart = aptStartMinutes;
+                }
+                if (lastAppointmentEnd === null || aptEndMinutes > lastAppointmentEnd) {
+                    lastAppointmentEnd = aptEndMinutes;
+                }
+            });
+        }
+
+        // Позначаємо слоти до першого та після останнього запису
+        var timeSlotCells = col.querySelectorAll('.time-slot-cell');
+        timeSlotCells.forEach(function(cell, slotIndex) {
+            cell.classList.remove('non-working');
+
+            if (appointments.length === 0) {
+                // Немає записів - всі слоти вільні (з полосками)
+                cell.classList.add('non-working');
+            } else {
+                var slotTime = calendarData.timeSlots[slotIndex];
+                var slotParts = slotTime.split(':');
+                var slotMinutes = parseInt(slotParts[0]) * 60 + parseInt(slotParts[1]);
+                var slotEndMinutes = slotMinutes + 30; // Кожен слот 30 хвилин
+
+                // Слот до першого запису або після останнього
+                if (slotEndMinutes <= firstAppointmentStart || slotMinutes >= lastAppointmentEnd) {
+                    cell.classList.add('non-working');
+                }
+            }
+        });
+
+        if (appointments.length === 0) {
             return;
         }
-        
-        var appointments = masterData.appointments_by_date[dateKey];
         var colors = [
             {from: '#8B5CF6', to: '#6366F1'},
             {from: '#3B82F6', to: '#2563EB'},
