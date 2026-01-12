@@ -284,11 +284,11 @@ class AppointmentController extends Controller
         ]);
     }
 
-    public function destroy($id)
+    public function destroy($id, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
         $user = auth()->user();
 
-        $query = Appointment::query();
+        $query = Appointment::with(['client', 'master', 'service']);
 
         // Майстер може видаляти тільки свої записи
         if ($user->isMaster()) {
@@ -296,6 +296,12 @@ class AppointmentController extends Controller
         }
 
         $appointment = $query->findOrFail($id);
+
+        // Відправляємо повідомлення майстру про видалення запису (якщо він був запланований)
+        if ($appointment->status === 'scheduled') {
+            $masterTelegramBotService->sendCancellationNotification($appointment);
+        }
+
         $appointment->delete();
 
         return back()->with('success', 'Запис видалено');
