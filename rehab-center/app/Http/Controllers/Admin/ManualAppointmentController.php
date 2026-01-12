@@ -137,15 +137,31 @@ class ManualAppointmentController extends Controller
         } else {
             $normalizedPhone = PhoneHelper::normalize($request->new_client_phone);
 
-            $client = User::updateOrCreate(
-                ['phone' => $normalizedPhone],
-                [
+            // Перевірка чи телефон не належить майстру
+            $existingUser = User::where('phone', $normalizedPhone)->first();
+            if ($existingUser && $existingUser->role === 'master') {
+                return back()->withErrors([
+                    'new_client_phone' => 'Цей номер телефону належить майстру. Неможливо створити клієнта з таким номером.',
+                ])->withInput();
+            }
+
+            // Якщо клієнт існує - використовуємо його, якщо ні - створюємо
+            if ($existingUser) {
+                $client = $existingUser;
+                // Оновлюємо ім'я та email якщо вказані
+                $client->update([
+                    'name' => $request->new_client_name,
+                    'email' => $request->new_client_email ?: $client->email,
+                ]);
+            } else {
+                $client = User::create([
+                    'phone' => $normalizedPhone,
                     'name' => $request->new_client_name,
                     'email' => $request->new_client_email,
                     'role' => 'client',
                     'password' => bcrypt(str()->random(12)),
-                ]
-            );
+                ]);
+            }
             $clientId = $client->id;
         }
 

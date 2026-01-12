@@ -54,8 +54,13 @@ class ClientController extends Controller
                 'string',
                 'max:20',
                 function ($attribute, $value, $fail) use ($normalizedPhone) {
-                    if (User::where('phone', $normalizedPhone)->exists()) {
-                        $fail('Клієнт з таким телефоном вже існує');
+                    $existingUser = User::where('phone', $normalizedPhone)->first();
+                    if ($existingUser) {
+                        if ($existingUser->role === 'master') {
+                            $fail('Цей номер телефону належить майстру. Неможливо створити клієнта з таким номером.');
+                        } else {
+                            $fail('Клієнт з таким телефоном вже існує');
+                        }
                     }
                 },
             ],
