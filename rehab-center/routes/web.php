@@ -66,6 +66,9 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     Route::patch('appointments/{appointment}/toggle-confirm', [AdminAppointmentController::class, 'toggleConfirm'])->name('appointments.toggle-confirm');
     Route::delete('appointments/{appointment}', [AdminAppointmentController::class, 'destroy'])->name('appointments.destroy');
 
+    // Повторний запис (AJAX)
+    Route::post('appointments/repeat', [AdminAppointmentController::class, 'repeat'])->name('appointments.repeat');
+
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         Route::resource('clients', ClientController::class);

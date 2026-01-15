@@ -208,7 +208,15 @@
 <div id="appointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
     <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center p-4 border-b">
-            <h3 class="font-semibold">Деталі запису</h3>
+            <div class="flex items-center gap-2">
+                <h3 class="font-semibold">Деталі запису</h3>
+                <button id="repeatAppointmentBtn"
+                        onclick="openRepeatAppointmentModal()"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-purple-100 text-purple-600 transition-colors"
+                        title="Повторний запис">
+                    <i class="fas fa-redo-alt text-sm"></i>
+                </button>
+            </div>
             <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
                 <i class="fas fa-times"></i>
             </button>
@@ -232,6 +240,100 @@
                     Закрити
                 </button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка повторного запису -->
+<div id="repeatAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-redo-alt text-purple-600"></i>
+                <h3 class="font-semibold">Повторний запис</h3>
+            </div>
+            <button onclick="closeRepeatModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-4">
+            <!-- Інформація про запис -->
+            <div id="repeatAppointmentInfo" class="bg-gray-50 rounded-lg p-3 space-y-2">
+                <!-- Заповнюється JavaScript -->
+            </div>
+
+            <!-- Вибір дати -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Дата</label>
+                <input type="date"
+                       id="repeatDate"
+                       onchange="loadRepeatSlots()"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
+                       min="{{ date('Y-m-d') }}">
+            </div>
+
+            <!-- Вибір часу -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Доступний час</label>
+                <div id="repeatSlotsContainer" class="min-h-[60px]">
+                    <div class="text-sm text-gray-500 text-center py-4">
+                        Оберіть дату для перегляду доступних слотів
+                    </div>
+                </div>
+
+                <!-- Чекбокс кастомного часу -->
+                <div id="customTimeCheckboxContainer" class="hidden mt-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox"
+                               id="customTimeCheckbox"
+                               onchange="toggleCustomTime()"
+                               class="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500">
+                        <span class="ml-2 text-sm text-gray-600">
+                            <i class="fas fa-edit text-purple-500 mr-1"></i>
+                            Кастомний час
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Інпути кастомного часу -->
+                <div id="customTimeInputs" class="hidden mt-3">
+                    <div class="flex gap-2 items-center">
+                        <div class="flex-1">
+                            <input type="number"
+                                   id="repeatHour"
+                                   min="0" max="23" step="1"
+                                   placeholder="00"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-center">
+                        </div>
+                        <div class="text-lg font-semibold text-gray-500">:</div>
+                        <div class="flex-1">
+                            <input type="number"
+                                   id="repeatMinute"
+                                   min="0" max="59" step="1"
+                                   placeholder="00"
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500 text-center">
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Години: 0-23, Хвилини: 0-59
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t flex gap-2">
+            <button id="createRepeatBtn"
+                    onclick="createRepeatAppointment()"
+                    disabled
+                    class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <i class="fas fa-plus"></i>
+                <span>Створити запис</span>
+            </button>
+            <button onclick="closeRepeatModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
+                Скасувати
+            </button>
         </div>
     </div>
 </div>
@@ -648,6 +750,12 @@ function reloadTimeline(dayIndex) {
     var dateKey = calendarData.weekDates[dayIndex];
     var masterColumns = document.querySelectorAll('.master-column[data-master-id]');
 
+    // Отримуємо день тижня для вибраної дати
+    var selectedDate = new Date(dateKey + 'T00:00:00');
+    var dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    var dayNames = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    var dayName = dayNames[dayOfWeek];
+
     masterColumns.forEach(function(col) {
         var masterId = parseInt(col.dataset.masterId);
         var masterIdx = parseInt(col.dataset.masterIndex);
@@ -662,41 +770,43 @@ function reloadTimeline(dayIndex) {
             ? masterData.appointments_by_date[dateKey]
             : [];
 
-        // Знаходимо час першого та останнього запису
-        var firstAppointmentStart = null;
-        var lastAppointmentEnd = null;
+        // Знаходимо графік роботи мастера для вибраного дня
+        var master = calendarData.masters.find(function(m) { return m.id === masterId; });
+        var workSchedule = master && master.work_schedule ? master.work_schedule[dayName] : null;
 
-        if (appointments.length > 0) {
-            appointments.forEach(function(apt) {
-                var timeParts = apt.time.substring(0, 5).split(':');
-                var aptStartMinutes = parseInt(timeParts[0]) * 60 + parseInt(timeParts[1]);
-                var aptEndMinutes = aptStartMinutes + parseInt(apt.duration);
+        // Визначаємо робочі години мастера
+        var workStartMinutes = null;
+        var workEndMinutes = null;
+        var isWorkingDay = false;
 
-                if (firstAppointmentStart === null || aptStartMinutes < firstAppointmentStart) {
-                    firstAppointmentStart = aptStartMinutes;
-                }
-                if (lastAppointmentEnd === null || aptEndMinutes > lastAppointmentEnd) {
-                    lastAppointmentEnd = aptEndMinutes;
-                }
-            });
+        if (workSchedule && workSchedule.is_working) {
+            isWorkingDay = true;
+            if (workSchedule.start) {
+                var startParts = workSchedule.start.split(':');
+                workStartMinutes = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            }
+            if (workSchedule.end) {
+                var endParts = workSchedule.end.split(':');
+                workEndMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+            }
         }
 
-        // Позначаємо слоти до першого та після останнього запису
+        // Позначаємо нерабочі слоти на основі графіку мастера
         var timeSlotCells = col.querySelectorAll('.time-slot-cell');
         timeSlotCells.forEach(function(cell, slotIndex) {
             cell.classList.remove('non-working');
 
-            if (appointments.length === 0) {
-                // Немає записів - всі слоти вільні (з полосками)
-                cell.classList.add('non-working');
-            } else {
-                var slotTime = calendarData.timeSlots[slotIndex];
-                var slotParts = slotTime.split(':');
-                var slotMinutes = parseInt(slotParts[0]) * 60 + parseInt(slotParts[1]);
-                var slotEndMinutes = slotMinutes + 30; // Кожен слот 30 хвилин
+            var slotTime = calendarData.timeSlots[slotIndex];
+            var slotParts = slotTime.split(':');
+            var slotMinutes = parseInt(slotParts[0]) * 60 + parseInt(slotParts[1]);
+            var slotEndMinutes = slotMinutes + 30; // Кожен слот 30 хвилин
 
-                // Слот до першого запису або після останнього
-                if (slotEndMinutes <= firstAppointmentStart || slotMinutes >= lastAppointmentEnd) {
+            if (!isWorkingDay) {
+                // Мастер не працює в цей день - всі слоти нерабочі
+                cell.classList.add('non-working');
+            } else if (workStartMinutes !== null && workEndMinutes !== null) {
+                // Слот повністю за межами робочого часу
+                if (slotEndMinutes <= workStartMinutes || slotMinutes >= workEndMinutes) {
                     cell.classList.add('non-working');
                 }
             }
@@ -1157,9 +1267,403 @@ function closeModal() {
 
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+        closeRepeatModal();
         closeModal();
     }
 });
+
+// ============================================
+// Повторний запис - функції
+// ============================================
+
+var currentRepeatAppointmentData = null;
+var selectedRepeatSlot = null;
+var isCustomTimeMode = false;
+
+function openRepeatAppointmentModal() {
+    if (!currentAppointmentId) {
+        showNotification('Помилка: ID запису не знайдено', 'error');
+        return;
+    }
+
+    // Завантажуємо дані запису для повторення
+    fetch('/admin/appointments/' + currentAppointmentId)
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function(d) {
+            currentRepeatAppointmentData = d;
+
+            // Заповнюємо інформацію про запис
+            var infoHtml =
+                '<div class="flex items-center gap-2">' +
+                    '<i class="fas fa-user text-gray-400 text-sm"></i>' +
+                    '<span class="font-medium">' + d.client.name + '</span>' +
+                '</div>' +
+                '<div class="flex items-center gap-2">' +
+                    '<i class="fas fa-user-md text-gray-400 text-sm"></i>' +
+                    '<span class="text-sm text-gray-600">' + d.master.name + '</span>' +
+                '</div>' +
+                '<div class="flex items-center gap-2">' +
+                    '<i class="fas fa-concierge-bell text-gray-400 text-sm"></i>' +
+                    '<span class="text-sm text-gray-600">' + d.service.name + ' (' + d.service.duration + ' хв)</span>' +
+                '</div>' +
+                '<div class="flex items-center gap-2">' +
+                    '<i class="fas fa-money-bill text-gray-400 text-sm"></i>' +
+                    '<span class="text-sm font-semibold text-green-600">' + d.price + '₴</span>' +
+                '</div>';
+
+            document.getElementById('repeatAppointmentInfo').innerHTML = infoHtml;
+
+            // Скидаємо форму
+            document.getElementById('repeatDate').value = '';
+            document.getElementById('repeatSlotsContainer').innerHTML =
+                '<div class="text-sm text-gray-500 text-center py-4">Оберіть дату для перегляду доступних слотів</div>';
+            document.getElementById('createRepeatBtn').disabled = true;
+            selectedRepeatSlot = null;
+
+            // Скидаємо кастомний час
+            resetCustomTimeMode();
+
+            // Встановлюємо мінімальну дату (завтра)
+            var tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('repeatDate').min = tomorrow.toISOString().split('T')[0];
+
+            // Показуємо модалку
+            var modal = document.getElementById('repeatAppointmentModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        })
+        .catch(function(error) {
+            console.error('Error loading appointment:', error);
+            showNotification('Помилка завантаження даних запису', 'error');
+        });
+}
+
+function closeRepeatModal() {
+    var modal = document.getElementById('repeatAppointmentModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    currentRepeatAppointmentData = null;
+    selectedRepeatSlot = null;
+    resetCustomTimeMode();
+}
+
+function resetCustomTimeMode() {
+    isCustomTimeMode = false;
+    var checkbox = document.getElementById('customTimeCheckbox');
+    if (checkbox) checkbox.checked = false;
+    document.getElementById('customTimeCheckboxContainer').classList.add('hidden');
+    document.getElementById('customTimeInputs').classList.add('hidden');
+    document.getElementById('repeatHour').value = '';
+    document.getElementById('repeatMinute').value = '';
+}
+
+function loadRepeatSlots() {
+    var date = document.getElementById('repeatDate').value;
+
+    if (!date || !currentRepeatAppointmentData) {
+        return;
+    }
+
+    var container = document.getElementById('repeatSlotsContainer');
+    container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-xl text-gray-400"></i></div>';
+    document.getElementById('createRepeatBtn').disabled = true;
+    selectedRepeatSlot = null;
+
+    // Скидаємо кастомний час при зміні дати
+    resetCustomTimeMode();
+
+    // Використовуємо існуючий API для отримання слотів
+    var masterId = currentRepeatAppointmentData.master.id;
+    var serviceId = currentRepeatAppointmentData.service.id;
+
+    fetch('/masters/' + masterId + '/available-slots/' + date + '/' + serviceId)
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
+        .then(function(slots) {
+            // Показуємо чекбокс кастомного часу
+            document.getElementById('customTimeCheckboxContainer').classList.remove('hidden');
+
+            if (slots.length === 0) {
+                container.innerHTML =
+                    '<div class="text-center py-4">' +
+                        '<i class="fas fa-calendar-times text-gray-400 text-2xl mb-2"></i>' +
+                        '<div class="text-sm text-gray-500">Немає доступних слотів на цю дату</div>' +
+                    '</div>';
+                return;
+            }
+
+            var slotsHtml = '<div id="slotsGrid" class="grid grid-cols-4 gap-2">';
+            slots.forEach(function(slot) {
+                slotsHtml +=
+                    '<button type="button" ' +
+                           'onclick="selectRepeatSlot(\'' + slot + '\', this)" ' +
+                           'class="repeat-slot-btn px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-purple-50 hover:border-purple-300 transition-colors">' +
+                        slot +
+                    '</button>';
+            });
+            slotsHtml += '</div>';
+
+            container.innerHTML = slotsHtml;
+        })
+        .catch(function(error) {
+            console.error('Error loading slots:', error);
+            container.innerHTML =
+                '<div class="text-center py-4 text-red-500">' +
+                    '<i class="fas fa-exclamation-circle text-2xl mb-2"></i>' +
+                    '<div class="text-sm">Помилка завантаження слотів</div>' +
+                '</div>';
+            // Все одно показуємо чекбокс для кастомного часу
+            document.getElementById('customTimeCheckboxContainer').classList.remove('hidden');
+        });
+}
+
+function toggleCustomTime() {
+    var checkbox = document.getElementById('customTimeCheckbox');
+    var slotsContainer = document.getElementById('repeatSlotsContainer');
+    var customInputs = document.getElementById('customTimeInputs');
+    var slotsGrid = document.getElementById('slotsGrid');
+
+    isCustomTimeMode = checkbox.checked;
+
+    if (isCustomTimeMode) {
+        // Ховаємо слоти, показуємо інпути
+        if (slotsGrid) slotsGrid.classList.add('hidden');
+        customInputs.classList.remove('hidden');
+
+        // Скидаємо вибраний слот
+        selectedRepeatSlot = null;
+        document.querySelectorAll('.repeat-slot-btn').forEach(function(btn) {
+            btn.classList.remove('bg-purple-600', 'text-white', 'border-purple-600');
+            btn.classList.add('border-gray-300');
+        });
+
+        // Активуємо кнопку якщо введено коректний час
+        updateCreateButtonState();
+
+        // Додаємо обробники для інпутів часу
+        setupCustomTimeInputs();
+    } else {
+        // Показуємо слоти, ховаємо інпути
+        if (slotsGrid) slotsGrid.classList.remove('hidden');
+        customInputs.classList.add('hidden');
+
+        // Скидаємо інпути
+        document.getElementById('repeatHour').value = '';
+        document.getElementById('repeatMinute').value = '';
+
+        // Деактивуємо кнопку (поки не вибраний слот)
+        document.getElementById('createRepeatBtn').disabled = true;
+    }
+}
+
+function setupCustomTimeInputs() {
+    var hourInput = document.getElementById('repeatHour');
+    var minuteInput = document.getElementById('repeatMinute');
+
+    // Видаляємо старі обробники щоб не дублювати
+    hourInput.onblur = formatRepeatTimeInputs;
+    hourInput.onchange = formatRepeatTimeInputs;
+    hourInput.oninput = updateCreateButtonState;
+
+    minuteInput.onblur = formatRepeatTimeInputs;
+    minuteInput.onchange = formatRepeatTimeInputs;
+    minuteInput.oninput = updateCreateButtonState;
+}
+
+function formatRepeatTimeInputs() {
+    var hourInput = document.getElementById('repeatHour');
+    var minuteInput = document.getElementById('repeatMinute');
+
+    var hour = parseInt(hourInput.value);
+    var minute = parseInt(minuteInput.value);
+
+    // Валідація години
+    if (!isNaN(hour)) {
+        hour = Math.max(0, Math.min(23, hour));
+        hourInput.value = String(hour).padStart(2, '0');
+    }
+
+    // Валідація хвилин
+    if (!isNaN(minute)) {
+        minute = Math.max(0, Math.min(59, minute));
+        minuteInput.value = String(minute).padStart(2, '0');
+    }
+
+    updateCreateButtonState();
+}
+
+function updateCreateButtonState() {
+    if (!isCustomTimeMode) return;
+
+    var hourInput = document.getElementById('repeatHour');
+    var minuteInput = document.getElementById('repeatMinute');
+    var btn = document.getElementById('createRepeatBtn');
+
+    var hour = parseInt(hourInput.value);
+    var minute = parseInt(minuteInput.value);
+
+    // Перевіряємо чи введено коректний час
+    var isValid = !isNaN(hour) && !isNaN(minute) &&
+                  hour >= 0 && hour <= 23 &&
+                  minute >= 0 && minute <= 59;
+
+    btn.disabled = !isValid;
+}
+
+function getSelectedTime() {
+    if (isCustomTimeMode) {
+        var hourInput = document.getElementById('repeatHour');
+        var minuteInput = document.getElementById('repeatMinute');
+
+        var hour = parseInt(hourInput.value);
+        var minute = parseInt(minuteInput.value);
+
+        if (!isNaN(hour) && !isNaN(minute)) {
+            return String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+        }
+        return null;
+    }
+    return selectedRepeatSlot;
+}
+
+function selectRepeatSlot(slot, button) {
+    // Знімаємо виділення з інших кнопок
+    document.querySelectorAll('.repeat-slot-btn').forEach(function(btn) {
+        btn.classList.remove('bg-purple-600', 'text-white', 'border-purple-600');
+        btn.classList.add('border-gray-300');
+    });
+
+    // Виділяємо обрану кнопку
+    button.classList.remove('border-gray-300');
+    button.classList.add('bg-purple-600', 'text-white', 'border-purple-600');
+
+    selectedRepeatSlot = slot;
+
+    // Скидаємо режим кастомного часу
+    if (isCustomTimeMode) {
+        document.getElementById('customTimeCheckbox').checked = false;
+        toggleCustomTime();
+    }
+
+    document.getElementById('createRepeatBtn').disabled = false;
+}
+
+function createRepeatAppointment() {
+    var selectedTime = getSelectedTime();
+
+    if (!currentRepeatAppointmentData || !selectedTime) {
+        showNotification('Оберіть дату та час', 'error');
+        return;
+    }
+
+    var date = document.getElementById('repeatDate').value;
+    if (!date) {
+        showNotification('Оберіть дату', 'error');
+        return;
+    }
+
+    var btn = document.getElementById('createRepeatBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Створення...</span>';
+
+    var data = {
+        original_appointment_id: currentAppointmentId,
+        appointment_date: date,
+        appointment_time: selectedTime
+    };
+
+    fetch('/admin/appointments/repeat', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        return response.json().then(function(d) {
+            return { status: response.status, data: d };
+        });
+    })
+    .then(function(result) {
+        if (result.data.success) {
+            showNotification(result.data.message || 'Повторний запис створено', 'success');
+
+            // Додаємо новий запис до calendarData якщо він на поточному тижні
+            if (result.data.appointment) {
+                addNewAppointmentToCalendar(result.data.appointment);
+            }
+
+            // Закриваємо обидві модалки
+            closeRepeatModal();
+            closeModal();
+        } else {
+            showNotification(result.data.message || 'Помилка створення запису', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i><span>Створити запис</span>';
+        }
+    })
+    .catch(function(error) {
+        console.error('Error creating repeat appointment:', error);
+        showNotification('Помилка мережі: ' + error.message, 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i><span>Створити запис</span>';
+    });
+}
+
+function addNewAppointmentToCalendar(appointment) {
+    // Перевіряємо чи запис на поточному тижні
+    var appointmentDate = appointment.appointment_date;
+    var weekDates = calendarData.weekDates;
+
+    var dateIndex = -1;
+    for (var i = 0; i < weekDates.length; i++) {
+        if (weekDates[i] === appointmentDate) {
+            dateIndex = i;
+            break;
+        }
+    }
+
+    if (dateIndex === -1) {
+        // Запис не на поточному тижні - просто показуємо повідомлення
+        return;
+    }
+
+    // Додаємо запис до calendarData
+    var masterId = appointment.master_id;
+    if (!calendarData.scheduleByMaster[masterId]) {
+        return;
+    }
+
+    if (!calendarData.scheduleByMaster[masterId].appointments_by_date[appointmentDate]) {
+        calendarData.scheduleByMaster[masterId].appointments_by_date[appointmentDate] = [];
+    }
+
+    calendarData.scheduleByMaster[masterId].appointments_by_date[appointmentDate].push({
+        id: appointment.id,
+        time: appointment.appointment_time,
+        duration: appointment.duration,
+        client_name: appointment.client_name,
+        client_telegram: appointment.client_telegram,
+        service_name: appointment.service_name,
+        price: appointment.price,
+        status: appointment.status,
+        telegram_notification_sent: appointment.telegram_notification_sent,
+        is_confirmed: appointment.is_confirmed || false
+    });
+
+    // Перемальовуємо календар якщо обраний цей день
+    if (currentDayIndex === dateIndex) {
+        reloadTimeline(dateIndex);
+    }
+}
 </script>
 @endpush
 @endsection

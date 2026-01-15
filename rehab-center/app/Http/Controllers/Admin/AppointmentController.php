@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Appointment;
+use App\Models\MasterService;
 use App\Models\Service;
 use App\Models\User;
 use App\Services\MasterTelegramBotNotificationService;
@@ -93,16 +94,19 @@ class AppointmentController extends Controller
         return response()->json([
             'id' => $appointment->id,
             'client' => [
+                'id' => $appointment->client->id,
                 'name' => $appointment->client->name,
                 'phone' => $appointment->client->phone,
                 'email' => $appointment->client->email,
                 'description' => $appointment->client->description,
             ],
             'master' => [
+                'id' => $appointment->master->id,
                 'name' => $appointment->master->name,
                 'phone' => $appointment->master->phone,
             ],
             'service' => [
+                'id' => $appointment->service->id,
                 'name' => $appointment->service->name,
                 'duration' => $appointment->duration,
             ],
@@ -348,5 +352,88 @@ class AppointmentController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Створення повторного запису на основі існуючого
+     */
+    public function repeat(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
+    {
+        $request->validate([
+            'original_appointment_id' => 'required|exists:appointments,id',
+            'appointment_date' => 'required|date|after:today',
+            'appointment_time' => 'required|date_format:H:i',
+        ]);
+
+        $user = auth()->user();
+
+        // Отримуємо оригінальний запис
+        $query = Appointment::with(['client', 'master', 'service']);
+
+        // Майстер може копіювати тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+
+        $originalAppointment = $query->findOrFail($request->original_appointment_id);
+
+        // Отримуємо актуальну ціну та тривалість з MasterService
+        $masterService = MasterService::where('master_id', $originalAppointment->master_id)
+            ->where('service_id', $originalAppointment->service_id)
+            ->first();
+
+        $duration = $masterService ? $masterService->getDuration() : $originalAppointment->duration;
+        $price = $masterService ? $masterService->price : $originalAppointment->price;
+
+        // Перевірка на конфлікт часу
+        $conflict = $this->checkTimeConflict(
+            $originalAppointment->master_id,
+            $request->appointment_date,
+            $request->appointment_time,
+            $duration
+        );
+
+        if ($conflict) {
+            return response()->json([
+                'success' => false,
+                'message' => 'На цей час вже є запис',
+            ], 422);
+        }
+
+        // Створюємо новий запис
+        $newAppointment = Appointment::create([
+            'client_id' => $originalAppointment->client_id,
+            'master_id' => $originalAppointment->master_id,
+            'service_id' => $originalAppointment->service_id,
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $request->appointment_time.':00',
+            'duration' => $duration,
+            'price' => $price,
+            'notes' => $originalAppointment->notes,
+            'status' => 'scheduled',
+        ]);
+
+        // Відправляємо Telegram повідомлення майстру
+        $masterTelegramBotService->sendMasterNotification($newAppointment);
+
+        // Повертаємо дані для оновлення календаря
+        return response()->json([
+            'success' => true,
+            'message' => 'Повторний запис успішно створено',
+            'appointment' => [
+                'id' => $newAppointment->id,
+                'master_id' => $newAppointment->master_id,
+                'appointment_date' => $newAppointment->appointment_date->format('Y-m-d'),
+                'appointment_time' => $newAppointment->appointment_time,
+                'duration' => $newAppointment->duration,
+                'client_name' => $originalAppointment->client->name,
+                'client_telegram' => $originalAppointment->client->telegram_username,
+                'service_name' => $originalAppointment->service->name,
+                'price' => $newAppointment->price,
+                'status' => $newAppointment->status,
+                'telegram_notification_sent' => $newAppointment->telegram_notification_sent,
+                'is_confirmed' => $newAppointment->is_confirmed,
+            ],
+        ]);
     }
 }
