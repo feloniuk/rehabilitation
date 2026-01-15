@@ -248,14 +248,33 @@
                             <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
                                 Примітки (опціонально)
                             </label>
-                            <textarea id="notes" 
-                                      name="notes" 
+                            <textarea id="notes"
+                                      name="notes"
                                       rows="4"
                                       class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200 resize-none"
                                       placeholder="Опишіть ваші побажання або особливості, які важливо знати спеціалісту...">{{ old('notes') }}</textarea>
                             @error('notes')
                                 <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                             @enderror
+                        </div>
+                    </div>
+
+                    <!-- Warning for distant dates -->
+                    <div id="distant-date-warning" class="mb-6 hidden">
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-exclamation-triangle text-amber-500 text-xl"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <h4 class="text-sm font-semibold text-amber-800">Зверніть увагу</h4>
+                                    <p class="mt-1 text-sm text-amber-700">
+                                        Ви обрали дату, яка більш ніж через 3 тижні.
+                                        Розклад на такий період може бути змінено.
+                                        Ми зв'яжемося з вами за декілька днів до візиту для підтвердження запису.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -340,6 +359,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const masterId = {{ $master->id }};
     const serviceId = {{ $service->id }};
+    const distantDateWarning = document.getElementById('distant-date-warning');
+
+    // Функция проверки дистанции даты (3+ недели)
+    function checkDistantDate(selectedDate) {
+        if (!selectedDate) {
+            distantDateWarning.classList.add('hidden');
+            return;
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const selected = new Date(selectedDate);
+        selected.setHours(0, 0, 0, 0);
+
+        // Разница в днях
+        const diffTime = selected - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        // 3 недели = 21 день
+        if (diffDays >= 21) {
+            distantDateWarning.classList.remove('hidden');
+        } else {
+            distantDateWarning.classList.add('hidden');
+        }
+    }
 
     // Функция загрузки доступных слотов
     function loadAvailableSlots(selectedDate) {
@@ -393,11 +438,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Date selection handler
     dateInput.addEventListener('change', function() {
         loadAvailableSlots(this.value);
+        checkDistantDate(this.value);
     });
 
-    // ИСПРАВЛЕНИЕ: Проверка предустановленной даты при загрузке страницы
+    // Проверка предустановленной даты при загрузке страницы
     if (dateInput.value) {
         loadAvailableSlots(dateInput.value);
+        checkDistantDate(dateInput.value);
     }
 
     // Time slot selection
