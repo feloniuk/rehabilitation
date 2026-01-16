@@ -48,6 +48,8 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         ->name('appointments.manual.create');
     Route::post('appointments/create-manual', [ManualAppointmentController::class, 'store'])
         ->name('appointments.manual.store');
+    Route::post('appointments/quick-store', [ManualAppointmentController::class, 'storeQuick'])
+        ->name('appointments.quick-store');
 
     // API для пошуку клієнтів (для Select2)
     Route::get('appointments/search-clients', [ManualAppointmentController::class, 'searchClients'])
@@ -101,6 +103,8 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
             ->name('notifications.preview');
         Route::post('appointments/{appointment}/quick-reminder', [NotificationController::class, 'quickReminder'])
             ->name('appointments.quick-reminder');
+        Route::get('appointments/{appointment}/reminder-text', [NotificationController::class, 'getReminderText'])
+            ->name('appointments.reminder-text');
 
         // Управління шаблонами
         Route::get('notifications/templates', [NotificationController::class, 'templates'])

@@ -274,4 +274,146 @@ class ManualAppointmentController extends Controller
 
         return response()->json($services);
     }
+
+    /**
+     * AJAX створення запису (швидкий запис з дашборду)
+     */
+    public function storeQuick(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
+    {
+        $rules = [
+            'master_id' => 'required|exists:users,id',
+            'service_id' => 'required|exists:services,id',
+            'appointment_date' => 'required|date',
+            'appointment_time' => 'required|date_format:H:i',
+            'client_type' => 'required|in:existing,new',
+        ];
+
+        if ($request->client_type === 'existing') {
+            $rules['existing_client'] = 'required|exists:users,id';
+        } else {
+            $rules['new_client_name'] = 'required|string|max:255';
+            $rules['new_client_phone'] = 'required|string|max:20';
+        }
+
+        try {
+            $validated = $request->validate($rules);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Помилка валідації',
+                'errors' => $e->errors(),
+            ], 422);
+        }
+
+        // Отримуємо ціну та тривалість з master_services
+        $masterService = MasterService::where('master_id', $request->master_id)
+            ->where('service_id', $request->service_id)
+            ->first();
+
+        if (! $masterService) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Послуга не знайдена для цього майстра',
+            ], 404);
+        }
+
+        $price = $masterService->price;
+        $duration = $masterService->getDuration();
+
+        // Перевірка що час в майбутньому
+        $appointmentDateTime = Carbon::createFromFormat(
+            'Y-m-d H:i',
+            $request->appointment_date.' '.$request->appointment_time
+        );
+
+        if ($appointmentDateTime->isPast()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Неможливо створити запис на минулий час',
+            ], 422);
+        }
+
+        // Перевірка на конфлікт часу
+        $conflict = $this->checkTimeConflict(
+            $request->master_id,
+            $request->appointment_date,
+            $request->appointment_time,
+            $duration
+        );
+
+        if ($conflict) {
+            return response()->json([
+                'success' => false,
+                'message' => 'На цей час вже є запис',
+            ], 422);
+        }
+
+        // Отримання або створення клієнта
+        if ($request->client_type === 'existing') {
+            $clientId = $request->existing_client;
+            $client = User::find($clientId);
+        } else {
+            $normalizedPhone = PhoneHelper::normalize($request->new_client_phone);
+
+            // Перевірка чи телефон не належить майстру
+            $existingUser = User::where('phone', $normalizedPhone)->first();
+            if ($existingUser && $existingUser->role === 'master') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Цей номер телефону належить майстру',
+                ], 422);
+            }
+
+            // Якщо клієнт існує - використовуємо його, якщо ні - створюємо
+            if ($existingUser) {
+                $client = $existingUser;
+                $client->update(['name' => $request->new_client_name]);
+            } else {
+                $client = User::create([
+                    'phone' => $normalizedPhone,
+                    'name' => $request->new_client_name,
+                    'role' => 'client',
+                    'password' => bcrypt(str()->random(12)),
+                ]);
+            }
+            $clientId = $client->id;
+        }
+
+        // Створення запису
+        $appointment = Appointment::create([
+            'client_id' => $clientId,
+            'master_id' => $request->master_id,
+            'service_id' => $request->service_id,
+            'appointment_date' => $request->appointment_date,
+            'appointment_time' => $request->appointment_time.':00',
+            'duration' => $duration,
+            'price' => $price,
+            'status' => 'scheduled',
+        ]);
+
+        // Завантажуємо зв'язки
+        $appointment->load(['client', 'master', 'service']);
+
+        // Відправляємо повідомлення майстру
+        $masterTelegramBotService->sendMasterNotification($appointment);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Запис успішно створено!',
+            'appointment' => [
+                'id' => $appointment->id,
+                'appointment_date' => $appointment->appointment_date->format('Y-m-d'),
+                'appointment_time' => substr($appointment->appointment_time, 0, 5),
+                'duration' => $appointment->duration,
+                'price' => $appointment->price,
+                'status' => $appointment->status,
+                'master_id' => $appointment->master_id,
+                'client_name' => $client->name,
+                'client_telegram' => $client->telegram_username,
+                'service_name' => $appointment->service->name,
+                'telegram_notification_sent' => false,
+                'is_confirmed' => false,
+            ],
+        ]);
+    }
 }

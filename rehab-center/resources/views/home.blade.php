@@ -203,7 +203,7 @@
                         <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $master->name }}</h3>
 
                         @if($master->description)
-                            <p class="text-gray-600 mb-4 leading-relaxed">{{ Str::limit($master->description, 80) }}</p>
+                            <p class="text-gray-600 mb-4 leading-relaxed">{{ Str::limit($master->description, 150) }}</p>
                         @endif
 
                         <div class="mb-4">

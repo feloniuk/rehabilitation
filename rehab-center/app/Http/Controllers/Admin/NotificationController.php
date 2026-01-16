@@ -189,6 +189,38 @@ class NotificationController extends Controller
     }
 
     /**
+     * Отримати текст нагадування для копіювання
+     */
+    public function getReminderText($appointmentId)
+    {
+        try {
+            $appointment = Appointment::with(['client', 'master', 'service'])
+                ->findOrFail($appointmentId);
+
+            $template = NotificationTemplate::find(1);
+
+            if (! $template) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Шаблон "на завтра" не знайдено (ID: 1)',
+                ], 404);
+            }
+
+            $text = $template->render($appointment);
+
+            return response()->json([
+                'success' => true,
+                'text' => $text,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Помилка: '.$e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Швидке нагадування "на завтра"
      */
     public function quickReminder(Request $request, $appointmentId)

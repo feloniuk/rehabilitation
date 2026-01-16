@@ -17,6 +17,10 @@
             </span>
         </div>
         <div class="flex gap-2">
+            <button onclick="openQuickAppointmentModal()" class="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1">
+                <i class="fas fa-plus"></i>
+                <span class="hidden sm:inline">Швидкий запис</span>
+            </button>
             <button onclick="navigateWeek('previous')" class="w-8 h-8 flex items-center justify-center rounded hover:bg-gray-100">
                 <i class="fas fa-chevron-left text-gray-600"></i>
             </button>
@@ -232,11 +236,16 @@
                 <span id="confirmButtonText">Підтвердити</span>
             </button>
             <div class="flex gap-2">
-                <button id="quickReminderBtn" onclick="sendQuickReminder()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                <button id="quickReminderBtn" onclick="sendQuickReminder()" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2" style="flex: 0 0 calc(90% - 4px);">
                     <i class="fas fa-paper-plane"></i>
                     <span>Швидке нагадування "на завтра"</span>
                 </button>
-                <button onclick="closeModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
+                <button id="copyReminderBtn" onclick="copyReminderText()" class="bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center" style="flex: 0 0 10%;" title="Копіювати текст">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+            <div class="flex gap-2 mt-2">
+                <button onclick="closeModal()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
                     Закрити
                 </button>
             </div>
@@ -338,8 +347,135 @@
     </div>
 </div>
 
+<!-- Модалка швидкого запису -->
+<div id="quickAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60] p-4">
+    <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-plus-circle text-green-600"></i>
+                <h3 class="font-semibold">Швидкий запис</h3>
+            </div>
+            <button onclick="closeQuickAppointmentModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="quickAppointmentForm" class="p-4 space-y-4">
+            <!-- Майстер -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-user-md text-blue-500 mr-1"></i>Майстер *
+                </label>
+                <select id="qa_master_id" name="master_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    <option value="">Оберіть майстра</option>
+                    @foreach($calendar['masters'] as $master)
+                        <option value="{{ $master->id }}">{{ $master->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Послуга -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-spa text-green-500 mr-1"></i>Послуга *
+                </label>
+                <select id="qa_service_id" name="service_id" required disabled class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    <option value="">Спочатку оберіть майстра</option>
+                </select>
+            </div>
+
+            <!-- Дата та час -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-calendar text-purple-500 mr-1"></i>Дата *
+                    </label>
+                    <input type="date" id="qa_date" name="appointment_date" required min="{{ date('Y-m-d') }}" value="{{ date('Y-m-d') }}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-clock text-orange-500 mr-1"></i>Час *
+                    </label>
+                    <div class="flex gap-1 items-center">
+                        <input type="number" id="qa_hour" min="0" max="23" placeholder="09" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-center">
+                        <span class="text-lg font-bold text-gray-400">:</span>
+                        <input type="number" id="qa_minute" min="0" max="59" placeholder="00" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-center">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Клієнт -->
+            <div class="border-t pt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <i class="fas fa-user text-blue-600 mr-1"></i>Клієнт
+                </label>
+                <div class="flex gap-4 mb-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="qa_client_type" value="existing" checked class="mr-2">
+                        <span class="text-sm">Існуючий</span>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
+                        <input type="radio" name="qa_client_type" value="new" class="mr-2">
+                        <span class="text-sm">Новий</span>
+                    </label>
+                </div>
+
+                <!-- Пошук існуючого клієнта -->
+                <div id="qa_existing_client_block">
+                    <input type="text" id="qa_client_search" placeholder="Пошук по імені або телефону..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 mb-2">
+                    <div id="qa_client_results" class="border border-gray-200 rounded-lg max-h-40 overflow-y-auto bg-gray-50">
+                        <div class="p-4 text-center text-gray-500 text-sm">
+                            <i class="fas fa-search text-gray-400 mr-1"></i>Введіть мін. 2 символи
+                        </div>
+                    </div>
+                    <input type="hidden" id="qa_existing_client" name="existing_client">
+                </div>
+
+                <!-- Новий клієнт -->
+                <div id="qa_new_client_block" class="hidden space-y-3">
+                    <div>
+                        <input type="text" id="qa_new_client_name" name="new_client_name" placeholder="Ім'я клієнта *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    <div>
+                        <input type="tel" id="qa_new_client_phone" name="new_client_phone" placeholder="Телефон *" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Помилки -->
+            <div id="qa_errors" class="hidden bg-red-100 border border-red-400 text-red-700 px-3 py-2 rounded text-sm"></div>
+        </form>
+
+        <div class="p-4 border-t flex gap-2">
+            <button id="qa_submit_btn" onclick="submitQuickAppointment()" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
+                <i class="fas fa-save"></i>
+                <span>Створити запис</span>
+            </button>
+            <button onclick="closeQuickAppointmentModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
+                Скасувати
+            </button>
+        </div>
+    </div>
+</div>
+
 @push('styles')
 <style>
+/* Фікс ширини інпута дати в модалці на мобільних */
+#repeatDate {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* Контейнер модалки - обмеження overflow */
+#repeatAppointmentModal .p-4 {
+    overflow: hidden;
+}
+
 /* Заборона горизонтальної прокрутки сторінки */
 #calendar-container {
     max-width: 100%;
@@ -1265,8 +1401,95 @@ function closeModal() {
     document.getElementById('appointmentModal').classList.remove('flex');
 }
 
+function copyReminderText() {
+    if (!currentAppointmentId) {
+        showNotification('Помилка: ID запису не знайдено', 'error');
+        return;
+    }
+
+    var btn = document.getElementById('copyReminderBtn');
+    var originalContent = btn.innerHTML;
+
+    // Показуємо лоадер
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    fetch('/admin/appointments/' + currentAppointmentId + '/reminder-text', {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(result) {
+        if (result.success) {
+            // Копіюємо текст в буфер обміну
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(result.text).then(function() {
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    showNotification('Текст скопійовано!', 'success');
+                    setTimeout(function() {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }, 1500);
+                }).catch(function(err) {
+                    // Fallback для старих браузерів
+                    fallbackCopyText(result.text);
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    showNotification('Текст скопійовано!', 'success');
+                    setTimeout(function() {
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }, 1500);
+                });
+            } else {
+                // Fallback для старих браузерів та мобільних
+                fallbackCopyText(result.text);
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                showNotification('Текст скопійовано!', 'success');
+                setTimeout(function() {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }, 1500);
+            }
+        } else {
+            btn.disabled = false;
+            btn.innerHTML = originalContent;
+            showNotification(result.message || 'Помилка отримання тексту', 'error');
+        }
+    })
+    .catch(function(error) {
+        btn.disabled = false;
+        btn.innerHTML = originalContent;
+        showNotification('Помилка мережі: ' + error.message, 'error');
+    });
+}
+
+function fallbackCopyText(text) {
+    // Створюємо тимчасовий textarea
+    var textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    textArea.style.top = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+        document.execCommand('copy');
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+    }
+
+    document.body.removeChild(textArea);
+}
+
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+        closeQuickAppointmentModal();
         closeRepeatModal();
         closeModal();
     }
@@ -1664,6 +1887,316 @@ function addNewAppointmentToCalendar(appointment) {
         reloadTimeline(dateIndex);
     }
 }
+
+// ============================================
+// Швидкий запис - функції
+// ============================================
+
+var qaSearchTimeout;
+var qaSelectedClientId = null;
+
+function openQuickAppointmentModal() {
+    var modal = document.getElementById('quickAppointmentModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    // Скидаємо форму
+    resetQuickAppointmentForm();
+
+    // Встановлюємо дату з календаря
+    var selectedDate = calendarData.weekDates[currentDayIndex];
+    document.getElementById('qa_date').value = selectedDate;
+
+    // Встановлюємо час: поточна година, 00 хвилин
+    var now = new Date();
+    document.getElementById('qa_hour').value = String(now.getHours()).padStart(2, '0');
+    document.getElementById('qa_minute').value = '00';
+
+    // Ініціалізуємо обробники
+    initQuickAppointmentHandlers();
+}
+
+function closeQuickAppointmentModal() {
+    var modal = document.getElementById('quickAppointmentModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    resetQuickAppointmentForm();
+}
+
+function resetQuickAppointmentForm() {
+    document.getElementById('qa_master_id').value = '';
+    document.getElementById('qa_service_id').innerHTML = '<option value="">Спочатку оберіть майстра</option>';
+    document.getElementById('qa_service_id').disabled = true;
+    document.getElementById('qa_hour').value = '';
+    document.getElementById('qa_minute').value = '';
+    document.getElementById('qa_client_search').value = '';
+    document.getElementById('qa_existing_client').value = '';
+    document.getElementById('qa_new_client_name').value = '';
+    document.getElementById('qa_new_client_phone').value = '';
+    document.getElementById('qa_errors').classList.add('hidden');
+    document.getElementById('qa_client_results').innerHTML = '<div class="p-4 text-center text-gray-500 text-sm"><i class="fas fa-search text-gray-400 mr-1"></i>Введіть мін. 2 символи</div>';
+
+    // Скидаємо на "Існуючий клієнт"
+    document.querySelector('input[name="qa_client_type"][value="existing"]').checked = true;
+    document.getElementById('qa_existing_client_block').classList.remove('hidden');
+    document.getElementById('qa_new_client_block').classList.add('hidden');
+
+    // Скидаємо стан кнопки
+    var btn = document.getElementById('qa_submit_btn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-save"></i><span>Створити запис</span>';
+
+    qaSelectedClientId = null;
+}
+
+function initQuickAppointmentHandlers() {
+    // Обробник зміни майстра
+    var masterSelect = document.getElementById('qa_master_id');
+    masterSelect.onchange = function() {
+        var masterId = this.value;
+        var serviceSelect = document.getElementById('qa_service_id');
+
+        if (!masterId) {
+            serviceSelect.innerHTML = '<option value="">Спочатку оберіть майстра</option>';
+            serviceSelect.disabled = true;
+            return;
+        }
+
+        serviceSelect.disabled = true;
+        serviceSelect.innerHTML = '<option value="">Завантаження...</option>';
+
+        fetch('/admin/appointments/master-services?master_id=' + masterId)
+            .then(function(r) { return r.json(); })
+            .then(function(services) {
+                serviceSelect.disabled = false;
+                serviceSelect.innerHTML = '<option value="">Оберіть послугу</option>';
+                services.forEach(function(service) {
+                    var option = document.createElement('option');
+                    option.value = service.id;
+                    option.textContent = service.name + ' (' + service.duration + ' хв)';
+                    serviceSelect.appendChild(option);
+                });
+            })
+            .catch(function() {
+                serviceSelect.disabled = false;
+                serviceSelect.innerHTML = '<option value="">Помилка завантаження</option>';
+            });
+    };
+
+    // Обробник типу клієнта
+    document.querySelectorAll('input[name="qa_client_type"]').forEach(function(radio) {
+        radio.onchange = function() {
+            if (this.value === 'existing') {
+                document.getElementById('qa_existing_client_block').classList.remove('hidden');
+                document.getElementById('qa_new_client_block').classList.add('hidden');
+            } else {
+                document.getElementById('qa_existing_client_block').classList.add('hidden');
+                document.getElementById('qa_new_client_block').classList.remove('hidden');
+            }
+        };
+    });
+
+    // Пошук клієнтів
+    var searchInput = document.getElementById('qa_client_search');
+    searchInput.oninput = function() {
+        clearTimeout(qaSearchTimeout);
+        var query = this.value.trim();
+        var resultsContainer = document.getElementById('qa_client_results');
+
+        if (query.length < 2) {
+            resultsContainer.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm"><i class="fas fa-search text-gray-400 mr-1"></i>Введіть мін. 2 символи</div>';
+            return;
+        }
+
+        resultsContainer.innerHTML = '<div class="p-4 text-center text-gray-500"><i class="fas fa-spinner fa-spin"></i></div>';
+
+        qaSearchTimeout = setTimeout(function() {
+            fetch('/admin/appointments/search-clients?q=' + encodeURIComponent(query))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.results.length === 0) {
+                        resultsContainer.innerHTML = '<div class="p-4 text-center text-gray-500 text-sm">Не знайдено</div>';
+                        return;
+                    }
+
+                    resultsContainer.innerHTML = data.results.map(function(client) {
+                        var isSelected = qaSelectedClientId == client.id;
+                        var emailHtml = client.email ? '<span class="ml-2"><i class="fas fa-envelope text-gray-400 mr-1"></i>' + client.email + '</span>' : '';
+                        var telegramHtml = client.telegram_username ? '<a href="https://t.me/' + client.telegram_username + '" target="_blank" onclick="event.stopPropagation()" class="ml-2 text-blue-600 hover:text-blue-800"><i class="fab fa-telegram mr-1"></i>@' + client.telegram_username + '</a>' : '';
+                        var descriptionHtml = client.description ? '<div class="text-xs text-gray-500 mt-1 bg-gray-100 p-1.5 rounded"><i class="fas fa-info-circle mr-1"></i>' + client.description + '</div>' : '';
+
+                        return '<label class="flex items-start p-3 hover:bg-green-50 cursor-pointer border-b border-gray-100 last:border-b-0 ' + (isSelected ? 'bg-green-50' : '') + '">' +
+                            '<input type="radio" name="qa_client_radio" value="' + client.id + '" ' + (isSelected ? 'checked' : '') + ' class="mr-3 mt-1">' +
+                            '<div class="flex-1 min-w-0">' +
+                                '<div class="font-medium text-sm">' + client.name + '</div>' +
+                                '<div class="text-xs text-gray-600 mt-0.5 flex flex-wrap items-center">' +
+                                    '<span><i class="fas fa-phone text-gray-400 mr-1"></i>' + client.phone + '</span>' +
+                                    emailHtml +
+                                    telegramHtml +
+                                '</div>' +
+                                descriptionHtml +
+                            '</div>' +
+                        '</label>';
+                    }).join('');
+
+                    // Обробка вибору
+                    document.querySelectorAll('input[name="qa_client_radio"]').forEach(function(radio) {
+                        radio.onchange = function() {
+                            qaSelectedClientId = this.value;
+                            document.getElementById('qa_existing_client').value = this.value;
+
+                            // Візуальна індикація
+                            document.querySelectorAll('input[name="qa_client_radio"]').forEach(function(r) {
+                                r.closest('label').classList.remove('bg-green-50');
+                            });
+                            this.closest('label').classList.add('bg-green-50');
+                        };
+                    });
+                })
+                .catch(function() {
+                    resultsContainer.innerHTML = '<div class="p-4 text-center text-red-500 text-sm">Помилка</div>';
+                });
+        }, 300);
+    };
+
+    // Форматування телефону
+    var phoneInput = document.getElementById('qa_new_client_phone');
+    phoneInput.oninput = function() {
+        var value = this.value.replace(/\D/g, '');
+        if (value.startsWith('380')) value = value.substring(3);
+        if (value.length > 0) {
+            value = '+380 ' + value.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+        }
+        this.value = value.trim();
+    };
+
+    // Форматування часу
+    document.getElementById('qa_hour').onblur = formatQaTime;
+    document.getElementById('qa_minute').onblur = formatQaTime;
+}
+
+function formatQaTime() {
+    var hourInput = document.getElementById('qa_hour');
+    var minuteInput = document.getElementById('qa_minute');
+
+    var hour = parseInt(hourInput.value);
+    var minute = parseInt(minuteInput.value);
+
+    if (!isNaN(hour)) {
+        hour = Math.max(0, Math.min(23, hour));
+        hourInput.value = String(hour).padStart(2, '0');
+    }
+
+    if (!isNaN(minute)) {
+        minute = Math.max(0, Math.min(59, minute));
+        minuteInput.value = String(minute).padStart(2, '0');
+    }
+}
+
+function submitQuickAppointment() {
+    var errorsDiv = document.getElementById('qa_errors');
+    errorsDiv.classList.add('hidden');
+
+    // Збираємо дані
+    var masterId = document.getElementById('qa_master_id').value;
+    var serviceId = document.getElementById('qa_service_id').value;
+    var date = document.getElementById('qa_date').value;
+    var hour = document.getElementById('qa_hour').value;
+    var minute = document.getElementById('qa_minute').value;
+    var clientType = document.querySelector('input[name="qa_client_type"]:checked').value;
+
+    // Валідація
+    var errors = [];
+    if (!masterId) errors.push('Оберіть майстра');
+    if (!serviceId) errors.push('Оберіть послугу');
+    if (!date) errors.push('Оберіть дату');
+    if (!hour || !minute) errors.push('Вкажіть час');
+
+    if (clientType === 'existing') {
+        if (!document.getElementById('qa_existing_client').value) {
+            errors.push('Оберіть клієнта');
+        }
+    } else {
+        if (!document.getElementById('qa_new_client_name').value) errors.push('Вкажіть ім\'я клієнта');
+        if (!document.getElementById('qa_new_client_phone').value) errors.push('Вкажіть телефон клієнта');
+    }
+
+    if (errors.length > 0) {
+        errorsDiv.innerHTML = errors.join('<br>');
+        errorsDiv.classList.remove('hidden');
+        return;
+    }
+
+    // Форматуємо час
+    formatQaTime();
+    var time = document.getElementById('qa_hour').value + ':' + document.getElementById('qa_minute').value;
+
+    var btn = document.getElementById('qa_submit_btn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Створення...</span>';
+
+    var data = {
+        master_id: masterId,
+        service_id: serviceId,
+        appointment_date: date,
+        appointment_time: time,
+        client_type: clientType
+    };
+
+    if (clientType === 'existing') {
+        data.existing_client = document.getElementById('qa_existing_client').value;
+    } else {
+        data.new_client_name = document.getElementById('qa_new_client_name').value;
+        data.new_client_phone = document.getElementById('qa_new_client_phone').value;
+    }
+
+    fetch('/admin/appointments/quick-store', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(function(response) {
+        return response.json().then(function(d) {
+            return { status: response.status, data: d };
+        });
+    })
+    .then(function(result) {
+        if (result.data.success) {
+            showNotification(result.data.message, 'success');
+
+            // Додаємо запис до календаря
+            if (result.data.appointment) {
+                addNewAppointmentToCalendar(result.data.appointment);
+            }
+
+            closeQuickAppointmentModal();
+        } else {
+            var errorMsg = result.data.message;
+            if (result.data.errors) {
+                var errorList = [];
+                for (var field in result.data.errors) {
+                    errorList = errorList.concat(result.data.errors[field]);
+                }
+                errorMsg = errorList.join('<br>');
+            }
+            errorsDiv.innerHTML = errorMsg;
+            errorsDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save"></i><span>Створити запис</span>';
+        }
+    })
+    .catch(function(error) {
+        errorsDiv.innerHTML = 'Помилка мережі: ' + error.message;
+        errorsDiv.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i><span>Створити запис</span>';
+    });
+}
+
 </script>
 @endpush
 @endsection
