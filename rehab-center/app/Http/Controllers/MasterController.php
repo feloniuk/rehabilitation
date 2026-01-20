@@ -108,4 +108,88 @@ class MasterController extends Controller
 
         return $slots;
     }
+
+    /**
+     * Отримання першого вільного слоту та робочого часу мастра
+     */
+    public function getFirstAvailableSlot($id, $date, $serviceId)
+    {
+        $master = User::where('role', 'master')->find($id);
+
+        if (! $master) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Майстра не знайдено',
+            ], 404);
+        }
+
+        $requestDate = Carbon::parse($date);
+        $dayName = strtolower($requestDate->format('l'));
+
+        // Отримуємо робочий час мастра
+        $workingHours = null;
+        $isWorkingDay = $master->isWorkingOnDay($dayName);
+
+        if ($isWorkingDay) {
+            $workingHours = $master->getWorkingHours($dayName);
+        }
+
+        // Якщо мастер не працює в цей день
+        if (! $isWorkingDay || ! $workingHours) {
+            return response()->json([
+                'success' => true,
+                'is_working_day' => false,
+                'working_hours' => null,
+                'first_available_slot' => null,
+                'message' => 'Майстер не працює в цей день',
+            ]);
+        }
+
+        // Отримуємо послугу мастра
+        $masterService = $master->masterServices()
+            ->where('service_id', $serviceId)
+            ->first();
+
+        if (! $masterService) {
+            return response()->json([
+                'success' => true,
+                'is_working_day' => true,
+                'working_hours' => $workingHours,
+                'first_available_slot' => $workingHours['start'],
+                'duration' => 60,
+            ]);
+        }
+
+        $duration = (int) $masterService->getDuration();
+
+        // Отримуємо існуючі записи
+        $existingAppointments = Appointment::where('master_id', $id)
+            ->where('appointment_date', $date)
+            ->where('status', 'scheduled')
+            ->get();
+
+        // Мінімальний час для сьогодення
+        $minTime = null;
+        if ($requestDate->isToday()) {
+            $minTime = Carbon::now()->format('H:i');
+        }
+
+        // Генеруємо слоти
+        $slots = $this->generateAvailableSlots(
+            $workingHours['start'],
+            $workingHours['end'],
+            $duration,
+            $existingAppointments,
+            $minTime
+        );
+
+        return response()->json([
+            'success' => true,
+            'is_working_day' => true,
+            'working_hours' => $workingHours,
+            'first_available_slot' => ! empty($slots) ? $slots[0] : null,
+            'available_slots_count' => count($slots),
+            'duration' => $duration,
+        ]);
+    }
 }

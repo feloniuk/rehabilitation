@@ -31,6 +31,8 @@ Route::patch('/appointment/{appointment}/cancel', [AppointmentController::class,
 // AJAX routes
 Route::get('/masters/{master}/available-slots/{date}/{service}', [MasterController::class, 'getAvailableSlots'])
     ->name('masters.available-slots');
+Route::get('/masters/{master}/first-slot/{date}/{service}', [MasterController::class, 'getFirstAvailableSlot'])
+    ->name('masters.first-slot');
 
 // Auth routes
 Auth::routes(['register' => false]);

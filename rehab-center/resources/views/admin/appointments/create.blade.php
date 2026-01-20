@@ -252,6 +252,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsContainer = document.getElementById('client_results');
     const hiddenInput = document.getElementById('existing_client');
 
+    // Зберігаємо робочий час мастра для валідації
+    let currentMasterWorkingHours = null;
+    let outsideWorkingHoursConfirmed = false;
+
     function parseDescriptionWithViberLink(text) {
         if (!text) return '';
 
@@ -400,11 +404,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Автозаповнення ціни
     let priceTimeout;
+
+    // Функція для завантаження першого вільного слота
+    function loadFirstAvailableSlot() {
+        const masterId = document.getElementById('master_id').value;
+        const serviceId = document.getElementById('service_id').value;
+        const date = document.getElementById('appointment_date').value;
+
+        if (!masterId || !serviceId || !date) {
+            return;
+        }
+
+        fetch(`/masters/${masterId}/first-slot/${date}/${serviceId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Зберігаємо робочий час для валідації
+                    currentMasterWorkingHours = data.working_hours;
+                    outsideWorkingHoursConfirmed = false;
+
+                    if (data.is_working_day && data.first_available_slot) {
+                        // Встановлюємо перший вільний слот
+                        const [hour, minute] = data.first_available_slot.split(':');
+                        document.getElementById('appointment_hour').value = hour;
+                        document.getElementById('appointment_minute').value = minute;
+                        formatTimeInputs();
+                    } else if (!data.is_working_day) {
+                        // Майстер не працює - показуємо попередження
+                        showWorkingHoursWarning('Майстер не працює в цей день. Час буде встановлено на 09:00.');
+                        document.getElementById('appointment_hour').value = '09';
+                        document.getElementById('appointment_minute').value = '00';
+                        formatTimeInputs();
+                    } else {
+                        // Немає вільних слотів
+                        showWorkingHoursWarning('Немає вільних слотів на цей день у робочий час майстра.');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading first slot:', error);
+            });
+    }
+
+    // Показати попередження
+    function showWorkingHoursWarning(message) {
+        // Видаляємо попередні попередження
+        const oldWarning = document.getElementById('working-hours-warning');
+        if (oldWarning) oldWarning.remove();
+
+        const warningDiv = document.createElement('div');
+        warningDiv.id = 'working-hours-warning';
+        warningDiv.className = 'bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded mb-4';
+        warningDiv.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>${message}`;
+
+        const form = document.getElementById('appointment-form');
+        form.insertBefore(warningDiv, form.firstChild.nextSibling);
+
+        setTimeout(() => {
+            if (warningDiv.parentNode) {
+                warningDiv.remove();
+            }
+        }, 5000);
+    }
+
     // Загрузка услуг мастера
     document.getElementById('master_id').addEventListener('change', function() {
         const masterId = this.value;
         const serviceSelect = document.getElementById('service_id');
         const priceInput = document.getElementById('price');
+
+        // Скидаємо робочий час
+        currentMasterWorkingHours = null;
+        outsideWorkingHoursConfirmed = false;
 
         if (!masterId) {
             serviceSelect.innerHTML = '<option value="">Оберіть послугу</option>';
@@ -421,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(services => {
                 serviceSelect.disabled = false;
                 serviceSelect.innerHTML = '<option value="">Оберіть послугу</option>';
-                
+
                 services.forEach(service => {
                     const option = document.createElement('option');
                     option.value = service.id;
@@ -436,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 serviceSelect.innerHTML = '<option value="">Помилка завантаження</option>';
                 console.error('Error:', error);
             });
-        
+
         priceInput.value = '';
     });
 
@@ -449,10 +520,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (option.value) {
             priceInput.value = option.dataset.price;
             durationInput.value = option.dataset.duration;
+            // Завантажуємо перший вільний слот після вибору послуги
+            loadFirstAvailableSlot();
         } else {
             priceInput.value = '';
             durationInput.value = '';
         }
+    });
+
+    // Завантаження слоту при зміні дати
+    document.getElementById('appointment_date').addEventListener('change', function() {
+        outsideWorkingHoursConfirmed = false;
+        loadFirstAvailableSlot();
     });
 
     // Форматування телефону
@@ -527,6 +606,107 @@ document.addEventListener('DOMContentLoaded', function() {
     // Ініціалізація при завантаженні
     formatTimeInputs();
 
+    // Перевірка чи час у межах робочого часу
+    function isTimeInWorkingHours(hour, minute) {
+        if (!currentMasterWorkingHours) {
+            return true; // Якщо немає даних - не блокуємо
+        }
+
+        const timeStr = String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+        const start = currentMasterWorkingHours.start;
+        const end = currentMasterWorkingHours.end;
+
+        return timeStr >= start && timeStr < end;
+    }
+
+    // Кастомний confirm-діалог
+    function showConfirmDialog(options) {
+        const title = options.title || 'Підтвердження';
+        const message = options.message || '';
+        const confirmText = options.confirmText || 'Так';
+        const cancelText = options.cancelText || 'Скасувати';
+        const type = options.type || 'warning';
+        const onConfirm = options.onConfirm || function() {};
+        const onCancel = options.onCancel || function() {};
+
+        let iconColor, iconBg, buttonColor;
+        if (type === 'danger') {
+            iconColor = 'text-red-600';
+            iconBg = 'bg-red-100';
+            buttonColor = 'bg-red-600 hover:bg-red-700';
+        } else if (type === 'info') {
+            iconColor = 'text-blue-600';
+            iconBg = 'bg-blue-100';
+            buttonColor = 'bg-blue-600 hover:bg-blue-700';
+        } else {
+            iconColor = 'text-yellow-600';
+            iconBg = 'bg-yellow-100';
+            buttonColor = 'bg-yellow-600 hover:bg-yellow-700';
+        }
+
+        const modalHtml = `
+            <div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+                <div class="bg-white rounded-lg max-w-md w-full shadow-xl">
+                    <div class="p-6">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-shrink-0 w-12 h-12 rounded-full ${iconBg} flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-xl ${iconColor}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">${title}</h3>
+                                <p class="text-gray-600 text-sm">${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end gap-3">
+                        <button id="confirmDialogCancel" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                            ${cancelText}
+                        </button>
+                        <button id="confirmDialogConfirm" class="px-4 py-2 text-white rounded-lg transition-colors ${buttonColor}">
+                            ${confirmText}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Видаляємо попередній діалог якщо є
+        const existingModal = document.getElementById('customConfirmModal');
+        if (existingModal) existingModal.remove();
+
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = modalHtml.trim();
+        const modal = wrapper.firstChild;
+        document.body.appendChild(modal);
+
+        modal.style.opacity = '0';
+        setTimeout(() => {
+            modal.style.transition = 'opacity 0.2s';
+            modal.style.opacity = '1';
+        }, 10);
+
+        function closeModal() {
+            modal.style.opacity = '0';
+            setTimeout(() => {
+                if (modal.parentNode) modal.parentNode.removeChild(modal);
+            }, 200);
+        }
+
+        modal.querySelector('#confirmDialogCancel').onclick = () => { closeModal(); onCancel(); };
+        modal.querySelector('#confirmDialogConfirm').onclick = () => { closeModal(); onConfirm(); };
+
+        modal.onclick = (e) => { if (e.target === modal) { closeModal(); onCancel(); } };
+
+        const escHandler = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                onCancel();
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    }
+
     // Валідація форми
     document.getElementById('appointment-form').addEventListener('submit', function(e) {
         const clientType = document.querySelector('input[name="client_type"]:checked').value;
@@ -539,6 +719,33 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Оберіть клієнта зі списку');
             searchInput.focus();
             return false;
+        }
+
+        // Перевірка робочого часу (якщо ще не підтверджено)
+        if (!outsideWorkingHoursConfirmed && currentMasterWorkingHours) {
+            const hour = parseInt(document.getElementById('appointment_hour').value);
+            const minute = parseInt(document.getElementById('appointment_minute').value);
+
+            if (!isTimeInWorkingHours(hour, minute)) {
+                e.preventDefault();
+
+                const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+                const workingHoursText = `${currentMasterWorkingHours.start} - ${currentMasterWorkingHours.end}`;
+                const form = this;
+
+                showConfirmDialog({
+                    title: 'Час поза робочим графіком',
+                    message: `Обраний час <strong>${timeStr}</strong> знаходиться поза робочим часом майстра <strong>(${workingHoursText})</strong>.<br><br>Ви впевнені, що хочете створити запис на цей час?`,
+                    confirmText: 'Так, створити',
+                    cancelText: 'Скасувати',
+                    type: 'warning',
+                    onConfirm: function() {
+                        outsideWorkingHoursConfirmed = true;
+                        form.submit();
+                    }
+                });
+                return false;
+            }
         }
     });
 });

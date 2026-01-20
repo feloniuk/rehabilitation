@@ -745,6 +745,17 @@ function updateCalendar(calendar, selectedDateIndex) {
     calendarData.weekDates = calendar.weekDates; // weekDates вже в форматі Y-m-d
     calendarData.todayIndex = calendar.todayIndex;
 
+    // Оновлюємо masters якщо вони передані
+    if (calendar.masters) {
+        calendarData.masters = calendar.masters;
+    }
+
+    // Оновлюємо timeSlots якщо вони змінились (динамічні межі часу)
+    if (calendar.timeSlots && JSON.stringify(calendar.timeSlots) !== JSON.stringify(calendarData.timeSlots)) {
+        calendarData.timeSlots = calendar.timeSlots;
+        rebuildTimeColumn();
+    }
+
     // Оновлюємо заголовок
     var firstDateStr = calendarData.weekDates[0];
     var firstDate = new Date(firstDateStr + 'T00:00:00');
@@ -798,6 +809,41 @@ function updateDateButtons(weekDates, todayIndex, selectedIndex) {
         btn.appendChild(smallText);
         btn.appendChild(dayNum);
         datePanel.appendChild(btn);
+    });
+}
+
+function rebuildTimeColumn() {
+    // Перебудовуємо колонку часу
+    var timeColumn = document.querySelector('.time-column');
+    if (timeColumn) {
+        timeColumn.innerHTML = '';
+        calendarData.timeSlots.forEach(function(timeSlot) {
+            var cell = document.createElement('div');
+            cell.className = 'time-cell';
+            cell.innerHTML = '<span class="text-[11px] font-medium text-gray-600">' + timeSlot + '</span>';
+            timeColumn.appendChild(cell);
+        });
+    }
+
+    // Перебудовуємо слоти в колонках мастерів
+    var masterColumns = document.querySelectorAll('.master-column[data-master-id]');
+    masterColumns.forEach(function(col) {
+        // Видаляємо всі старі слоти
+        col.querySelectorAll('.time-slot-cell').forEach(function(cell) {
+            cell.remove();
+        });
+        col.querySelectorAll('.appointment-card').forEach(function(card) {
+            card.remove();
+        });
+
+        // Створюємо нові слоти
+        calendarData.timeSlots.forEach(function(timeSlot, slotIndex) {
+            var cell = document.createElement('div');
+            cell.className = 'time-slot-cell';
+            cell.setAttribute('data-time-slot', timeSlot);
+            cell.setAttribute('data-slot-index', slotIndex);
+            col.appendChild(cell);
+        });
     });
 }
 
@@ -1894,6 +1940,8 @@ function addNewAppointmentToCalendar(appointment) {
 
 var qaSearchTimeout;
 var qaSelectedClientId = null;
+var qaCurrentMasterWorkingHours = null;
+var qaOutsideWorkingHoursConfirmed = false;
 
 function openQuickAppointmentModal() {
     var modal = document.getElementById('quickAppointmentModal');
@@ -1907,7 +1955,7 @@ function openQuickAppointmentModal() {
     var selectedDate = calendarData.weekDates[currentDayIndex];
     document.getElementById('qa_date').value = selectedDate;
 
-    // Встановлюємо час: поточна година, 00 хвилин
+    // Встановлюємо час: поточна година, 00 хвилин (тимчасово, оновиться при виборі майстра/послуги)
     var now = new Date();
     document.getElementById('qa_hour').value = String(now.getHours()).padStart(2, '0');
     document.getElementById('qa_minute').value = '00';
@@ -1947,6 +1995,69 @@ function resetQuickAppointmentForm() {
     btn.innerHTML = '<i class="fas fa-save"></i><span>Створити запис</span>';
 
     qaSelectedClientId = null;
+    qaCurrentMasterWorkingHours = null;
+    qaOutsideWorkingHoursConfirmed = false;
+
+    // Видаляємо попередження якщо є
+    var warning = document.getElementById('qa_working_hours_warning');
+    if (warning) warning.remove();
+}
+
+// Функція для завантаження першого вільного слота (швидкий запис)
+function qaLoadFirstAvailableSlot() {
+    var masterId = document.getElementById('qa_master_id').value;
+    var serviceId = document.getElementById('qa_service_id').value;
+    var date = document.getElementById('qa_date').value;
+
+    if (!masterId || !serviceId || !date) {
+        return;
+    }
+
+    fetch('/masters/' + masterId + '/first-slot/' + date + '/' + serviceId)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                // Зберігаємо робочий час для валідації
+                qaCurrentMasterWorkingHours = data.working_hours;
+                qaOutsideWorkingHoursConfirmed = false;
+
+                // Видаляємо попередні попередження
+                var oldWarning = document.getElementById('qa_working_hours_warning');
+                if (oldWarning) oldWarning.remove();
+
+                if (data.is_working_day && data.first_available_slot) {
+                    // Встановлюємо перший вільний слот
+                    var parts = data.first_available_slot.split(':');
+                    document.getElementById('qa_hour').value = parts[0];
+                    document.getElementById('qa_minute').value = parts[1];
+                } else if (!data.is_working_day) {
+                    // Майстер не працює - показуємо попередження
+                    qaShowWorkingHoursWarning('Майстер не працює в цей день');
+                    document.getElementById('qa_hour').value = '09';
+                    document.getElementById('qa_minute').value = '00';
+                } else {
+                    // Немає вільних слотів
+                    qaShowWorkingHoursWarning('Немає вільних слотів у робочий час');
+                }
+            }
+        })
+        .catch(function(error) {
+            console.error('Error loading first slot:', error);
+        });
+}
+
+// Показати попередження в швидкому записі
+function qaShowWorkingHoursWarning(message) {
+    var oldWarning = document.getElementById('qa_working_hours_warning');
+    if (oldWarning) oldWarning.remove();
+
+    var warningDiv = document.createElement('div');
+    warningDiv.id = 'qa_working_hours_warning';
+    warningDiv.className = 'bg-yellow-50 border border-yellow-200 text-yellow-700 px-3 py-2 rounded text-sm mb-2';
+    warningDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>' + message;
+
+    var dateRow = document.getElementById('qa_date').closest('.grid');
+    dateRow.parentNode.insertBefore(warningDiv, dateRow.nextSibling);
 }
 
 function initQuickAppointmentHandlers() {
@@ -1955,6 +2066,10 @@ function initQuickAppointmentHandlers() {
     masterSelect.onchange = function() {
         var masterId = this.value;
         var serviceSelect = document.getElementById('qa_service_id');
+
+        // Скидаємо робочий час
+        qaCurrentMasterWorkingHours = null;
+        qaOutsideWorkingHoursConfirmed = false;
 
         if (!masterId) {
             serviceSelect.innerHTML = '<option value="">Спочатку оберіть майстра</option>';
@@ -1981,6 +2096,21 @@ function initQuickAppointmentHandlers() {
                 serviceSelect.disabled = false;
                 serviceSelect.innerHTML = '<option value="">Помилка завантаження</option>';
             });
+    };
+
+    // Обробник зміни послуги - завантажуємо перший вільний слот
+    var serviceSelect = document.getElementById('qa_service_id');
+    serviceSelect.onchange = function() {
+        if (this.value) {
+            qaLoadFirstAvailableSlot();
+        }
+    };
+
+    // Обробник зміни дати - завантажуємо перший вільний слот
+    var dateInput = document.getElementById('qa_date');
+    dateInput.onchange = function() {
+        qaOutsideWorkingHoursConfirmed = false;
+        qaLoadFirstAvailableSlot();
     };
 
     // Обробник типу клієнта
@@ -2093,6 +2223,129 @@ function formatQaTime() {
     }
 }
 
+// ============================================
+// Кастомний confirm-діалог в стилі адмінки
+// ============================================
+function showConfirmDialog(options) {
+    var title = options.title || 'Підтвердження';
+    var message = options.message || '';
+    var confirmText = options.confirmText || 'Так';
+    var cancelText = options.cancelText || 'Скасувати';
+    var type = options.type || 'warning'; // warning, danger, info
+    var onConfirm = options.onConfirm || function() {};
+    var onCancel = options.onCancel || function() {};
+
+    // Кольори в залежності від типу
+    var iconColor, iconBg, buttonColor;
+    if (type === 'danger') {
+        iconColor = 'text-red-600';
+        iconBg = 'bg-red-100';
+        buttonColor = 'bg-red-600 hover:bg-red-700';
+    } else if (type === 'info') {
+        iconColor = 'text-blue-600';
+        iconBg = 'bg-blue-100';
+        buttonColor = 'bg-blue-600 hover:bg-blue-700';
+    } else {
+        iconColor = 'text-yellow-600';
+        iconBg = 'bg-yellow-100';
+        buttonColor = 'bg-yellow-600 hover:bg-yellow-700';
+    }
+
+    // Створюємо HTML модалки
+    var modalHtml = '<div id="customConfirmModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">' +
+        '<div class="bg-white rounded-lg max-w-md w-full shadow-xl transform transition-all">' +
+            '<div class="p-6">' +
+                '<div class="flex items-start gap-4">' +
+                    '<div class="flex-shrink-0 w-12 h-12 rounded-full ' + iconBg + ' flex items-center justify-center">' +
+                        '<i class="fas fa-exclamation-triangle text-xl ' + iconColor + '"></i>' +
+                    '</div>' +
+                    '<div class="flex-1">' +
+                        '<h3 class="text-lg font-semibold text-gray-900 mb-2">' + title + '</h3>' +
+                        '<p class="text-gray-600 text-sm">' + message + '</p>' +
+                    '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end gap-3">' +
+                '<button id="confirmDialogCancel" class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">' +
+                    cancelText +
+                '</button>' +
+                '<button id="confirmDialogConfirm" class="px-4 py-2 text-white rounded-lg transition-colors ' + buttonColor + '">' +
+                    confirmText +
+                '</button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+
+    // Видаляємо попередній діалог якщо є
+    var existingModal = document.getElementById('customConfirmModal');
+    if (existingModal) existingModal.remove();
+
+    // Додаємо модалку
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = modalHtml;
+    var modal = wrapper.firstChild;
+    document.body.appendChild(modal);
+
+    // Анімація появи
+    modal.style.opacity = '0';
+    setTimeout(function() {
+        modal.style.transition = 'opacity 0.2s';
+        modal.style.opacity = '1';
+    }, 10);
+
+    // Функція закриття
+    function closeModal() {
+        modal.style.opacity = '0';
+        setTimeout(function() {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
+        }, 200);
+    }
+
+    // Обробники
+    modal.querySelector('#confirmDialogCancel').onclick = function() {
+        closeModal();
+        onCancel();
+    };
+
+    modal.querySelector('#confirmDialogConfirm').onclick = function() {
+        closeModal();
+        onConfirm();
+    };
+
+    // Закриття по кліку на overlay
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeModal();
+            onCancel();
+        }
+    };
+
+    // Закриття по Escape
+    var escHandler = function(e) {
+        if (e.key === 'Escape') {
+            closeModal();
+            onCancel();
+            document.removeEventListener('keydown', escHandler);
+        }
+    };
+    document.addEventListener('keydown', escHandler);
+}
+
+// Перевірка чи час у межах робочого часу майстра
+function qaIsTimeInWorkingHours(hour, minute) {
+    if (!qaCurrentMasterWorkingHours) {
+        return true; // Якщо немає даних - не блокуємо
+    }
+
+    var timeStr = String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0');
+    var start = qaCurrentMasterWorkingHours.start;
+    var end = qaCurrentMasterWorkingHours.end;
+
+    return timeStr >= start && timeStr < end;
+}
+
 function submitQuickAppointment() {
     var errorsDiv = document.getElementById('qa_errors');
     errorsDiv.classList.add('hidden');
@@ -2129,7 +2382,32 @@ function submitQuickAppointment() {
 
     // Форматуємо час
     formatQaTime();
-    var time = document.getElementById('qa_hour').value + ':' + document.getElementById('qa_minute').value;
+    var formattedHour = document.getElementById('qa_hour').value;
+    var formattedMinute = document.getElementById('qa_minute').value;
+    var time = formattedHour + ':' + formattedMinute;
+
+    // Перевірка робочого часу (якщо ще не підтверджено)
+    if (!qaOutsideWorkingHoursConfirmed && qaCurrentMasterWorkingHours) {
+        var hourInt = parseInt(formattedHour);
+        var minuteInt = parseInt(formattedMinute);
+
+        if (!qaIsTimeInWorkingHours(hourInt, minuteInt)) {
+            var workingHoursText = qaCurrentMasterWorkingHours.start + ' - ' + qaCurrentMasterWorkingHours.end;
+
+            showConfirmDialog({
+                title: 'Час поза робочим графіком',
+                message: 'Обраний час <strong>' + time + '</strong> знаходиться поза робочим часом майстра <strong>(' + workingHoursText + ')</strong>.<br><br>Ви впевнені, що хочете створити запис на цей час?',
+                confirmText: 'Так, створити',
+                cancelText: 'Скасувати',
+                type: 'warning',
+                onConfirm: function() {
+                    qaOutsideWorkingHoursConfirmed = true;
+                    submitQuickAppointment(); // Повторно викликаємо з підтвердженням
+                }
+            });
+            return;
+        }
+    }
 
     var btn = document.getElementById('qa_submit_btn');
     btn.disabled = true;

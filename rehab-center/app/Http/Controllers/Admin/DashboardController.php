@@ -172,11 +172,27 @@ class DashboardController extends Controller
             ];
         }
 
+        // Відслідковуємо мінімальний та максимальний час записів за тиждень
+        $minAppointmentTime = null;
+        $maxAppointmentEndTime = null;
+
         foreach ($appointments as $appointment) {
             $dateKey = $appointment->appointment_date->format('Y-m-d');
 
             if (! isset($scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey])) {
                 $scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey] = [];
+            }
+
+            // Визначаємо час початку та кінця запису
+            $appointmentStartTime = Carbon::createFromFormat('H:i:s', $appointment->appointment_time);
+            $appointmentEndTime = $appointmentStartTime->copy()->addMinutes((int) $appointment->duration);
+
+            // Оновлюємо мінімум та максимум
+            if ($minAppointmentTime === null || $appointmentStartTime->lt($minAppointmentTime)) {
+                $minAppointmentTime = $appointmentStartTime->copy();
+            }
+            if ($maxAppointmentEndTime === null || $appointmentEndTime->gt($maxAppointmentEndTime)) {
+                $maxAppointmentEndTime = $appointmentEndTime->copy();
             }
 
             $scheduleByMaster[$appointment->master_id]['appointments_by_date'][$dateKey][] = [
@@ -194,8 +210,46 @@ class DashboardController extends Controller
             ];
         }
 
-        // Генеруємо фіксовані часові слоти з 10:00 до 21:00 з кроком 30 хвилин
-        $timeSlots = $this->generateTimeSlots('10:00', '21:00', 30);
+        // Визначаємо межі часу для календаря
+        $defaultStartTime = '10:00';
+        $defaultEndTime = '21:00';
+
+        // Якщо є записи за межами стандартного діапазону - розширюємо
+        $calendarStartTime = $defaultStartTime;
+        $calendarEndTime = $defaultEndTime;
+
+        if ($minAppointmentTime !== null) {
+            $minTimeStr = $minAppointmentTime->format('H:i');
+            // Округлюємо вниз до півгодини
+            $minHour = (int) $minAppointmentTime->format('H');
+            $minMinute = (int) $minAppointmentTime->format('i');
+            $roundedMinMinute = $minMinute < 30 ? 0 : 30;
+            $roundedMinTime = sprintf('%02d:%02d', $minHour, $roundedMinMinute);
+
+            if ($roundedMinTime < $defaultStartTime) {
+                $calendarStartTime = $roundedMinTime;
+            }
+        }
+
+        if ($maxAppointmentEndTime !== null) {
+            // Округлюємо вгору до півгодини
+            $maxHour = (int) $maxAppointmentEndTime->format('H');
+            $maxMinute = (int) $maxAppointmentEndTime->format('i');
+            if ($maxMinute > 0 && $maxMinute <= 30) {
+                $roundedMaxTime = sprintf('%02d:30', $maxHour);
+            } elseif ($maxMinute > 30) {
+                $roundedMaxTime = sprintf('%02d:00', $maxHour + 1);
+            } else {
+                $roundedMaxTime = sprintf('%02d:00', $maxHour);
+            }
+
+            if ($roundedMaxTime > $defaultEndTime) {
+                $calendarEndTime = $roundedMaxTime;
+            }
+        }
+
+        // Генеруємо часові слоти з динамічними межами
+        $timeSlots = $this->generateTimeSlots($calendarStartTime, $calendarEndTime, 30);
 
         // Генеруємо дати тижня
         $weekDates = [];
