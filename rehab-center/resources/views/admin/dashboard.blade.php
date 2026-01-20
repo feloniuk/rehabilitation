@@ -597,6 +597,31 @@
     border-bottom: 1px dashed #e5e7eb;
     position: relative;
     background: #fff;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.time-slot-cell:hover:not(.non-working) {
+    background-color: #f0fdf4;
+}
+
+.time-slot-cell:active:not(.non-working) {
+    background-color: #dcfce7;
+}
+
+.time-slot-cell.non-working {
+    cursor: default;
+}
+
+/* Ефект "пульсу" при кліку */
+.time-slot-cell.clicked {
+    animation: slotPulse 0.3s ease;
+}
+
+@keyframes slotPulse {
+    0% { background-color: #dcfce7; }
+    50% { background-color: #bbf7d0; }
+    100% { background-color: #f0fdf4; }
 }
 
 /* Нерабочий час (до початку та після закінчення робочого дня) */
@@ -663,6 +688,7 @@ var currentWeekOffset = 0;
 document.addEventListener('DOMContentLoaded', function() {
     selectDate(currentDayIndex);
     scrollToCurrentHour();
+    initTimeSlotClickHandlers();
 });
 
 function navigateWeek(direction) {
@@ -1942,8 +1968,17 @@ var qaSearchTimeout;
 var qaSelectedClientId = null;
 var qaCurrentMasterWorkingHours = null;
 var qaOutsideWorkingHoursConfirmed = false;
+var qaTimeSetManually = false; // Чи було час встановлено вручну (кліком на ячейку)
 
-function openQuickAppointmentModal() {
+/**
+ * Відкрити модалку швидкого запису
+ * @param {Object} options - Опціональні параметри
+ * @param {number} options.masterId - ID мастера для предзаповнення
+ * @param {string} options.time - Час у форматі "HH:MM"
+ */
+function openQuickAppointmentModal(options) {
+    options = options || {};
+
     var modal = document.getElementById('quickAppointmentModal');
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -1955,13 +1990,115 @@ function openQuickAppointmentModal() {
     var selectedDate = calendarData.weekDates[currentDayIndex];
     document.getElementById('qa_date').value = selectedDate;
 
-    // Встановлюємо час: поточна година, 00 хвилин (тимчасово, оновиться при виборі майстра/послуги)
-    var now = new Date();
-    document.getElementById('qa_hour').value = String(now.getHours()).padStart(2, '0');
-    document.getElementById('qa_minute').value = '00';
-
     // Ініціалізуємо обробники
     initQuickAppointmentHandlers();
+
+    // Якщо передано masterId - предзаповнюємо
+    if (options.masterId) {
+        var masterSelect = document.getElementById('qa_master_id');
+        masterSelect.value = options.masterId;
+
+        // Позначаємо що час встановлено вручну (з кліку на ячейку)
+        if (options.time) {
+            qaTimeSetManually = true;
+        }
+
+        // Завантажуємо послуги мастера
+        loadMasterServicesForQuickAppointment(options.masterId, function() {
+            // Після завантаження послуг - встановлюємо час
+            if (options.time) {
+                var timeParts = options.time.split(':');
+                document.getElementById('qa_hour').value = timeParts[0];
+                document.getElementById('qa_minute').value = timeParts[1];
+            }
+        });
+    } else {
+        // Встановлюємо час: поточна година, 00 хвилин
+        var now = new Date();
+        document.getElementById('qa_hour').value = String(now.getHours()).padStart(2, '0');
+        document.getElementById('qa_minute').value = '00';
+    }
+}
+
+/**
+ * Завантажити послуги мастера для швидкого запису
+ */
+function loadMasterServicesForQuickAppointment(masterId, callback) {
+    var serviceSelect = document.getElementById('qa_service_id');
+
+    serviceSelect.disabled = true;
+    serviceSelect.innerHTML = '<option value="">Завантаження...</option>';
+
+    fetch('/admin/appointments/master-services?master_id=' + masterId)
+        .then(function(r) { return r.json(); })
+        .then(function(services) {
+            serviceSelect.disabled = false;
+            serviceSelect.innerHTML = '<option value="">Оберіть послугу</option>';
+            services.forEach(function(service) {
+                var option = document.createElement('option');
+                option.value = service.id;
+                option.textContent = service.name + ' (' + service.duration + ' хв)';
+                serviceSelect.appendChild(option);
+            });
+
+            if (callback) callback();
+        })
+        .catch(function() {
+            serviceSelect.disabled = false;
+            serviceSelect.innerHTML = '<option value="">Помилка завантаження</option>';
+            if (callback) callback();
+        });
+}
+
+/**
+ * Обробник кліку на ячейку часу в календарі
+ */
+function handleTimeSlotClick(e) {
+    var cell = e.target.closest('.time-slot-cell');
+    if (!cell) return;
+
+    // Ігноруємо нерабочі слоти
+    if (cell.classList.contains('non-working')) return;
+
+    // Ігноруємо якщо клікнули на картку запису
+    if (e.target.closest('.appointment-card')) return;
+
+    var masterColumn = cell.closest('.master-column');
+    if (!masterColumn) return;
+
+    var masterId = parseInt(masterColumn.dataset.masterId);
+    var timeSlot = cell.dataset.timeSlot;
+
+    if (!masterId || !timeSlot) return;
+
+    // Візуальний ефект кліку
+    cell.classList.add('clicked');
+    setTimeout(function() {
+        cell.classList.remove('clicked');
+    }, 300);
+
+    // Відкриваємо модалку з параметрами
+    openQuickAppointmentModal({
+        masterId: masterId,
+        time: timeSlot
+    });
+}
+
+/**
+ * Ініціалізація обробників кліку на ячейки часу
+ */
+function initTimeSlotClickHandlers() {
+    var calendarBody = document.querySelector('.calendar-body');
+    if (!calendarBody) return;
+
+    // Видаляємо попередній обробник якщо є
+    calendarBody.removeEventListener('click', handleTimeSlotClick);
+
+    // Додаємо делегований обробник на весь контейнер (ефективніше для мобільних)
+    calendarBody.addEventListener('click', handleTimeSlotClick);
+
+    // Для мобільних: швидкий відгук без затримки 300ms
+    calendarBody.style.touchAction = 'manipulation';
 }
 
 function closeQuickAppointmentModal() {
@@ -1997,6 +2134,7 @@ function resetQuickAppointmentForm() {
     qaSelectedClientId = null;
     qaCurrentMasterWorkingHours = null;
     qaOutsideWorkingHoursConfirmed = false;
+    qaTimeSetManually = false;
 
     // Видаляємо попередження якщо є
     var warning = document.getElementById('qa_working_hours_warning');
@@ -2024,6 +2162,15 @@ function qaLoadFirstAvailableSlot() {
                 // Видаляємо попередні попередження
                 var oldWarning = document.getElementById('qa_working_hours_warning');
                 if (oldWarning) oldWarning.remove();
+
+                // Якщо час встановлено вручну (кліком на ячейку) - не змінюємо його
+                if (qaTimeSetManually) {
+                    // Але показуємо попередження якщо день нерабочий
+                    if (!data.is_working_day) {
+                        qaShowWorkingHoursWarning('Майстер не працює в цей день');
+                    }
+                    return;
+                }
 
                 if (data.is_working_day && data.first_available_slot) {
                     // Встановлюємо перший вільний слот
