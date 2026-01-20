@@ -112,14 +112,18 @@
                             ];
                             $color = $colors[($masterIndex + $aptIndex) % count($colors)];
 
+                            // Поріг для нахлесту: 20 хвилин - достатньо щоб заголовок був видимий
+                            $overlapThresholdMinutes = 20;
                             $overlappingCount = 0;
                             $positionInOverlap = 0;
 
                             foreach($dayAppointments as $otherIndex => $otherApt) {
                                 $otherStart = \Carbon\Carbon::parse($otherApt['time']);
-                                $otherEnd = $otherStart->copy()->addMinutes($otherApt['duration']);
 
-                                if ($startTime->lt($otherEnd) && $endTime->gt($otherStart)) {
+                                // Рахуємо конфлікт тільки якщо записи починаються близько одна до одної
+                                $startDiff = abs($startTime->diffInMinutes($otherStart));
+
+                                if ($startDiff < $overlapThresholdMinutes) {
                                     $overlappingCount++;
                                     if ($otherIndex < $aptIndex) {
                                         $positionInOverlap++;
@@ -1049,17 +1053,22 @@ function reloadTimeline(dayIndex) {
             var topPx = minutesFromDayStart * pixelsPerMinute;
             var heightPx = apt.duration * pixelsPerMinute;
             
-            // Виявляємо нахлести
+            // Виявляємо нахлести - тільки для записів які починаються близько одна до одної
+            // Поріг: 20 хвилин - достатньо щоб заголовок попередньої картки був видимий
+            var OVERLAP_THRESHOLD_MINUTES = 20;
             var overlappingCount = 0;
             var positionInOverlap = 0;
-            
+
             appointments.forEach(function(otherApt, otherIndex) {
                 var otherTimeParts = otherApt.time.substring(0, 5).split(':');
                 var otherStartMinutes = parseInt(otherTimeParts[0]) * 60 + parseInt(otherTimeParts[1]);
-                var otherEndMinutes = otherStartMinutes + parseInt(otherApt.duration);
-                
-                // Перевірка перетину
-                if (aptStartMinutes < otherEndMinutes && aptEndMinutes > otherStartMinutes) {
+
+                // Рахуємо конфлікт тільки якщо записи починаються близько одна до одної
+                // АБО якщо поточна картка починається в межах порогу від початку іншої
+                var startDiff = Math.abs(aptStartMinutes - otherStartMinutes);
+
+                if (startDiff < OVERLAP_THRESHOLD_MINUTES) {
+                    // Записи починаються майже одночасно - потрібно ділити ширину
                     overlappingCount++;
                     if (otherIndex < aptIndex) {
                         positionInOverlap++;
