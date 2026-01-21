@@ -156,12 +156,11 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <button onclick="showAuditDetails({{ json_encode(['log' => [
-                                    'id' => $log->id,
+                                    'appointment_id' => $log->appointment_id,
                                     'action' => $log->action,
                                     'old_values' => $log->old_values,
                                     'new_values' => $log->new_values,
-                                    'appointment_date' => $log->appointment_date ?? null,
-                                    'appointment_time' => $log->appointment_time ?? null
+                                    'created_at' => $log->created_at->toIso8601String()
                                 ], 'user' => $log->user?->only(['id', 'name', 'email']) ?? null]) }}, this)"
                                         class="text-blue-600 hover:text-blue-800 transition-colors font-medium">
                                     <i class="fas fa-eye mr-1"></i>Деталі
@@ -219,20 +218,26 @@ function showAuditDetails(data, element) {
     const { log, user } = data;
     let html = '<div class="space-y-4">';
 
-    // Основна інформація
+    // Заголовок з дією
+    const actionColors = {
+        'created': 'bg-green-100 text-green-800',
+        'updated': 'bg-yellow-100 text-yellow-800',
+        'deleted': 'bg-red-100 text-red-800',
+        'restored': 'bg-blue-100 text-blue-800'
+    };
+
     html += `
-        <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
-            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <i class="fas fa-info-circle text-blue-600"></i>Основна інформація
-            </h4>
-            <div class="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                    <span class="text-gray-600 text-xs uppercase">ID Запису</span>
-                    <div class="font-bold text-gray-900 text-lg">#${log.id}</div>
-                </div>
-                <div>
-                    <span class="text-gray-600 text-xs uppercase">Дія</span>
-                    <div class="font-semibold text-gray-900">${formatAction(log.action)}</div>
+        <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+            <div>
+                <div class="text-xs text-gray-600 uppercase font-semibold">Запис №</div>
+                <div class="text-3xl font-bold text-gray-900">${log.appointment_id}</div>
+            </div>
+            <div class="text-right">
+                <span class="inline-block px-3 py-2 rounded-full ${actionColors[log.action] || 'bg-gray-100'} font-semibold text-sm">
+                    ${formatAction(log.action)}
+                </span>
+                <div class="text-xs text-gray-600 mt-2">
+                    ${new Date(log.created_at).toLocaleString('uk-UA')}
                 </div>
             </div>
         </div>
@@ -242,12 +247,12 @@ function showAuditDetails(data, element) {
     if (user) {
         html += `
             <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <i class="fas fa-user text-blue-600"></i>Виконав дію
+                <h4 class="font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <i class="fas fa-user-circle text-blue-600"></i>Виконав дію
                 </h4>
                 <div class="text-sm">
                     <div class="font-semibold text-gray-900">${user.name}</div>
-                    <div class="text-gray-600">${user.email}</div>
+                    <div class="text-gray-600 text-xs">${user.email}</div>
                 </div>
             </div>
         `;
