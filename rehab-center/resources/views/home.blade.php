@@ -143,11 +143,11 @@
                                     {{ $service->duration }} хв
                                 </span>
                                 @php
-                                    $prices = $service->masterServices->pluck('price')->unique()->sort();
+                                    $priceRange = $service->activePriceRange;
                                 @endphp
-                                @if($prices->count() > 0)
+                                @if($priceRange['min'])
                                     <span class="text-lg font-bold text-pink-600">
-                                        від {{ number_format($prices->first(), 0) }} грн
+                                        від {{ number_format($priceRange['min'], 0) }} грн
                                     </span>
                                 @endif
                             </div>
