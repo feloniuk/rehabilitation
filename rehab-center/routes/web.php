@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AppointmentAuditController;
 use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -129,6 +130,9 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         Route::delete('notifications/templates/{id}', [NotificationController::class, 'deleteTemplate'])
             ->name('notifications.templates.delete');
 
+        // Аудит записів (скрита сторінка)
+        Route::get('appointment-audit', [AppointmentAuditController::class, 'index'])
+            ->name('appointment-audit.index');
     });
 });
 
