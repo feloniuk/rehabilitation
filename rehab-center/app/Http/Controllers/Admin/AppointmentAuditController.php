@@ -42,8 +42,12 @@ class AppointmentAuditController extends Controller
         $updatedCount = (clone $query)->where('action', 'updated')->count();
         $deletedCount = (clone $query)->where('action', 'deleted')->count();
 
-        $logs = $query->paginate(50)->withQueryString();
+        // Кількість записей на сторінці (за замовчуванням 30)
+        $perPage = (int) $request->get('per_page', 30);
+        $perPage = in_array($perPage, [15, 25, 30, 50, 100]) ? $perPage : 30;
 
-        return view('admin.appointment-audit', compact('logs', 'createdCount', 'updatedCount', 'deletedCount'));
+        $logs = $query->paginate($perPage)->withQueryString();
+
+        return view('admin.appointment-audit', compact('logs', 'createdCount', 'updatedCount', 'deletedCount', 'perPage'));
     }
 }

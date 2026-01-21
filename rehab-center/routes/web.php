@@ -94,6 +94,7 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
         Route::delete('pages/{id}', [PageController::class, 'destroy'])->name('pages.destroy');
 
         Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+        Route::put('settings/password', [SettingController::class, 'updatePassword'])->name('settings.update-password');
         Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
 
         Route::get('notifications', [NotificationController::class, 'index'])

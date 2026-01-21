@@ -52,13 +52,26 @@
                            value="{{ request('date_to') }}">
                 </div>
 
-                <div class="col-span-full flex gap-2">
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium transition-colors flex items-center gap-2">
-                        <i class="fas fa-filter"></i>Фільтрувати
-                    </button>
-                    <a href="{{ route('admin.appointment-audit.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 text-sm font-medium transition-colors flex items-center gap-2">
-                        <i class="fas fa-redo"></i>Скинути
-                    </a>
+                <div class="col-span-full flex gap-2 justify-between items-end">
+                    <div class="flex gap-2">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="fas fa-filter"></i>Фільтрувати
+                        </button>
+                        <a href="{{ route('admin.appointment-audit.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 text-sm font-medium transition-colors flex items-center gap-2">
+                            <i class="fas fa-redo"></i>Скинути
+                        </a>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Записей на сторінці</label>
+                        <select name="per_page" class="w-auto px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="this.form.submit()">
+                            <option value="15" {{ $perPage == 15 ? 'selected' : '' }}>15</option>
+                            <option value="25" {{ $perPage == 25 ? 'selected' : '' }}>25</option>
+                            <option value="30" {{ $perPage == 30 ? 'selected' : '' }}>30</option>
+                            <option value="50" {{ $perPage == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ $perPage == 100 ? 'selected' : '' }}>100</option>
+                        </select>
+                    </div>
                 </div>
             </form>
         </div>
@@ -179,12 +192,20 @@
             </table>
         </div>
 
-        {{-- Пагінація --}}
-        @if($logs->hasPages())
-            <div class="px-6 py-4 border-t">
-                {{ $logs->links('vendor.pagination.tailwind') }}
+        {{-- Інформація про пагінацію та посилання --}}
+        <div class="px-6 py-4 border-t bg-gray-50">
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-sm text-gray-600">
+                    Показано <span class="font-semibold">{{ $logs->count() }}</span> з <span class="font-semibold">{{ $logs->total() }}</span> записів
+                    @if($logs->hasPages())
+                        (сторінка {{ $logs->currentPage() }} з {{ $logs->lastPage() }})
+                    @endif
+                </div>
             </div>
-        @endif
+            @if($logs->hasPages())
+                {{ $logs->links('vendor.pagination.tailwind') }}
+            @endif
+        </div>
     </div>
 </div>
 

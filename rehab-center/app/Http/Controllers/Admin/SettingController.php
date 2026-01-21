@@ -1,13 +1,14 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class SettingController extends Controller
 {
-
     public function index()
     {
         $settings = [
@@ -38,6 +39,43 @@ class SettingController extends Controller
         }
 
         return redirect()->route('admin.settings.index')
-                        ->with('success', 'Налаштування збережено');
+            ->with('success', 'Налаштування збережено');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ], [
+            'current_password.required' => 'Поточний пароль є обов\'язковим',
+            'password.required' => 'Новий пароль є обов\'язковим',
+            'password.min' => 'Пароль має містити щонайменше :min символів',
+            'password.confirmed' => 'Підтвердження пароля не співпадає',
+        ]);
+
+        $user = auth()->user();
+
+        // Перевірка поточного пароля
+        if (! Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors([
+                'current_password' => 'Поточний пароль невірний',
+            ])->withInput();
+        }
+
+        // Перевірка що новий пароль не збігається з поточним
+        if (Hash::check($request->password, $user->password)) {
+            return back()->withErrors([
+                'password' => 'Новий пароль має відрізнятися від поточного',
+            ])->withInput();
+        }
+
+        // Оновлення пароля
+        $user->update([
+            'password' => Hash::make($request->password),
+        ]);
+
+        return redirect()->route('admin.settings.index')
+            ->with('success', 'Пароль успішно змінено');
     }
 }
