@@ -10,26 +10,46 @@ class AppointmentObserver
 {
     public function created(Appointment $appointment): void
     {
-        $this->logAction($appointment, 'created', null, $appointment->toArray());
+        $appointment->load(['client', 'master', 'service']);
+
+        $newValues = $this->formatAppointmentData($appointment);
+
+        $this->logAction($appointment, 'created', null, $newValues);
     }
 
     public function updated(Appointment $appointment): void
     {
-        $oldValues = $appointment->getOriginal();
-        $newValues = $appointment->getChanges();
+        $changes = $appointment->getChanges();
 
         // Не логувати якщо змінився тільки updated_at
-        if (count($newValues) === 1 && isset($newValues['updated_at'])) {
+        if (count($changes) === 1 && isset($changes['updated_at'])) {
             return;
         }
 
-        $this->logAction($appointment, 'updated', $oldValues, $newValues);
+        $appointment->load(['client', 'master', 'service']);
+
+        $oldValues = $this->getOldValuesWithRelations($appointment);
+        $newValues = $this->formatAppointmentData($appointment);
+
+        // Логуємо тільки змінені поля
+        $logOldValues = [];
+        $logNewValues = [];
+        foreach (array_keys($changes) as $field) {
+            if ($field !== 'updated_at') {
+                $logOldValues[$field] = $oldValues[$field] ?? null;
+                $logNewValues[$field] = $newValues[$field] ?? null;
+            }
+        }
+
+        $this->logAction($appointment, 'updated', $logOldValues, $logNewValues);
     }
 
     public function deleting(Appointment $appointment): void
     {
-        // Зберігаємо повні дані запису перед видаленням
-        $fullData = $appointment->load(['client', 'master', 'service'])->toArray();
+        // Зберігаємо ПОВНІ дані запису перед видаленням
+        $appointment->load(['client', 'master', 'service']);
+
+        $fullData = $this->formatAppointmentData($appointment);
 
         $this->logAction($appointment, 'deleted', $fullData, null);
 
@@ -52,7 +72,11 @@ class AppointmentObserver
 
     public function restored(Appointment $appointment): void
     {
-        $this->logAction($appointment, 'restored', null, $appointment->toArray());
+        $appointment->load(['client', 'master', 'service']);
+
+        $newValues = $this->formatAppointmentData($appointment);
+
+        $this->logAction($appointment, 'restored', null, $newValues);
     }
 
     private function logAction(Appointment $appointment, string $action, ?array $oldValues, ?array $newValues): void
@@ -91,5 +115,85 @@ class AppointmentObserver
         }
 
         return $user->role ?? 'unknown';
+    }
+
+    /**
+     * Форматує дані запису з повною інформацією про зв'язки
+     */
+    private function formatAppointmentData(Appointment $appointment): array
+    {
+        return [
+            'id' => $appointment->id,
+            'client_id' => $appointment->client_id,
+            'client' => [
+                'id' => $appointment->client?->id,
+                'name' => $appointment->client?->name,
+                'phone' => $appointment->client?->phone,
+                'email' => $appointment->client?->email,
+            ],
+            'master_id' => $appointment->master_id,
+            'master' => [
+                'id' => $appointment->master?->id,
+                'name' => $appointment->master?->name,
+                'phone' => $appointment->master?->phone,
+            ],
+            'service_id' => $appointment->service_id,
+            'service' => [
+                'id' => $appointment->service?->id,
+                'name' => $appointment->service?->name,
+                'duration' => $appointment->service?->duration,
+            ],
+            'appointment_date' => $appointment->appointment_date?->format('Y-m-d'),
+            'appointment_time' => $appointment->appointment_time,
+            'duration' => $appointment->duration,
+            'price' => $appointment->price,
+            'status' => $appointment->status,
+            'notes' => $appointment->notes,
+            'is_confirmed' => $appointment->is_confirmed,
+            'telegram_notification_sent' => $appointment->telegram_notification_sent,
+            'created_at' => $appointment->created_at?->toIso8601String(),
+            'updated_at' => $appointment->updated_at?->toIso8601String(),
+        ];
+    }
+
+    /**
+     * Отримує старі значення з інформацією про зв'язки
+     */
+    private function getOldValuesWithRelations(Appointment $appointment): array
+    {
+        $original = $appointment->getOriginal();
+
+        return [
+            'id' => $original['id'] ?? $appointment->id,
+            'client_id' => $original['client_id'] ?? $appointment->client_id,
+            'client' => [
+                'id' => $appointment->client?->id,
+                'name' => $appointment->client?->name,
+                'phone' => $appointment->client?->phone,
+                'email' => $appointment->client?->email,
+            ],
+            'master_id' => $original['master_id'] ?? $appointment->master_id,
+            'master' => [
+                'id' => $appointment->master?->id,
+                'name' => $appointment->master?->name,
+                'phone' => $appointment->master?->phone,
+            ],
+            'service_id' => $original['service_id'] ?? $appointment->service_id,
+            'service' => [
+                'id' => $appointment->service?->id,
+                'name' => $appointment->service?->name,
+                'duration' => $appointment->service?->duration,
+            ],
+            'appointment_date' => $original['appointment_date'] ?? $appointment->appointment_date?->format('Y-m-d'),
+            'appointment_time' => $original['appointment_time'] ?? $appointment->appointment_time,
+            'duration' => $original['duration'] ?? $appointment->duration,
+            'price' => $original['price'] ?? $appointment->price,
+            'status' => $original['status'] ?? $appointment->status,
+            'notes' => $original['notes'] ?? $appointment->notes,
+            'is_confirmed' => $original['is_confirmed'] ?? $appointment->is_confirmed,
+            'telegram_notification_sent' => $original['telegram_notification_sent'] ?? $appointment->telegram_notification_sent,
+            'created_at' => $original['created_at'] ?? $appointment->created_at?->toIso8601String(),
+            'updated_at' => $original['updated_at'] ?? $appointment->updated_at?->toIso8601String(),
+        ];
     }
 }

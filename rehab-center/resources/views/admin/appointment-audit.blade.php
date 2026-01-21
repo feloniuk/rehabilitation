@@ -221,16 +221,18 @@ function showAuditDetails(data, element) {
 
     // Основна інформація
     html += `
-        <div class="bg-gray-50 rounded-lg p-4">
-            <h4 class="font-semibold text-gray-900 mb-3">Основна інформація</h4>
-            <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <i class="fas fa-info-circle text-blue-600"></i>Основна інформація
+            </h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                    <span class="text-gray-600">ID Запису:</span>
-                    <div class="font-semibold text-gray-900">${log.id}</div>
+                    <span class="text-gray-600 text-xs uppercase">ID Запису</span>
+                    <div class="font-bold text-gray-900 text-lg">#${log.id}</div>
                 </div>
                 <div>
-                    <span class="text-gray-600">Дія:</span>
-                    <div class="font-semibold text-gray-900">${log.action}</div>
+                    <span class="text-gray-600 text-xs uppercase">Дія</span>
+                    <div class="font-semibold text-gray-900">${formatAction(log.action)}</div>
                 </div>
             </div>
         </div>
@@ -239,58 +241,171 @@ function showAuditDetails(data, element) {
     // Користувач
     if (user) {
         html += `
-            <div class="bg-blue-50 rounded-lg p-4">
-                <h4 class="font-semibold text-gray-900 mb-2">Користувач</h4>
+            <div class="bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <i class="fas fa-user text-blue-600"></i>Виконав дію
+                </h4>
                 <div class="text-sm">
-                    <div><strong>${user.name}</strong></div>
+                    <div class="font-semibold text-gray-900">${user.name}</div>
                     <div class="text-gray-600">${user.email}</div>
                 </div>
             </div>
         `;
     }
 
-    // Старі значення
-    if (log.old_values && Object.keys(log.old_values).length > 0) {
-        html += '<div class="bg-red-50 rounded-lg p-4">';
-        html += '<h4 class="font-semibold text-gray-900 mb-3">Попередні значення</h4>';
-        html += '<div class="space-y-2 text-sm">';
-
-        if (log.old_values.client) {
-            html += `<div><strong>Клієнт:</strong> ${log.old_values.client.name} (${log.old_values.client.phone || 'N/A'})</div>`;
-        }
-        if (log.old_values.master) {
-            html += `<div><strong>Майстер:</strong> ${log.old_values.master.name}</div>`;
-        }
-        if (log.old_values.service) {
-            html += `<div><strong>Послуга:</strong> ${log.old_values.service.name}</div>`;
-        }
-        if (log.old_values.appointment_date) {
-            html += `<div><strong>Дата:</strong> ${new Date(log.old_values.appointment_date).toLocaleDateString('uk-UA')} @ ${log.old_values.appointment_time || 'N/A'}</div>`;
-        }
-        if (log.old_values.status) {
-            html += `<div><strong>Статус:</strong> ${log.old_values.status}</div>`;
-        }
-
-        html += '</div></div>';
+    // Деталі запису (для created, deleted, restored)
+    if (log.action === 'deleted' && log.old_values) {
+        html += formatAppointmentDetails('Дані видаленої записи', log.old_values, 'red');
+    } else if (log.action === 'created' && log.new_values) {
+        html += formatAppointmentDetails('Дані створеної записи', log.new_values, 'green');
+    } else if (log.action === 'restored' && log.new_values) {
+        html += formatAppointmentDetails('Дані відновленої записи', log.new_values, 'blue');
     }
 
-    // Нові значення
-    if (log.new_values && Object.keys(log.new_values).length > 0) {
-        html += '<div class="bg-green-50 rounded-lg p-4">';
-        html += '<h4 class="font-semibold text-gray-900 mb-3">Нові значення</h4>';
-        html += '<div class="space-y-2 text-sm">';
-
-        Object.entries(log.new_values).forEach(([key, value]) => {
-            if (key !== 'updated_at') {
-                html += `<div><strong>${key}:</strong> ${value}</div>`;
-            }
-        });
-
-        html += '</div></div>';
+    // Зміни (для updated)
+    if (log.action === 'updated' && log.old_values && log.new_values) {
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        html += formatAppointmentDetails('Було', log.old_values, 'red');
+        html += formatAppointmentDetails('Стало', log.new_values, 'green');
+        html += '</div>';
     }
 
     html += '</div>';
     content.innerHTML = html;
+}
+
+function formatAction(action) {
+    const actions = {
+        'created': '✓ Створено',
+        'updated': '✎ Оновлено',
+        'deleted': '✗ Видалено',
+        'restored': '↻ Відновлено'
+    };
+    return actions[action] || action;
+}
+
+function formatAppointmentDetails(title, data, color = 'blue') {
+    const colorMap = {
+        'red': 'bg-red-50 border-red-500',
+        'green': 'bg-green-50 border-green-500',
+        'blue': 'bg-blue-50 border-blue-500',
+        'yellow': 'bg-yellow-50 border-yellow-500'
+    };
+
+    let html = `<div class="bg-${color}-50 rounded-lg p-4 border-l-4 border-${color}-500">`;
+    html += `<h4 class="font-semibold text-gray-900 mb-4">${title}</h4>`;
+    html += '<div class="space-y-3 text-sm">';
+
+    // Клієнт
+    if (data.client && (data.client.name || data.client.id)) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">👤 Клієнт</div>
+                <div class="font-semibold text-gray-900">${data.client.name || '—'}</div>
+                <div class="text-gray-600 text-xs">
+                    ${data.client.phone ? `📞 ${data.client.phone}` : ''}
+                    ${data.client.email ? `<div>✉️ ${data.client.email}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Майстер
+    if (data.master && (data.master.name || data.master.id)) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">🧑‍💼 Майстер</div>
+                <div class="font-semibold text-gray-900">${data.master.name || '—'}</div>
+                <div class="text-gray-600 text-xs">
+                    ${data.master.phone ? `📞 ${data.master.phone}` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Послуга
+    if (data.service && (data.service.name || data.service.id)) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">🛠️ Послуга</div>
+                <div class="font-semibold text-gray-900">${data.service.name || '—'}</div>
+                <div class="text-gray-600 text-xs">
+                    ${data.service.duration ? `⏱️ ${data.service.duration} хв` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Дата і час
+    if (data.appointment_date || data.appointment_time) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">📅 Дата та час</div>
+                <div class="font-semibold text-gray-900">
+                    ${data.appointment_date ? new Date(data.appointment_date).toLocaleDateString('uk-UA') : '—'}
+                    ${data.appointment_time ? `@ ${data.appointment_time}` : ''}
+                </div>
+            </div>
+        `;
+    }
+
+    // Тривалість
+    if (data.duration) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">⏱️ Тривалість</div>
+                <div class="font-semibold text-gray-900">${data.duration} хв</div>
+            </div>
+        `;
+    }
+
+    // Ціна
+    if (data.price) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">💰 Ціна</div>
+                <div class="font-bold text-green-600 text-lg">${parseFloat(data.price).toFixed(2)} грн</div>
+            </div>
+        `;
+    }
+
+    // Статус
+    if (data.status) {
+        const statusMap = {
+            'scheduled': '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Заплановано</span>',
+            'completed': '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Завершено</span>',
+            'cancelled': '<span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Скасовано</span>'
+        };
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">📊 Статус</div>
+                <div>${statusMap[data.status] || data.status}</div>
+            </div>
+        `;
+    }
+
+    // Підтвердження
+    if (data.is_confirmed !== undefined) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">✓ Підтверджено</div>
+                <div class="font-semibold text-gray-900">${data.is_confirmed ? '✓ Так' : '✗ Ні'}</div>
+            </div>
+        `;
+    }
+
+    // Примітки
+    if (data.notes) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">📝 Примітки</div>
+                <div class="text-gray-700 whitespace-pre-wrap">${data.notes}</div>
+            </div>
+        `;
+    }
+
+    html += '</div></div>';
+    return html;
 }
 
 function closeAuditModal() {
