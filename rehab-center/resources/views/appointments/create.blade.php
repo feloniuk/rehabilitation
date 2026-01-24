@@ -398,9 +398,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fetch available slots
         fetch(`/masters/${masterId}/available-slots/${selectedDate}/${serviceId}`)
             .then(response => response.json())
-            .then(slots => {
+            .then(data => {
                 timeSelect.innerHTML = '<option value="">Оберіть час</option>';
                 timeSelect.disabled = false;
+
+                // Handle blocked dates
+                if (data.blocked) {
+                    timeSelect.innerHTML = '<option value="">Немає доступних слотів</option>';
+                    slotsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
+                    slotsPreview.classList.remove('hidden');
+                    return;
+                }
+
+                // Handle regular slot response (array)
+                const slots = Array.isArray(data) ? data : (data.slots || []);
 
                 if (slots.length === 0) {
                     timeSelect.innerHTML = '<option value="">Немає доступних слотів</option>';
@@ -425,13 +436,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         slotsGrid.appendChild(slotBtn);
                     });
                 }
-                
+
                 slotsPreview.classList.remove('hidden');
             })
             .catch(error => {
                 console.error('Error:', error);
-                timeSelect.innerHTML = '<option value="">Помилка завантаження</option>';
+                timeSelect.innerHTML = '<option value="">Немає доступних слотів</option>';
+                slotsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
                 timeSelect.disabled = false;
+                slotsPreview.classList.remove('hidden');
             });
     }
 
