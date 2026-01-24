@@ -339,9 +339,10 @@
                     <i class="fas fa-comments text-purple-600"></i>
                 </div>
                 <h4 class="font-semibold text-gray-800 mb-2">Чат</h4>
-                <button class="text-purple-600 hover:text-purple-700 font-medium">
+                <a href="https://t.me/aleinikova_massage_for_famely" target="_blank" rel="noopener noreferrer"
+                   class="text-purple-600 hover:text-purple-700 font-medium">
                     Онлайн консультант
-                </button>
+                </a>
             </div>
         </div>
     </div>
