@@ -112,6 +112,34 @@
             @endif
         </div>
 
+        <!-- Blocked Periods -->
+        @if($master->activeBlockedPeriods->isNotEmpty())
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold mb-4">
+                    <i class="fas fa-calendar-times text-red-600 mr-2"></i>
+                    Заблоковані періоди
+                </h3>
+                <div class="space-y-3">
+                    @foreach($master->activeBlockedPeriods as $period)
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <div>
+                                    <span class="font-medium">{{ $period->getFormattedPeriod() }}</span>
+                                    @if($period->reason)
+                                        <span class="text-sm text-gray-600 ml-2">({{ $period->reason }})</span>
+                                    @endif
+                                </div>
+                                <span class="text-sm text-gray-500">{{ $period->getDurationInDays() }} днів</span>
+                            </div>
+                            @if($period->notes)
+                                <p class="text-sm text-gray-600 mt-2">{{ $period->notes }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         <!-- Recent Appointments -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold mb-4">Останні записи</h3>

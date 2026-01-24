@@ -67,6 +67,17 @@ class User extends Authenticatable
         return $this->hasMany(Appointment::class, 'master_id');
     }
 
+    public function blockedPeriods()
+    {
+        return $this->hasMany(MasterBlockedPeriod::class, 'master_id');
+    }
+
+    public function activeBlockedPeriods()
+    {
+        return $this->hasMany(MasterBlockedPeriod::class, 'master_id')
+            ->where('end_date', '>=', now()->toDateString());
+    }
+
     // Helper methods
     public function isAdmin()
     {
@@ -110,5 +121,21 @@ class User extends Authenticatable
             'start' => $this->work_schedule[$dayName]['start'] ?? '09:00',
             'end' => $this->work_schedule[$dayName]['end'] ?? '17:00',
         ];
+    }
+
+    public function isBlockedOn(\Carbon\Carbon $date): bool
+    {
+        return $this->blockedPeriods()
+            ->where('start_date', '<=', $date->toDateString())
+            ->where('end_date', '>=', $date->toDateString())
+            ->exists();
+    }
+
+    public function getBlockedPeriodOn(\Carbon\Carbon $date): ?MasterBlockedPeriod
+    {
+        return $this->blockedPeriods()
+            ->where('start_date', '<=', $date->toDateString())
+            ->where('end_date', '>=', $date->toDateString())
+            ->first();
     }
 }

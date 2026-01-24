@@ -115,6 +115,18 @@ class ManualAppointmentController extends Controller
             ])->withInput();
         }
 
+        // Перевірка чи дата не заблокована
+        $master = User::find($request->master_id);
+        $appointmentDate = Carbon::parse($request->appointment_date);
+        if ($master->isBlockedOn($appointmentDate)) {
+            $blockedPeriod = $master->getBlockedPeriodOn($appointmentDate);
+            $reason = $blockedPeriod->reason ?? 'Недоступний';
+
+            return back()->withErrors([
+                'appointment_date' => "Майстер недоступний в цей день ({$reason}). Виберіть іншу дату.",
+            ])->withInput();
+        }
+
         // Перевірка на конфлікт часу
         if (! $request->boolean('allow_overlap')) {
             $conflict = $this->checkTimeConflict(
@@ -330,6 +342,19 @@ class ManualAppointmentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Неможливо створити запис на минулий час',
+            ], 422);
+        }
+
+        // Перевірка чи дата не заблокована
+        $master = User::find($request->master_id);
+        $appointmentDate = Carbon::parse($request->appointment_date);
+        if ($master->isBlockedOn($appointmentDate)) {
+            $blockedPeriod = $master->getBlockedPeriodOn($appointmentDate);
+            $reason = $blockedPeriod->reason ?? 'Недоступний';
+
+            return response()->json([
+                'success' => false,
+                'message' => "Майстер недоступний в цей день ({$reason})",
             ], 422);
         }
 

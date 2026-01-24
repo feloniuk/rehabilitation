@@ -208,6 +208,90 @@
                 @endforeach
             </div>
 
+            <!-- Blocked Periods -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-calendar-times mr-2 text-red-600"></i>
+                        Заблоковані періоди (відпустки, вихідні)
+                    </h3>
+                    <button type="button" onclick="addBlockedPeriod()"
+                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm">
+                        <i class="fas fa-plus mr-1"></i> Додати період
+                    </button>
+                </div>
+
+                <p class="text-sm text-gray-600 mb-4">
+                    Вкажіть періоди коли майстер не приймає клієнтів (відпустка, лікарняний тощо)
+                </p>
+
+                <div id="blocked-periods-container">
+                    @foreach($master->blockedPeriods as $index => $period)
+                        <div class="border rounded-lg p-4 mb-3 blocked-period-item bg-gray-50">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Початок *
+                                        </label>
+                                        <input type="date"
+                                               name="blocked_periods[{{ $index }}][start_date]"
+                                               value="{{ $period->start_date->format('Y-m-d') }}"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                               required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Кінець *
+                                        </label>
+                                        <input type="date"
+                                               name="blocked_periods[{{ $index }}][end_date]"
+                                               value="{{ $period->end_date->format('Y-m-d') }}"
+                                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                               required>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                                            Причина
+                                        </label>
+                                        <select name="blocked_periods[{{ $index }}][reason]"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                            <option value="">Не вказано</option>
+                                            <option value="Відпустка" {{ $period->reason === 'Відпустка' ? 'selected' : '' }}>Відпустка</option>
+                                            <option value="Лікарняний" {{ $period->reason === 'Лікарняний' ? 'selected' : '' }}>Лікарняний</option>
+                                            <option value="Навчання" {{ $period->reason === 'Навчання' ? 'selected' : '' }}>Навчання</option>
+                                            <option value="Особисті справи" {{ $period->reason === 'Особисті справи' ? 'selected' : '' }}>Особисті справи</option>
+                                            <option value="Інше" {{ !in_array($period->reason, ['Відпустка', 'Лікарняний', 'Навчання', 'Особисті справи']) && $period->reason ? 'selected' : '' }}>Інше</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button type="button" onclick="removeBlockedPeriod(this)"
+                                        class="ml-3 text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Примітки
+                                </label>
+                                <textarea name="blocked_periods[{{ $index }}][notes]"
+                                          rows="2"
+                                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                          placeholder="Додаткова інформація...">{{ $period->notes }}</textarea>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                @if($master->blockedPeriods->isEmpty())
+                    <p class="text-sm text-gray-500 italic">Немає заблокованих періодів</p>
+                @endif
+            </div>
+
             <!-- Services and Prices -->
             <div class="mb-6">
                 <h3 class="text-lg font-semibold mb-4">Послуги та ціни</h3>
@@ -277,6 +361,8 @@
 @push('scripts')
 
 <script>
+let blockedPeriodIndex = {{ $master->blockedPeriods->count() }};
+
 function toggleService(serviceId) {
     const block = document.querySelector(`#service_fields_${serviceId}`);
     const checkbox = document.querySelector(`#service_${serviceId}`);
@@ -290,6 +376,74 @@ function toggleService(serviceId) {
         priceInput.required = false;
         // priceInput.value = '';
     }
+}
+
+function addBlockedPeriod() {
+    const container = document.getElementById('blocked-periods-container');
+    const template = `
+        <div class="border rounded-lg p-4 mb-3 blocked-period-item bg-gray-50">
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Початок *
+                        </label>
+                        <input type="date"
+                               name="blocked_periods[${blockedPeriodIndex}][start_date]"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Кінець *
+                        </label>
+                        <input type="date"
+                               name="blocked_periods[${blockedPeriodIndex}][end_date]"
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                               required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Причина
+                        </label>
+                        <select name="blocked_periods[${blockedPeriodIndex}][reason]"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Не вказано</option>
+                            <option value="Відпустка">Відпустка</option>
+                            <option value="Лікарняний">Лікарняний</option>
+                            <option value="Навчання">Навчання</option>
+                            <option value="Особисті справи">Особисті справи</option>
+                            <option value="Інше">Інше</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" onclick="removeBlockedPeriod(this)"
+                        class="ml-3 text-red-600 hover:text-red-800">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Примітки
+                </label>
+                <textarea name="blocked_periods[${blockedPeriodIndex}][notes]"
+                          rows="2"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                          placeholder="Додаткова інформація..."></textarea>
+            </div>
+        </div>
+    `;
+
+    container.insertAdjacentHTML('beforeend', template);
+    blockedPeriodIndex++;
+}
+
+function removeBlockedPeriod(button) {
+    button.closest('.blocked-period-item').remove();
 }
 </script>
 @endpush

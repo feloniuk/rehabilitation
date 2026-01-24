@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
+use App\Models\MasterBlockedPeriod;
 use App\Models\MasterService;
 use App\Models\Service;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -93,6 +96,20 @@ class MasterController extends Controller
     public function update(Request $request, $id)
     {
         $master = User::where('role', 'master')->findOrFail($id);
+
+        $request->validate([
+            'blocked_periods' => 'nullable|array',
+            'blocked_periods.*.start_date' => 'required_with:blocked_periods|date',
+            'blocked_periods.*.end_date' => 'required_with:blocked_periods|date|after_or_equal:blocked_periods.*.start_date',
+            'blocked_periods.*.reason' => 'nullable|string|max:255',
+            'blocked_periods.*.notes' => 'nullable|string',
+        ], [
+            'blocked_periods.*.start_date.required_with' => 'Вкажіть дату початку',
+            'blocked_periods.*.start_date.date' => 'Дата початку має невалідний формат',
+            'blocked_periods.*.end_date.required_with' => 'Вкажіть дату закінчення',
+            'blocked_periods.*.end_date.date' => 'Дата закінчення має невалідний формат',
+            'blocked_periods.*.end_date.after_or_equal' => 'Дата закінчення має бути більше або дорівнювати даті початку',
+        ]);
 
         // Собираем все чекбоксы услуг вручную
         $serviceCheckboxes = collect($request->all())
@@ -183,6 +200,43 @@ class MasterController extends Controller
             ]);
         }
 
+        // Обробка блокованих періодів
+        if ($request->has('blocked_periods')) {
+            $master->blockedPeriods()->delete();
+
+            foreach ($request->blocked_periods as $period) {
+                if (isset($period['start_date']) && isset($period['end_date'])) {
+                    $startDate = Carbon::parse($period['start_date']);
+                    $endDate = Carbon::parse($period['end_date']);
+
+                    // Перевірка кількості існуючих запланованих записів в діапазоні
+                    $affectedAppointments = Appointment::where('master_id', $master->id)
+                        ->whereBetween('appointment_date', [$startDate->toDateString(), $endDate->toDateString()])
+                        ->where('status', 'scheduled')
+                        ->count();
+
+                    if ($affectedAppointments > 0) {
+                        Log::warning("Blocked period {$startDate} to {$endDate} contains {$affectedAppointments} scheduled appointments for master {$master->name}");
+                    }
+
+                    MasterBlockedPeriod::create([
+                        'master_id' => $master->id,
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'reason' => $period['reason'] ?? null,
+                        'notes' => $period['notes'] ?? null,
+                    ]);
+                }
+            }
+
+            if ($affectedAppointments > 0) {
+                session()->flash('warning', "Увага: {$affectedAppointments} записів потрапляють в заблокований період. Вам потрібно вручну перенести або скасувати ці записи.");
+            }
+        } else {
+            // Видалення всіх блокованих періодів якщо вони не передані
+            $master->blockedPeriods()->delete();
+        }
+
         return redirect()->route('admin.masters.index')
             ->with('success', 'Дані майстра оновлено');
     }
@@ -210,7 +264,7 @@ class MasterController extends Controller
         $master = User::where('role', 'master')
             ->with(['masterServices.service', 'masterAppointments' => function ($query) {
                 $query->orderBy('appointment_date', 'desc')->limit(10);
-            }, 'masterAppointments.client'])
+            }, 'masterAppointments.client', 'activeBlockedPeriods'])
             ->findOrFail($id);
 
         return view('admin.masters.show', compact('master'));
@@ -219,7 +273,7 @@ class MasterController extends Controller
     public function edit($id)
     {
         $master = User::where('role', 'master')
-            ->with('masterServices')
+            ->with('masterServices', 'blockedPeriods')
             ->findOrFail($id);
 
         $services = Service::where('is_active', true)->get();

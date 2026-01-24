@@ -22,6 +22,16 @@ class MasterController extends Controller
     {
         $master = User::where('role', 'master')->findOrFail($id);
         $requestDate = Carbon::parse($date);
+
+        // Перевіряємо чи дата не заблокована
+        if ($master->isBlockedOn($requestDate)) {
+            return response()->json([
+                'slots' => [],
+                'blocked' => true,
+                'message' => 'Майстер недоступний в цей день',
+            ]);
+        }
+
         $dayName = strtolower($requestDate->format('l'));
 
         if (! $master->isWorkingOnDay($dayName)) {
@@ -124,6 +134,19 @@ class MasterController extends Controller
         }
 
         $requestDate = Carbon::parse($date);
+
+        // Перевіряємо чи дата не заблокована
+        if ($master->isBlockedOn($requestDate)) {
+            return response()->json([
+                'success' => true,
+                'is_working_day' => false,
+                'blocked' => true,
+                'message' => 'Майстер недоступний в цей день',
+                'working_hours' => null,
+                'first_available_slot' => null,
+            ]);
+        }
+
         $dayName = strtolower($requestDate->format('l'));
 
         // Отримуємо робочий час мастра
