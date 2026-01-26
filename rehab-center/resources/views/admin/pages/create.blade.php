@@ -33,11 +33,9 @@
             </div>
 
             <div class="mb-6">
-                <label for="content" class="block text-sm font-medium text-gray-700 mb-2">Зміст *</label>
-                <textarea id="content" name="content" rows="15" required 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Введіть HTML-контент сторінки...">{{ old('content') }}</textarea>
-                <p class="text-sm text-gray-500 mt-1">Можна використовувати HTML-теги</p>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Зміст *</label>
+                <div id="editor" class="bg-white border border-gray-300 rounded-md" style="height: 400px;">{!! old('content', '') !!}</div>
+                <textarea id="content" name="content" required style="display:none;"></textarea>
                 @error('content')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
@@ -48,7 +46,7 @@
                    class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
                     Скасувати
                 </a>
-                <button type="submit" 
+                <button type="submit" onclick="savePage()"
                         class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
                     Створити сторінку
                 </button>
@@ -57,19 +55,47 @@
     </div>
 </div>
 
+@push('styles')
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+@endpush
+
 @push('scripts')
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 <script>
+// Initialize Quill editor
+const quill = new Quill('#editor', {
+    theme: 'snow',
+    placeholder: 'Введіть HTML-контент сторінки...',
+    modules: {
+        toolbar: [
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote', 'code-block'],
+            [{ 'header': 1 }, { 'header': 2 }],
+            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+            ['link', 'image'],
+            ['clean']
+        ]
+    }
+});
+
+
 // Auto-generate slug from title
 document.getElementById('title').addEventListener('input', function() {
     const title = this.value;
     const slug = title.toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-') // Replace spaces with hyphens
-        .replace(/-+/g, '-') // Replace multiple hyphens with single
-        .trim('-'); // Remove leading/trailing hyphens
-    
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim('-');
+
     document.getElementById('slug').value = slug;
 });
+
+// Fill content field before submit
+function savePage() {
+    const editorContent = quill.root.innerHTML;
+    document.getElementById('content').value = editorContent;
+}
 </script>
 @endpush
 @endsection

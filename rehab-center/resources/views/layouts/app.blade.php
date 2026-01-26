@@ -291,8 +291,8 @@
                         © {{ date('Y') }} {{ \App\Models\Setting::get('center_name') }}. Всі права захищені.
                     </p>
                     <div class="flex space-x-6 mt-4 md:mt-0">
-                        <a href="#" class="text-gray-400 hover:text-pink-400 text-sm transition-colors">Політика конфіденційності</a>
-                        <a href="#" class="text-gray-400 hover:text-pink-400 text-sm transition-colors">Умови використання</a>
+                        <a href="{{ route('pages.show', 'privacy-policy') }}" class="text-gray-400 hover:text-pink-400 text-sm transition-colors">Політика конфіденційності</a>
+                        <a href="{{ route('pages.show', 'terms-of-use') }}" class="text-gray-400 hover:text-pink-400 text-sm transition-colors">Умови використання</a>
                     </div>
                 </div>
             </div>
@@ -367,5 +367,7 @@
     </script>
 
     @stack('scripts')
+
+    @include('components.cookie-notice')
 </body>
 </html>
