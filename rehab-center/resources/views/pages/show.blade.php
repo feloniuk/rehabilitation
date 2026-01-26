@@ -48,7 +48,9 @@
                             <div>
                                 <h3 class="font-semibold text-gray-800 mb-1">Адреса</h3>
                                 <p class="text-gray-600">{{ \App\Models\Setting::get('center_address') }}</p>
-                                <a href="#" class="text-pink-600 hover:text-pink-700 text-sm mt-2 inline-flex items-center">
+                                <a href="https://www.google.com/maps/dir//46.469363,30.747363/@46.469363,30.747363,16z/data=!4m6!1m5!3m4!2zNDbCsDI4JzA5LjciTiAzMMKwNDQnNTAuNSJF!8m2!3d46.469363!4d30.747363?hl=en-US&entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D" 
+                                target="_blank"
+                                class="text-pink-600 hover:text-pink-700 text-sm mt-2 inline-flex items-center">
                                     <i class="fas fa-directions mr-1"></i>
                                     Побудувати маршрут
                                 </a>
