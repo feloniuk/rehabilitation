@@ -237,6 +237,23 @@ function showAuditDetails(data, element) {
     modal.classList.add('flex');
 
     const { log, user } = data;
+
+    // Parse JSON values if they are strings
+    if (typeof log.old_values === 'string') {
+        try {
+            log.old_values = JSON.parse(log.old_values);
+        } catch (e) {
+            log.old_values = {};
+        }
+    }
+    if (typeof log.new_values === 'string') {
+        try {
+            log.new_values = JSON.parse(log.new_values);
+        } catch (e) {
+            log.new_values = {};
+        }
+    }
+
     let html = '<div class="space-y-4">';
 
     // Заголовок з дією
@@ -426,6 +443,18 @@ function formatAppointmentDetails(title, data, color = 'blue') {
             <div class="bg-white rounded p-3">
                 <div class="text-xs text-gray-500 uppercase font-semibold mb-1">📝 Примітки</div>
                 <div class="text-gray-700 whitespace-pre-wrap">${data.notes}</div>
+            </div>
+        `;
+    }
+
+    // Telegram сповіщення
+    if (data.telegram_notification_sent !== undefined) {
+        html += `
+            <div class="bg-white rounded p-3">
+                <div class="text-xs text-gray-500 uppercase font-semibold mb-1">💬 Telegram сповіщення</div>
+                <div class="font-semibold text-gray-900">
+                    ${data.telegram_notification_sent ? '✓ Відправлено' : '✗ Не відправлено'}
+                </div>
             </div>
         `;
     }
