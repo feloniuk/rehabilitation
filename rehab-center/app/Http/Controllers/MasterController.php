@@ -75,6 +75,7 @@ class MasterController extends Controller
     private function generateAvailableSlots($startTime, $endTime, $duration, $existingAppointments, $minTime = null)
     {
         $slots = [];
+        $slotInterval = config('appointments.slot_interval');
 
         // ИСПРАВЛЕНИЕ: явно создаем Carbon объекты и используем integer для duration
         $current = Carbon::createFromFormat('H:i', $startTime);
@@ -92,7 +93,7 @@ class MasterController extends Controller
 
             // Пропускаем слоты, которые уже прошли (для сегодняшней даты)
             if ($minTimeCarbon && $slotStart->lte($minTimeCarbon)) {
-                $current->addMinutes(30);
+                $current->addMinutes($slotInterval);
 
                 continue;
             }
@@ -112,8 +113,8 @@ class MasterController extends Controller
                 $slots[] = $slotStart->format('H:i');
             }
 
-            // Используем фиксированный шаг 30 минут для генерации слотов
-            $current->addMinutes(30);
+            // Используем конфигурируемый интервал для генерации слотов
+            $current->addMinutes($slotInterval);
         }
 
         return $slots;
