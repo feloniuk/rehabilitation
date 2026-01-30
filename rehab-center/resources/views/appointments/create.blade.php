@@ -361,6 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const masterId = {{ $master->id }};
     const serviceId = {{ $service->id }};
     const distantDateWarning = document.getElementById('distant-date-warning');
+    const telegramLink = "{{ \App\Models\Setting::get('telegram_chat_link', 'https://t.me/aleinikova_massage_for_famely') }}";
 
     // Функция проверки дистанции даты (3+ недели)
     function checkDistantDate(selectedDate) {
@@ -387,6 +388,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Функция для отображения сообщения об отсутствии доступных слотов
+    function getNoSlotsMessage() {
+        return `
+            <div class="col-span-full text-center py-4">
+                <p class="text-gray-500 mb-3">На цю дату всі часи зайняті</p>
+                <p class="text-sm text-gray-600">Можлива індивідуальна запис. За деталями напишіть нам:</p>
+                <a href="${telegramLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors text-sm font-medium">
+                    <i class="fab fa-telegram mr-2"></i>
+                    Написати в Telegram
+                </a>
+            </div>
+        `;
+    }
+
     // Функция загрузки доступных слотов
     function loadAvailableSlots(selectedDate) {
         if (!selectedDate) return;
@@ -406,7 +421,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Handle blocked dates
                 if (data.blocked) {
                     timeSelect.innerHTML = '<option value="">Немає доступних слотів</option>';
-                    slotsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
+                    slotsGrid.innerHTML = getNoSlotsMessage();
                     slotsPreview.classList.remove('hidden');
                     return;
                 }
@@ -416,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (slots.length === 0) {
                     timeSelect.innerHTML = '<option value="">Немає доступних слотів</option>';
-                    slotsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
+                    slotsGrid.innerHTML = getNoSlotsMessage();
                 } else {
                     // Populate time select
                     slots.forEach(slot => {
@@ -443,7 +458,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 timeSelect.innerHTML = '<option value="">Немає доступних слотів</option>';
-                slotsGrid.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
+                slotsGrid.innerHTML = getNoSlotsMessage();
                 timeSelect.disabled = false;
                 slotsPreview.classList.remove('hidden');
             });
