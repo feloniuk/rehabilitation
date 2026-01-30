@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="col-span-full text-center py-4">
                 <p class="text-gray-500 mb-3">На цю дату всі часи зайняті</p>
                 <p class="text-sm text-gray-600">Можлива індивідуальна запис. За деталями напишіть нам:</p>
-                <a href="${telegramLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors text-sm font-medium">
+                <a href="${telegramLink}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center mt-2 px-4 py-2 bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 text-white rounded-lg transition-all duration-200 text-sm font-medium">
                     <i class="fab fa-telegram mr-2"></i>
                     Написати в Telegram
                 </a>
