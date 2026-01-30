@@ -92,7 +92,7 @@ class MasterController extends Controller
 
             // Пропускаем слоты, которые уже прошли (для сегодняшней даты)
             if ($minTimeCarbon && $slotStart->lte($minTimeCarbon)) {
-                $current->addMinutes($durationInt);
+                $current->addMinutes(30);
 
                 continue;
             }
@@ -112,8 +112,8 @@ class MasterController extends Controller
                 $slots[] = $slotStart->format('H:i');
             }
 
-            // ИСПРАВЛЕНИЕ: используем integer
-            $current->addMinutes($durationInt);
+            // Используем фиксированный шаг 30 минут для генерации слотов
+            $current->addMinutes(30);
         }
 
         return $slots;

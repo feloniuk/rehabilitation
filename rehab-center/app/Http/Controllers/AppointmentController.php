@@ -26,32 +26,24 @@ class AppointmentController extends Controller
         return view('appointments.create', compact('master', 'service', 'masterService'));
     }
 
-    public function store(Request $request, MasterTelegramBotNotificationService $masterTelegramBotService)
+    public function store(\App\Http\Requests\StoreAppointmentRequest $request, MasterTelegramBotNotificationService $masterTelegramBotService)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email',
-            'phone' => 'required|string|max:20',
-            'master_id' => 'required|exists:users,id',
-            'service_id' => 'required|exists:services,id',
-            'appointment_date' => 'required|date|after_or_equal:today',
-            'appointment_time' => 'required',
-        ]);
+        $validated = $request->validated();
 
         // Нормалізуємо телефон та шукаємо/створюємо клієнта
-        $normalizedPhone = PhoneHelper::normalize($request->phone);
+        $normalizedPhone = PhoneHelper::normalize($validated['phone']);
 
         $client = User::firstOrCreate(
             ['phone' => $normalizedPhone],
             [
-                'name' => $request->name,
+                'name' => $validated['name'],
                 'role' => 'client',
                 'password' => bcrypt(str()->random(12)),
             ]
         );
 
-        $masterService = MasterService::where('master_id', $request->master_id)
-            ->where('service_id', $request->service_id)
+        $masterService = MasterService::where('master_id', $validated['master_id'])
+            ->where('service_id', $validated['service_id'])
             ->firstOrFail();
 
         // ИСПРАВЛЕНИЕ: явно приводим к integer
@@ -60,13 +52,13 @@ class AppointmentController extends Controller
 
         $appointment = Appointment::create([
             'client_id' => $client->id,
-            'master_id' => $request->master_id,
-            'service_id' => $request->service_id,
-            'appointment_date' => $request->appointment_date,
-            'appointment_time' => $request->appointment_time,
+            'master_id' => $validated['master_id'],
+            'service_id' => $validated['service_id'],
+            'appointment_date' => $validated['appointment_date'],
+            'appointment_time' => $validated['appointment_time'],
             'duration' => $duration,
             'price' => $price,
-            'notes' => $request->notes,
+            'notes' => $request->input('notes'),
         ]);
 
         $masterTelegramBotService->sendMasterNotification($appointment);
