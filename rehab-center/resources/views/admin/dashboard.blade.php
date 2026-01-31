@@ -530,6 +530,29 @@
                 <div id="rescheduleSlotsContainer" class="text-sm text-gray-500 text-center py-4">
                     Оберіть дату для перегляду доступних слотів
                 </div>
+
+                <!-- Чекбокс кастомного часу -->
+                <div id="rescheduleCustomTimeCheckboxContainer" class="hidden mt-3">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox"
+                               id="rescheduleCustomTimeCheckbox"
+                               onchange="toggleRescheduleCustomTime()"
+                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                        <span class="ml-2 text-sm text-gray-600">
+                            <i class="fas fa-edit text-blue-500 mr-1"></i>
+                            Кастомний час
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Кастомний час інпути -->
+                <div id="rescheduleCustomTimeInputs" class="hidden mt-3">
+                    <div class="flex gap-1 items-center">
+                        <input type="number" id="rescheduleHour" min="0" max="23" placeholder="09" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center">
+                        <span class="text-lg font-bold text-gray-400">:</span>
+                        <input type="number" id="rescheduleMinute" min="0" max="59" placeholder="00" class="w-full px-2 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center">
+                    </div>
+                </div>
             </div>
         </div>
         <div class="p-4 border-t flex gap-2">
@@ -2098,6 +2121,11 @@ function cancelAppointment() {
         }
     })
     .then(response => {
+        if (response.status === 422) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Неможливо скасувати цю запис');
+            });
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
     })
@@ -2106,18 +2134,12 @@ function cancelAppointment() {
         closeCancelModal();
         closeModal();
 
-        // Знаходимо та видаляємо блок запису з календаря
-        const appointmentBlock = document.querySelector('[data-appointment-id="' + currentAppointmentId + '"]');
-        if (appointmentBlock) {
-            appointmentBlock.remove();
-        }
-
-        // Перезагружуємо шкалу часу якщо потрібно
+        // Перезагружуємо шкалу часу щоб видалити запис
         reloadTimeline(currentDayIndex);
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Помилка при скасуванні запису', 'error');
+        showNotification(error.message || 'Помилка при скасуванні запису', 'error');
     });
 }
 
@@ -2159,6 +2181,7 @@ function openRescheduleModal() {
         '<div class="text-sm text-gray-500 text-center py-4">Оберіть дату для перегляду доступних слотів</div>';
     document.getElementById('confirmRescheduleBtn').disabled = true;
     selectedRescheduleSlot = null;
+    resetRescheduleCustomTime();
 
     // Встановлюємо мінімальну дату (завтра)
     const tomorrow = new Date();
@@ -2194,21 +2217,30 @@ function loadRescheduleSlots() {
         .then(data => {
             const slots = Array.isArray(data) ? data : (data.slots || []);
 
+            // Показуємо checkbox для кастомного часу
+            document.getElementById('rescheduleCustomTimeCheckboxContainer').classList.remove('hidden');
+
             if (slots.length === 0) {
-                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті. Можна обрати кастомний час.</p>';
                 return;
             }
 
             // Показуємо слоти
             container.innerHTML = '';
+            const slotGrid = document.createElement('div');
+            slotGrid.className = 'grid grid-cols-3 gap-2';
             slots.forEach(slot => {
                 const slotBtn = document.createElement('button');
                 slotBtn.type = 'button';
                 slotBtn.className = 'px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors hover:border-blue-500 hover:bg-blue-50';
                 slotBtn.textContent = slot;
-                slotBtn.onclick = () => selectRescheduleSlot(slot, slotBtn);
-                container.appendChild(slotBtn);
+                slotBtn.onclick = (e) => {
+                    e.preventDefault();
+                    selectRescheduleSlot(slot, slotBtn);
+                };
+                slotGrid.appendChild(slotBtn);
             });
+            container.appendChild(slotGrid);
         })
         .catch(error => {
             console.error('Error:', error);
@@ -2229,15 +2261,66 @@ function selectRescheduleSlot(slot, element) {
 
     selectedRescheduleSlot = slot;
     document.getElementById('confirmRescheduleBtn').disabled = false;
+
+    // Скидаємо кастомний час
+    resetRescheduleCustomTime();
+}
+
+function toggleRescheduleCustomTime() {
+    const checkbox = document.getElementById('rescheduleCustomTimeCheckbox');
+    const customInputs = document.getElementById('rescheduleCustomTimeInputs');
+
+    if (checkbox.checked) {
+        customInputs.classList.remove('hidden');
+        selectedRescheduleSlot = null; // Очищуємо вибір слота
+    } else {
+        customInputs.classList.add('hidden');
+        document.getElementById('rescheduleHour').value = '';
+        document.getElementById('rescheduleMinute').value = '';
+    }
+}
+
+function resetRescheduleCustomTime() {
+    const checkbox = document.getElementById('rescheduleCustomTimeCheckbox');
+    checkbox.checked = false;
+    document.getElementById('rescheduleCustomTimeInputs').classList.add('hidden');
+    document.getElementById('rescheduleHour').value = '';
+    document.getElementById('rescheduleMinute').value = '';
 }
 
 function rescheduleAppointment() {
-    if (!currentAppointmentId || !selectedRescheduleSlot) {
-        showNotification('Помилка: вибір часу не знайдено', 'error');
+    const newDate = document.getElementById('rescheduleDate').value;
+    let appointmentTime = selectedRescheduleSlot;
+
+    // Проверяємо кастомний час
+    const customCheckbox = document.getElementById('rescheduleCustomTimeCheckbox');
+    if (customCheckbox.checked) {
+        const hour = document.getElementById('rescheduleHour').value;
+        const minute = document.getElementById('rescheduleMinute').value;
+
+        if (!hour || !minute) {
+            showNotification('Помилка: вкажіть час', 'error');
+            return;
+        }
+
+        const hourNum = parseInt(hour);
+        const minuteNum = parseInt(minute);
+
+        if (hourNum < 0 || hourNum > 23 || minuteNum < 0 || minuteNum > 59) {
+            showNotification('Помилка: невірний час', 'error');
+            return;
+        }
+
+        appointmentTime = String(hourNum).padStart(2, '0') + ':' + String(minuteNum).padStart(2, '0');
+    } else if (!appointmentTime) {
+        showNotification('Помилка: оберіть час або включіть кастомний час', 'error');
         return;
     }
 
-    const newDate = document.getElementById('rescheduleDate').value;
+    if (!currentAppointmentId || !newDate) {
+        showNotification('Помилка: дата не вибрана', 'error');
+        return;
+    }
 
     fetch('/admin/appointments/' + currentAppointmentId + '/reschedule', {
         method: 'PATCH',
@@ -2247,10 +2330,15 @@ function rescheduleAppointment() {
         },
         body: JSON.stringify({
             appointment_date: newDate,
-            appointment_time: selectedRescheduleSlot
+            appointment_time: appointmentTime
         })
     })
     .then(response => {
+        if (response.status === 422) {
+            return response.json().then(data => {
+                throw new Error(data.message || 'Помилка валідації');
+            });
+        }
         if (!response.ok) throw new Error('HTTP ' + response.status);
         return response.json();
     })
@@ -2259,22 +2347,12 @@ function rescheduleAppointment() {
         closeRescheduleModal();
         closeModal();
 
-        // Оновлюємо дані запису
-        currentAppointmentData.appointment_date = newDate;
-        currentAppointmentData.appointment_time = selectedRescheduleSlot;
-
-        // Видаляємо старий блок запису з календаря
-        const appointmentBlock = document.querySelector('[data-appointment-id="' + currentAppointmentId + '"]');
-        if (appointmentBlock) {
-            appointmentBlock.remove();
-        }
-
-        // Перезагружуємо шкалу часу
+        // Перезагружуємо шкалу часу щоб оновити календар
         reloadTimeline(currentDayIndex);
     })
     .catch(error => {
         console.error('Error:', error);
-        showNotification('Помилка при перенесенні запису', 'error');
+        showNotification(error.message || 'Помилка при перенесенні запису', 'error');
     });
 }
 
