@@ -2347,8 +2347,28 @@ function rescheduleAppointment() {
         closeRescheduleModal();
         closeModal();
 
+        // Знаходимо та видаляємо блок запису з календаря поточного дня
+        const appointmentBlock = document.querySelector('[data-appointment-id="' + currentAppointmentId + '"]');
+        if (appointmentBlock) {
+            appointmentBlock.remove();
+        }
+
         // Перезагружуємо шкалу часу щоб оновити календар
         reloadTimeline(currentDayIndex);
+
+        // Якщо дата змінилась на інший день видимої тижня - перезагружуємо новий день теж
+        const rescheduledDate = new Date(newDate + 'T00:00:00');
+        const currentDate = new Date(calendarData.weekDates[currentDayIndex]);
+        if (rescheduledDate.getTime() !== currentDate.getTime()) {
+            // Знайдемо індекс нового дня в видимій тижні
+            for (let i = 0; i < calendarData.weekDates.length; i++) {
+                const weekDate = new Date(calendarData.weekDates[i]);
+                if (rescheduledDate.getTime() === weekDate.getTime()) {
+                    reloadTimeline(i);
+                    break;
+                }
+            }
+        }
     })
     .catch(error => {
         console.error('Error:', error);
