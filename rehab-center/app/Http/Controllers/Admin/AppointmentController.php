@@ -119,6 +119,15 @@ class AppointmentController extends Controller
             'telegram_notification_sent' => $appointment->telegram_notification_sent,
             'is_confirmed' => $appointment->is_confirmed,
             'created_at' => $appointment->created_at->format('d.m.Y H:i'),
+            // Плоські поля для зручності JavaScript функцій
+            'client_id' => $appointment->client->id,
+            'client_name' => $appointment->client->name,
+            'client_phone' => $appointment->client->phone,
+            'master_id' => $appointment->master->id,
+            'master_name' => $appointment->master->name,
+            'service_id' => $appointment->service->id,
+            'service_name' => $appointment->service->name,
+            'appointment_date_raw' => $appointment->appointment_date->format('Y-m-d'),
         ]);
     }
 

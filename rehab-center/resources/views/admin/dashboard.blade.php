@@ -2179,7 +2179,7 @@ function closeRescheduleModal() {
 function loadRescheduleSlots() {
     const date = document.getElementById('rescheduleDate').value;
 
-    if (!date) {
+    if (!date || !currentAppointmentData) {
         return;
     }
 
