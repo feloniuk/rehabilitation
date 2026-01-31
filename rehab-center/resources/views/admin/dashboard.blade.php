@@ -218,11 +218,23 @@
         <div class="flex justify-between items-center p-4 border-b">
             <div class="flex items-center gap-2">
                 <h3 class="font-semibold">Деталі запису</h3>
+                <button id="rescheduleAppointmentBtn"
+                        onclick="openRescheduleModal()"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-blue-100 text-blue-600 transition-colors"
+                        title="Перенести запис">
+                    <i class="fas fa-arrow-right text-sm"></i>
+                </button>
                 <button id="repeatAppointmentBtn"
                         onclick="openRepeatAppointmentModal()"
                         class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-purple-100 text-purple-600 transition-colors"
                         title="Повторний запис">
                     <i class="fas fa-redo-alt text-sm"></i>
+                </button>
+                <button id="cancelAppointmentBtn"
+                        onclick="openCancelConfirmation()"
+                        class="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-100 text-red-600 transition-colors"
+                        title="Скасувати запис">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
             <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
@@ -456,6 +468,75 @@
                 <span>Створити запис</span>
             </button>
             <button onclick="closeQuickAppointmentModal()" class="bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600">
+                Скасувати
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка скасування запису -->
+<div id="cancelAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[70] p-4">
+    <div class="bg-white rounded-lg max-w-sm w-full">
+        <div class="flex justify-between items-center p-4 border-b">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+                <h3 class="font-semibold">Скасувати запис?</h3>
+            </div>
+            <button onclick="closeCancelModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4">
+            <p class="text-gray-700 mb-2">Ви впевнені, що хочете скасувати цю запис?</p>
+            <p id="cancelAppointmentInfo" class="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg mb-4"></p>
+        </div>
+        <div class="p-4 border-t flex gap-2">
+            <button onclick="cancelAppointment()" class="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium">
+                <i class="fas fa-check mr-2"></i>Скасувати
+            </button>
+            <button onclick="closeCancelModal()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors font-medium">
+                Ні, залишити
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка переносу запису -->
+<div id="rescheduleAppointmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[70] p-4">
+    <div class="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-arrow-right text-blue-600"></i>
+                <h3 class="font-semibold">Перенести запис</h3>
+            </div>
+            <button onclick="closeRescheduleModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-4 space-y-4">
+            <!-- Інформація про запис -->
+            <div id="rescheduleAppointmentInfo" class="space-y-2 text-sm bg-blue-50 p-3 rounded-lg border border-blue-200"></div>
+
+            <!-- Дата та час -->
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <i class="fas fa-calendar text-blue-500 mr-1"></i>Нова дата *
+                    </label>
+                    <input type="date" id="rescheduleDate" onchange="loadRescheduleSlots()" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Доступні слоти -->
+                <div id="rescheduleSlotsContainer" class="text-sm text-gray-500 text-center py-4">
+                    Оберіть дату для перегляду доступних слотів
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t flex gap-2">
+            <button id="confirmRescheduleBtn" onclick="rescheduleAppointment()" disabled class="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fas fa-check mr-2"></i>Перенести
+            </button>
+            <button onclick="closeRescheduleModal()" class="flex-1 bg-gray-500 text-white py-2 px-4 rounded-lg hover:bg-gray-600 transition-colors font-medium">
                 Скасувати
             </button>
         </div>
@@ -1967,6 +2048,230 @@ function addNewAppointmentToCalendar(appointment) {
     if (currentDayIndex === dateIndex) {
         reloadTimeline(dateIndex);
     }
+}
+
+// ============================================
+// Скасування записи - функції
+// ============================================
+
+function openCancelConfirmation() {
+    if (!currentAppointmentId) {
+        showNotification('Помилка: ID запису не знайдено', 'error');
+        return;
+    }
+
+    const modal = document.getElementById('cancelAppointmentModal');
+    const infoDiv = document.getElementById('cancelAppointmentInfo');
+
+    // Показуємо інформацію про запис
+    infoDiv.innerHTML = `
+        <div><strong>${currentAppointmentData.client_name}</strong></div>
+        <div class="text-xs text-gray-600">${currentAppointmentData.appointment_date} о ${currentAppointmentData.appointment_time}</div>
+        <div class="text-xs text-gray-600">${currentAppointmentData.service_name}</div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeCancelModal() {
+    const modal = document.getElementById('cancelAppointmentModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function cancelAppointment() {
+    if (!currentAppointmentId) {
+        showNotification('Помилка: ID запису не знайдено', 'error');
+        return;
+    }
+
+    fetch('/admin/appointments/' + currentAppointmentId + '/cancel', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Запис успішно скасовано', 'success');
+        closeCancelModal();
+        closeModal();
+
+        // Знаходимо та видаляємо блок запису з календаря
+        const appointmentBlock = document.querySelector('[data-appointment-id="' + currentAppointmentId + '"]');
+        if (appointmentBlock) {
+            appointmentBlock.remove();
+        }
+
+        // Перезагружуємо шкалу часу якщо потрібно
+        reloadTimeline(currentDayIndex);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Помилка при скасуванні запису', 'error');
+    });
+}
+
+// ============================================
+// Перенесення запису - функції
+// ============================================
+
+var currentRescheduleAppointmentData = null;
+var selectedRescheduleSlot = null;
+
+function openRescheduleModal() {
+    if (!currentAppointmentId) {
+        showNotification('Помилка: ID запису не знайдено', 'error');
+        return;
+    }
+
+    const modal = document.getElementById('rescheduleAppointmentModal');
+    const infoDiv = document.getElementById('rescheduleAppointmentInfo');
+
+    // Показуємо інформацію про запис
+    infoDiv.innerHTML = `
+        <div class="flex items-center gap-2">
+            <i class="fas fa-user text-gray-400 text-sm"></i>
+            <span class="font-medium">${currentAppointmentData.client_name}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <i class="fas fa-user-md text-gray-400 text-sm"></i>
+            <span class="text-sm text-gray-600">${currentAppointmentData.master_name}</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <i class="fas fa-concierge-bell text-gray-400 text-sm"></i>
+            <span class="text-sm text-gray-600">${currentAppointmentData.service_name}</span>
+        </div>
+    `;
+
+    // Скидаємо форму
+    document.getElementById('rescheduleDate').value = '';
+    document.getElementById('rescheduleSlotsContainer').innerHTML =
+        '<div class="text-sm text-gray-500 text-center py-4">Оберіть дату для перегляду доступних слотів</div>';
+    document.getElementById('confirmRescheduleBtn').disabled = true;
+    selectedRescheduleSlot = null;
+
+    // Встановлюємо мінімальну дату (завтра)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('rescheduleDate').min = tomorrow.toISOString().split('T')[0];
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeRescheduleModal() {
+    const modal = document.getElementById('rescheduleAppointmentModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    selectedRescheduleSlot = null;
+}
+
+function loadRescheduleSlots() {
+    const date = document.getElementById('rescheduleDate').value;
+
+    if (!date) {
+        return;
+    }
+
+    const container = document.getElementById('rescheduleSlotsContainer');
+    container.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-xl text-gray-400"></i></div>';
+    document.getElementById('confirmRescheduleBtn').disabled = true;
+    selectedRescheduleSlot = null;
+
+    // Завантажуємо доступні слоти
+    fetch('/masters/' + currentAppointmentData.master_id + '/available-slots/' + date + '/' + currentAppointmentData.service_id)
+        .then(response => response.json())
+        .then(data => {
+            const slots = Array.isArray(data) ? data : (data.slots || []);
+
+            if (slots.length === 0) {
+                container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-4">На цю дату всі часи зайняті</p>';
+                return;
+            }
+
+            // Показуємо слоти
+            container.innerHTML = '';
+            slots.forEach(slot => {
+                const slotBtn = document.createElement('button');
+                slotBtn.type = 'button';
+                slotBtn.className = 'px-3 py-2 text-sm border border-gray-300 rounded-lg transition-colors hover:border-blue-500 hover:bg-blue-50';
+                slotBtn.textContent = slot;
+                slotBtn.onclick = () => selectRescheduleSlot(slot, slotBtn);
+                container.appendChild(slotBtn);
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = '<p class="col-span-full text-center text-red-500 py-4">Помилка завантаження слотів</p>';
+        });
+}
+
+function selectRescheduleSlot(slot, element) {
+    // Видаляємо селекцію з попереднього елемента
+    document.querySelectorAll('#rescheduleSlotsContainer button').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-gray-300');
+    });
+
+    // Додаємо селекцію до нового
+    element.classList.remove('border-gray-300');
+    element.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+
+    selectedRescheduleSlot = slot;
+    document.getElementById('confirmRescheduleBtn').disabled = false;
+}
+
+function rescheduleAppointment() {
+    if (!currentAppointmentId || !selectedRescheduleSlot) {
+        showNotification('Помилка: вибір часу не знайдено', 'error');
+        return;
+    }
+
+    const newDate = document.getElementById('rescheduleDate').value;
+
+    fetch('/admin/appointments/' + currentAppointmentId + '/reschedule', {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            appointment_date: newDate,
+            appointment_time: selectedRescheduleSlot
+        })
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.json();
+    })
+    .then(data => {
+        showNotification('Запис успішно перенесено', 'success');
+        closeRescheduleModal();
+        closeModal();
+
+        // Оновлюємо дані запису
+        currentAppointmentData.appointment_date = newDate;
+        currentAppointmentData.appointment_time = selectedRescheduleSlot;
+
+        // Видаляємо старий блок запису з календаря
+        const appointmentBlock = document.querySelector('[data-appointment-id="' + currentAppointmentId + '"]');
+        if (appointmentBlock) {
+            appointmentBlock.remove();
+        }
+
+        // Перезагружуємо шкалу часу
+        reloadTimeline(currentDayIndex);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Помилка при перенесенні запису', 'error');
+    });
 }
 
 // ============================================

@@ -436,4 +436,104 @@ class AppointmentController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Скасувати запис
+     */
+    public function cancel($id)
+    {
+        $user = auth()->user();
+
+        $query = Appointment::with(['client', 'master', 'service']);
+
+        // Майстер може скасовувати тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+
+        $appointment = $query->findOrFail($id);
+
+        // Перевіряємо чи можна скасувати
+        if (! $appointment->canBeCancelled()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Неможливо скасувати запис менше ніж за 24 години до прийому',
+            ], 422);
+        }
+
+        // Скасовуємо запис
+        $appointment->update(['status' => 'cancelled']);
+
+        // Відправляємо сповіщення про скасування
+        app(MasterTelegramBotNotificationService::class)->sendCancellationNotification($appointment);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Запис успішно скасовано',
+        ]);
+    }
+
+    /**
+     * Перенести запис на новий час
+     */
+    public function reschedule($id, Request $request)
+    {
+        $user = auth()->user();
+
+        $query = Appointment::with(['client', 'master', 'service']);
+
+        // Майстер може переносити тільки свої записи
+        if ($user->isMaster()) {
+            $query->where('master_id', $user->id);
+        }
+
+        $appointment = $query->findOrFail($id);
+
+        // Валідація
+        $validated = $request->validate([
+            'appointment_date' => 'required|date|after_or_equal:today',
+            'appointment_time' => 'required|string',
+        ]);
+
+        // Перевіряємо чи є конфлік з іншими записами
+        $conflict = Appointment::where('master_id', $appointment->master_id)
+            ->where('appointment_date', $validated['appointment_date'])
+            ->where('status', 'scheduled')
+            ->where('id', '!=', $appointment->id)
+            ->get();
+
+        $appointmentStart = Carbon::parse($validated['appointment_time']);
+        $appointmentEnd = $appointmentStart->copy()->addMinutes($appointment->duration);
+
+        foreach ($conflict as $existing) {
+            $existingStart = Carbon::parse($existing->appointment_time);
+            $existingEnd = $existingStart->copy()->addMinutes($existing->duration);
+
+            if ($appointmentStart->lt($existingEnd) && $appointmentEnd->gt($existingStart)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'На новий час вже є запис',
+                ], 422);
+            }
+        }
+
+        // Оновлюємо запис
+        $appointment->update([
+            'appointment_date' => $validated['appointment_date'],
+            'appointment_time' => $validated['appointment_time'],
+        ]);
+
+        // Відправляємо сповіщення про перенесення
+        app(MasterTelegramBotNotificationService::class)->sendMasterNotification($appointment);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Запис успішно перенесено',
+            'appointment' => [
+                'id' => $appointment->id,
+                'appointment_date' => $appointment->appointment_date->format('Y-m-d'),
+                'appointment_time' => $appointment->appointment_time,
+            ],
+        ]);
+    }
 }
