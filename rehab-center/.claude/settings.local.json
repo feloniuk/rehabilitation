@@ -13,7 +13,10 @@
       "Bash(git log:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\nРеалізація блокування діапазонів дат для майстрів\n\n- Додана нова модель MasterBlockedPeriod для управління заблокованими періодами\n- Додана міграція для створення таблиці master_blocked_periods\n- Розширена User модель:\n  * Relationship blockedPeriods\\(\\) та activeBlockedPeriods\\(\\)\n  * Helper методи isBlockedOn\\(\\) та getBlockedPeriodOn\\(\\)\n- Оновлені контролери:\n  * Admin/MasterController: CRUD для блокованих періодів в редагуванні\n  * MasterController: перевірка заблокованих дат в слотах\n  * ManualAppointmentController: валідація при ручному створенні записів\n- Оновлені views:\n  * admin/masters/edit: UI для управління блокованими періодами\n  * admin/masters/show: відображення активних заблокованих періодів\n- Динамічна форма для додавання/видалення періодів\n- Попередження адміністратора при створенні періоду з існуючими записами\n\nФункціональність:\n- Адміністратор може додавати/видаляти блоковані періоди при редагуванні майстра\n- Система автоматично блокує запис на клієнтській стороні під час блокованих дат\n- Ручне створення записів також забороняється адміністратором\n- Методи повертають інформацію про причину та деталі блокування\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(npm run build:*)",
-      "Bash(wmic process:*)"
+      "Bash(wmic process:*)",
+      "Bash(nvm use:*)",
+      "Bash(node --version:*)",
+      "Bash(npm --version:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -2134,8 +2134,29 @@ function cancelAppointment() {
         closeCancelModal();
         closeModal();
 
-        // Перезагружуємо шкалу часу щоб видалити запис
-        reloadTimeline(currentDayIndex);
+        // Перезагружуємо дані поточного дня з сервера щоб отримати актуальні дані
+        fetch("{{ route('admin.load-calendar') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                direction: 'stay',
+                week_offset: currentWeekOffset
+            })
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            if (responseData.success) {
+                // Оновлюємо календар але залишаємось на поточному дні
+                updateCalendar(responseData.calendar, currentDayIndex);
+            }
+        })
+        .catch(error => {
+            console.error('Error reloading calendar:', error);
+            showNotification('Помилка при оновленні календаря', 'error');
+        });
     })
     .catch(error => {
         console.error('Error:', error);
@@ -2269,14 +2290,17 @@ function selectRescheduleSlot(slot, element) {
 function toggleRescheduleCustomTime() {
     const checkbox = document.getElementById('rescheduleCustomTimeCheckbox');
     const customInputs = document.getElementById('rescheduleCustomTimeInputs');
+    const confirmBtn = document.getElementById('confirmRescheduleBtn');
 
     if (checkbox.checked) {
         customInputs.classList.remove('hidden');
         selectedRescheduleSlot = null; // Очищуємо вибір слота
+        confirmBtn.disabled = false; // Активуємо кнопку при включенні кастомного часу
     } else {
         customInputs.classList.add('hidden');
         document.getElementById('rescheduleHour').value = '';
         document.getElementById('rescheduleMinute').value = '';
+        confirmBtn.disabled = true; // Деактивуємо кнопку при вимиканні
     }
 }
 
@@ -2347,28 +2371,41 @@ function rescheduleAppointment() {
         closeRescheduleModal();
         closeModal();
 
-        // Знаходимо та видаляємо блок запису з календаря поточного дня
-        const appointmentBlock = document.querySelector('[data-appointment-id="' + currentAppointmentId + '"]');
-        if (appointmentBlock) {
-            appointmentBlock.remove();
-        }
+        // Перезагружуємо дані всієї тижня з сервера щоб отримати актуальні дані
+        fetch("{{ route('admin.load-calendar') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({
+                direction: 'stay',
+                week_offset: currentWeekOffset
+            })
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            if (responseData.success) {
+                // Знайдемо індекс нового дня в видимій тижні
+                let newDayIndex = currentDayIndex; // За замовчуванням залишаємось де були
+                const rescheduledDate = new Date(newDate + 'T00:00:00');
 
-        // Перезагружуємо шкалу часу щоб оновити календар
-        reloadTimeline(currentDayIndex);
-
-        // Якщо дата змінилась на інший день видимої тижня - перезагружуємо новий день теж
-        const rescheduledDate = new Date(newDate + 'T00:00:00');
-        const currentDate = new Date(calendarData.weekDates[currentDayIndex]);
-        if (rescheduledDate.getTime() !== currentDate.getTime()) {
-            // Знайдемо індекс нового дня в видимій тижні
-            for (let i = 0; i < calendarData.weekDates.length; i++) {
-                const weekDate = new Date(calendarData.weekDates[i]);
-                if (rescheduledDate.getTime() === weekDate.getTime()) {
-                    reloadTimeline(i);
-                    break;
+                for (let i = 0; i < responseData.calendar.weekDates.length; i++) {
+                    const weekDate = new Date(responseData.calendar.weekDates[i]);
+                    if (rescheduledDate.getTime() === weekDate.getTime()) {
+                        newDayIndex = i;
+                        break;
+                    }
                 }
+
+                // Оновлюємо календар залишаючись на потрібному дні
+                updateCalendar(responseData.calendar, newDayIndex);
             }
-        }
+        })
+        .catch(error => {
+            console.error('Error reloading calendar:', error);
+            showNotification('Помилка при оновленні календаря', 'error');
+        });
     })
     .catch(error => {
         console.error('Error:', error);
