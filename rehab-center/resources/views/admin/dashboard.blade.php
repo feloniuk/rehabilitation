@@ -768,6 +768,7 @@ var calendarData = {
 
 var currentDayIndex = {{ $selectedDateIndex ?? 0 }};
 var currentAppointmentId = null;
+var currentAppointmentData = null;
 var currentWeekOffset = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1282,6 +1283,9 @@ function showAppointmentDetails(id) {
         })
         .then(function(d) {
             console.log('Appointment data received:', d);
+
+            // Зберігаємо дані для інших функцій (скасування, перенесення)
+            currentAppointmentData = d;
 
             var statusClasses = {
                 'scheduled': 'bg-green-100 text-green-800',
