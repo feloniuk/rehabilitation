@@ -58,6 +58,6 @@ class Appointment extends Model
 
     public function canBeCancelled()
     {
-        return $this->status === 'scheduled' && $this->getStartDateTime()->diffInHours(now()) > 24;
+        return $this->status === 'scheduled' && $this->getStartDateTime()->diffInHours(now()) >= 24;
     }
 }

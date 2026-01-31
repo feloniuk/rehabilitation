@@ -462,14 +462,6 @@ class AppointmentController extends Controller
 
         $appointment = $query->findOrFail($id);
 
-        // Перевіряємо чи можна скасувати (адмін може скасовувати в будь-який час)
-        if (! $user->isAdmin() && ! $appointment->canBeCancelled()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Неможливо скасувати запис менше ніж за 24 години до прийому',
-            ], 422);
-        }
-
         // Скасовуємо запис
         $appointment->update(['status' => 'cancelled']);
 
