@@ -148,8 +148,6 @@
                                 <div class="font-medium text-gray-900">
                                     @if($log->user)
                                         {{ $log->user->name }}
-                                    @else
-                                        <span class="text-gray-400">Видалено</span>
                                     @endif
                                 </div>
                                 <div class="text-xs text-gray-500">

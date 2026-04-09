@@ -54,7 +54,7 @@
             <h3 class="text-lg font-semibold mb-4">Останні записи</h3>
             @if($client->clientAppointments->count() > 0)
                 <div class="space-y-3">
-                    @foreach($client->clientAppointments->take(5) as $appointment)
+                    @foreach($client->clientAppointments->take(10) as $appointment)
                         <div class="flex justify-between items-center p-3 border rounded">
                             <div>
                                 <h4 class="font-medium">{{ $appointment->service->name }}</h4>
