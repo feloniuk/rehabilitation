@@ -40,9 +40,9 @@
 
             <div class="flex items-center justify-between">
                 <div class="flex items-center">
-                    <input id="remember" name="remember" type="checkbox" 
+                    <input id="remember" name="remember" type="checkbox"
                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                           {{ old('remember') ? 'checked' : '' }}>
+                           {{ old('remember', true) ? 'checked' : '' }}>
                     <label for="remember" class="ml-2 block text-sm text-gray-900">
                         Запам'ятати мене
                     </label>
