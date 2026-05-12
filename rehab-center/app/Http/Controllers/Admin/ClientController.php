@@ -16,6 +16,11 @@ class ClientController extends Controller
         $query = User::where('role', 'client')
             ->withCount('clientAppointments');
 
+        // Фільтр "Видалені" — показати тільки soft-deleted
+        if ($request->filled('filter') && $request->filter === 'trashed') {
+            $query->onlyTrashed();
+        }
+
         // Фільтр по пошуковому запиту
         if ($request->filled('search')) {
             $search = $request->search;
@@ -33,8 +38,9 @@ class ClientController extends Controller
         }
 
         $clients = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+        $trashedCount = User::where('role', 'client')->onlyTrashed()->count();
 
-        return view('admin.clients.index', compact('clients'));
+        return view('admin.clients.index', compact('clients', 'trashedCount'));
     }
 
     public function create()
@@ -94,7 +100,7 @@ class ClientController extends Controller
 
     public function show($id)
     {
-        $client = User::where('role', 'client')
+        $client = User::withTrashed()->where('role', 'client')
             ->with(['clientAppointments' => function ($query) {
                 $query->orderBy('appointment_date', 'desc')->limit(10);
             }, 'clientAppointments.service', 'clientAppointments.master'])
@@ -166,12 +172,20 @@ class ClientController extends Controller
     public function destroy($id)
     {
         $client = User::where('role', 'client')->findOrFail($id);
-
-        // Видаляємо старі записи
-        $client->clientAppointments()->delete();
         $client->delete();
 
-        return back()->with('success', 'Клієнта видалено');
+        return back()->with('success', 'Клієнта видалено (м\'яке видалення). Записи збережено.');
+    }
+
+    /**
+     * Відновити м'яко видаленого клієнта
+     */
+    public function restore($id)
+    {
+        $client = User::onlyTrashed()->where('role', 'client')->findOrFail($id);
+        $client->restore();
+
+        return back()->with('success', 'Клієнта відновлено');
     }
 
     /**

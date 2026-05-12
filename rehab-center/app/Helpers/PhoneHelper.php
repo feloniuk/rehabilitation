@@ -34,11 +34,20 @@ class PhoneHelper
             if (strlen($phone) === 13) {
                 return $phone;
             }
+            // +3800XX... — зайвий 0 після коду країни (14 символів)
+            if (strlen($phone) === 14 && $phone[4] === '0') {
+                return '+380'.substr($phone, 5);
+            }
         }
 
         // Якщо починається з 380 (без +)
         if (str_starts_with($phone, '380') && strlen($phone) === 12) {
             return '+'.$phone;
+        }
+
+        // 3800XX... — зайвий 0 після коду країни (13 цифр без +)
+        if (str_starts_with($phone, '380') && strlen($phone) === 13 && $phone[3] === '0') {
+            return '+380'.substr($phone, 4);
         }
 
         // Якщо починається з 0 (локальний формат)

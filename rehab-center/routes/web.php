@@ -79,6 +79,7 @@ Route::middleware(['auth', 'role:admin,master'])->prefix('admin')->name('admin.'
     // Admin only routes
     Route::middleware('role:admin')->group(function () {
         Route::resource('clients', ClientController::class);
+        Route::post('clients/{id}/restore', [ClientController::class, 'restore'])->name('clients.restore');
         Route::resource('masters', AdminMasterController::class);
         Route::resource('services', AdminServiceController::class);
 

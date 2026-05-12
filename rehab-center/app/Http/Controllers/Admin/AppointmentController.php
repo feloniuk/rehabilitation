@@ -17,8 +17,9 @@ class AppointmentController extends Controller
     {
         $user = auth()->user();
 
-        // Базовий запит з фільтрацією по ролі
-        $query = Appointment::with(['client', 'master', 'service']);
+        // Базовий запит з фільтрацією по ролі (виключаємо записи видалених клієнтів)
+        $query = Appointment::whereHas('client')
+            ->with(['client', 'master', 'service']);
 
         // КРИТИЧНО: Якщо майстер - показуємо тільки його записи
         if ($user->isMaster()) {

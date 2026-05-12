@@ -510,6 +510,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (value.startsWith('380')) {
             value = value.substring(3);
         }
+        // Remove leading 0 (local format: 0XX XXX XX XX → XX XXX XX XX)
+        if (value.startsWith('0') && value.length <= 10) {
+            value = value.substring(1);
+        }
+        // Limit to 9 digits (subscriber number without country code)
+        value = value.substring(0, 9);
         if (value.length > 0) {
             value = '+380 ' + value.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
         }

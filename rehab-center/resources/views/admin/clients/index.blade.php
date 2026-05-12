@@ -15,9 +15,29 @@
         </div>
     </div>
 
+    {{-- Табы: Активні / Видалені --}}
+    <div class="px-4 pt-4 border-b bg-gray-50">
+        <div class="flex space-x-4 mb-4">
+            <a href="{{ route('admin.clients.index', array_merge(request()->except('filter', 'page'), [])) }}"
+               class="px-4 py-2 rounded-lg text-sm font-medium {{ !request('filter') ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 border hover:bg-gray-100' }}">
+                Активні
+            </a>
+            <a href="{{ route('admin.clients.index', array_merge(request()->except('page'), ['filter' => 'trashed'])) }}"
+               class="px-4 py-2 rounded-lg text-sm font-medium {{ request('filter') === 'trashed' ? 'bg-red-600 text-white' : 'bg-white text-gray-700 border hover:bg-gray-100' }}">
+                Видалені
+                @if($trashedCount > 0)
+                    <span class="ml-1 bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">{{ $trashedCount }}</span>
+                @endif
+            </a>
+        </div>
+    </div>
+
     {{-- Фільтри --}}
     <div class="px-4 py-4 border-b bg-gray-50">
         <form method="GET" action="{{ route('admin.clients.index') }}" class="flex flex-col md:flex-row gap-4">
+            @if(request('filter'))
+                <input type="hidden" name="filter" value="{{ request('filter') }}">
+            @endif
             <div class="flex-1">
                 <div class="relative">
                     <input type="text" name="search" value="{{ request('search') }}"
@@ -37,7 +57,7 @@
                 <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fas fa-filter mr-2"></i>Фільтр
                 </button>
-                @if(request('search') || request('status'))
+                @if(request('search') || request('status') || request('filter'))
                     <a href="{{ route('admin.clients.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors">
                         <i class="fas fa-times mr-2"></i>Скинути
                     </a>
@@ -98,21 +118,21 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            @if($client->is_active)
-                                <span style="
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            @if($client->trashed())
+                                <span style="display: flex; justify-content: center; align-items: center;"
+                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-200 text-gray-700">
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Видалено
+                                </span>
+                            @elseif($client->is_active)
+                                <span style="display: flex; justify-content: center; align-items: center;"
+                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     <i class="fas fa-check-circle mr-1"></i>
                                     Активний
                                 </span>
                             @else
-                                <span style="
-                                    display: flex;
-                                    justify-content: center;
-                                    align-items: center;
-                                " class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                <span style="display: flex; justify-content: center; align-items: center;"
+                                      class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
                                     <i class="fas fa-times-circle mr-1"></i>
                                     Неактивний
                                 </span>
@@ -120,26 +140,37 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-3">
-                                <a href="{{ route('admin.clients.show', $client->id) }}" 
+                                <a href="{{ route('admin.clients.show', $client->id) }}"
                                    class="text-blue-600 hover:text-blue-900 transition-colors"
                                    title="Деталі">
                                     <i class="fas fa-eye text-lg"></i>
                                 </a>
-                                <a href="{{ route('admin.clients.edit', $client->id) }}" 
-                                   class="text-indigo-600 hover:text-indigo-900 transition-colors"
-                                   title="Редагувати">
-                                    <i class="fas fa-edit text-lg"></i>
-                                </a>
-                                <form method="POST" action="{{ route('admin.clients.destroy', $client->id) }}" 
-                                      class="inline" onsubmit="return confirm('Ви впевнені? Це видалить всі записи клієнта!')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" 
-                                            class="text-red-600 hover:text-red-900 transition-colors"
-                                            title="Видалити">
-                                        <i class="fas fa-trash text-lg"></i>
-                                    </button>
-                                </form>
+                                @if($client->trashed())
+                                    <form method="POST" action="{{ route('admin.clients.restore', $client->id) }}" class="inline">
+                                        @csrf
+                                        <button type="submit"
+                                                class="text-green-600 hover:text-green-900 transition-colors"
+                                                title="Відновити">
+                                            <i class="fas fa-undo text-lg"></i>
+                                        </button>
+                                    </form>
+                                @else
+                                    <a href="{{ route('admin.clients.edit', $client->id) }}"
+                                       class="text-indigo-600 hover:text-indigo-900 transition-colors"
+                                       title="Редагувати">
+                                        <i class="fas fa-edit text-lg"></i>
+                                    </a>
+                                    <form method="POST" action="{{ route('admin.clients.destroy', $client->id) }}"
+                                          class="inline" onsubmit="return confirm('Видалити клієнта? Записи будуть збережені, але приховані.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-900 transition-colors"
+                                                title="Видалити">
+                                            <i class="fas fa-trash text-lg"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -180,26 +211,33 @@
                     </div>
                     
                     <div class="flex space-x-2">
-                        <a href="{{ route('admin.clients.show', $client->id) }}" 
+                        <a href="{{ route('admin.clients.show', $client->id) }}"
                            class="text-blue-600"
                            title="Деталі">
                             <i class="fas fa-eye"></i>
                         </a>
-                        <a href="{{ route('admin.clients.edit', $client->id) }}" 
-                           class="text-indigo-600"
-                           title="Редагувати">
-                            <i class="fas fa-edit"></i>
-                        </a>
-                        <form method="POST" action="{{ route('admin.clients.destroy', $client->id) }}" 
-                              class="inline" onsubmit="return confirm('Ви впевнені?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" 
-                                    class="text-red-600"
-                                    title="Видалити">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                        @if($client->trashed())
+                            <form method="POST" action="{{ route('admin.clients.restore', $client->id) }}" class="inline">
+                                @csrf
+                                <button type="submit" class="text-green-600" title="Відновити">
+                                    <i class="fas fa-undo"></i>
+                                </button>
+                            </form>
+                        @else
+                            <a href="{{ route('admin.clients.edit', $client->id) }}"
+                               class="text-indigo-600"
+                               title="Редагувати">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form method="POST" action="{{ route('admin.clients.destroy', $client->id) }}"
+                                  class="inline" onsubmit="return confirm('Видалити клієнта?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600" title="Видалити">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
 
@@ -225,7 +263,11 @@
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-gray-600">Статус:</span>
-                        @if($client->is_active)
+                        @if($client->trashed())
+                            <span class="px-2 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">
+                                Видалено
+                            </span>
+                        @elseif($client->is_active)
                             <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
                                 Активний
                             </span>

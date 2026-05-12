@@ -150,8 +150,9 @@ class DashboardController extends Controller
 
         $masters = $mastersQuery->orderBy('name')->get();
 
-        // Отримуємо всі записи на цей тиждень
+        // Отримуємо всі записи на цей тиждень (виключаємо записи видалених клієнтів)
         $appointmentsQuery = Appointment::whereBetween('appointment_date', [$startDate, $endDate])
+            ->whereHas('client')
             ->with(['client', 'service', 'master'])
             ->where('status', 'scheduled');
 
