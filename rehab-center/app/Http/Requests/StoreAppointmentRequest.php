@@ -51,6 +51,12 @@ class StoreAppointmentRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.required' => 'Введіть ваше ім\'я.',
+            'phone.required' => 'Введіть номер телефону.',
+            'phone.max' => 'Введіть коректний номер телефону у форматі +380XXXXXXXXX.',
+            'appointment_date.required' => 'Оберіть дату.',
+            'appointment_date.after_or_equal' => 'Дата не може бути в минулому.',
+            'appointment_time.required' => 'Оберіть час.',
             'appointment_time.in' => 'Вибраний час недоступний. Оберіть час з запропонованих варіантів.',
         ];
     }

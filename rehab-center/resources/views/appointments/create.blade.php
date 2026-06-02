@@ -509,11 +509,20 @@ document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.getElementById('phone');
     function applyPhoneMask(e) {
         let digits = e.target.value.replace(/\D/g, '');
-        // Normalize country/operator prefix
-        if (digits.startsWith('380')) { digits = digits.substring(2); }
-        else if (digits.startsWith('38')) { digits = digits.substring(2); }
-        // Ensure leading 0 for local format
-        if (!digits.startsWith('0') && digits.length > 0) { digits = '0' + digits; }
+        // Strip country-code prefix iteratively (handles 380380... double-prefix pasting)
+        let prefixStripped = false;
+        for (let i = 0; i < 2; i++) {
+            if (digits.startsWith('380')) { digits = digits.substring(3); prefixStripped = true; }
+            else if (digits.startsWith('38') && !digits.startsWith('380')) { digits = digits.substring(2); prefixStripped = true; }
+            else { break; }
+        }
+        // Single non-0 digit with no prefix stripped = user typing "+3" — don't show phantom digit
+        if (digits.length === 1 && !digits.startsWith('0') && !prefixStripped) {
+            e.target.value = '';
+            return;
+        }
+        // Ensure leading 0: always when prefix was stripped (and digits remain), otherwise only for ≥2 digits
+        if (digits.length > 0 && !digits.startsWith('0') && (prefixStripped || digits.length >= 2)) { digits = '0' + digits; }
         digits = digits.substring(0, 10); // 0XX XXX XX XX = 10 digits
         let masked = '+38 ';
         if (digits.length > 0) masked += digits.substring(0, Math.min(3, digits.length));
@@ -523,9 +532,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.value = digits.length === 0 ? '' : masked;
     }
     phoneInput.addEventListener('input', applyPhoneMask);
-    phoneInput.addEventListener('focus', function(e) {
-        if (e.target.value === '') { e.target.value = '+38 '; }
-    });
     phoneInput.addEventListener('blur', function(e) {
         if (e.target.value === '+38 ') { e.target.value = ''; }
     });
