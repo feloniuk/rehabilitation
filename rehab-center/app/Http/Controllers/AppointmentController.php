@@ -30,17 +30,15 @@ class AppointmentController extends Controller
     {
         $validated = $request->validated();
 
-        // Нормалізуємо телефон та шукаємо/створюємо клієнта
+        // Нормалізуємо телефон та шукаємо існуючого клієнта (або створюємо нового)
         $normalizedPhone = PhoneHelper::normalize($validated['phone']);
 
-        $client = User::firstOrCreate(
-            ['phone' => $normalizedPhone],
-            [
-                'name' => $validated['name'],
-                'role' => 'client',
-                'password' => bcrypt(str()->random(12)),
-            ]
-        );
+        $client = User::findByPhone($normalizedPhone) ?? User::create([
+            'phone' => $normalizedPhone,
+            'name' => $validated['name'],
+            'role' => 'client',
+            'password' => bcrypt(str()->random(12)),
+        ]);
 
         $masterService = MasterService::where('master_id', $validated['master_id'])
             ->where('service_id', $validated['service_id'])

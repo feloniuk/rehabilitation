@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Helpers\PhoneHelper;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -26,7 +27,17 @@ class StoreAppointmentRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'email' => 'nullable|email',
-            'phone' => 'required|string|max:20',
+            'phone' => [
+                'required',
+                'string',
+                'max:20',
+                function ($attribute, $value, $fail) {
+                    $normalized = PhoneHelper::normalize($value);
+                    if (! $normalized || strlen($normalized) !== 13 || ! str_starts_with($normalized, '+380')) {
+                        $fail('Введіть коректний номер телефону у форматі +380XXXXXXXXX.');
+                    }
+                },
+            ],
             'master_id' => 'required|exists:users,id',
             'service_id' => 'required|exists:services,id',
             'appointment_date' => 'required|date|after_or_equal:today',

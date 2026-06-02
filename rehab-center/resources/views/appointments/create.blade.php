@@ -161,12 +161,14 @@
                                 <label for="phone" class="block text-sm font-medium text-gray-700 mb-2">
                                     Телефон *
                                 </label>
-                                <input type="tel" 
-                                       id="phone" 
-                                       name="phone" 
+                                <input type="tel"
+                                       id="phone"
+                                       name="phone"
                                        required
+                                       autocomplete="tel"
+                                       inputmode="tel"
                                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-200"
-                                       placeholder="+380 XX XXX XX XX"
+                                       placeholder="+38 0XX XXX XX XX"
                                        value="{{ old('phone') }}">
                                 @error('phone')
                                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
@@ -503,23 +505,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     });
 
-    // Phone number formatting
+    // Phone mask: +38 0XX XXX XX XX
     const phoneInput = document.getElementById('phone');
-    phoneInput.addEventListener('input', function(e) {
-        let value = e.target.value.replace(/\D/g, '');
-        if (value.startsWith('380')) {
-            value = value.substring(3);
-        }
-        // Remove leading 0 (local format: 0XX XXX XX XX → XX XXX XX XX)
-        if (value.startsWith('0') && value.length <= 10) {
-            value = value.substring(1);
-        }
-        // Limit to 9 digits (subscriber number without country code)
-        value = value.substring(0, 9);
-        if (value.length > 0) {
-            value = '+380 ' + value.replace(/(\d{2})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
-        }
-        e.target.value = value;
+    function applyPhoneMask(e) {
+        let digits = e.target.value.replace(/\D/g, '');
+        // Normalize country/operator prefix
+        if (digits.startsWith('380')) { digits = digits.substring(2); }
+        else if (digits.startsWith('38')) { digits = digits.substring(2); }
+        // Ensure leading 0 for local format
+        if (!digits.startsWith('0') && digits.length > 0) { digits = '0' + digits; }
+        digits = digits.substring(0, 10); // 0XX XXX XX XX = 10 digits
+        let masked = '+38 ';
+        if (digits.length > 0) masked += digits.substring(0, Math.min(3, digits.length));
+        if (digits.length > 3) masked += ' ' + digits.substring(3, Math.min(6, digits.length));
+        if (digits.length > 6) masked += ' ' + digits.substring(6, Math.min(8, digits.length));
+        if (digits.length > 8) masked += ' ' + digits.substring(8, 10);
+        e.target.value = digits.length === 0 ? '' : masked;
+    }
+    phoneInput.addEventListener('input', applyPhoneMask);
+    phoneInput.addEventListener('focus', function(e) {
+        if (e.target.value === '') { e.target.value = '+38 '; }
+    });
+    phoneInput.addEventListener('blur', function(e) {
+        if (e.target.value === '+38 ') { e.target.value = ''; }
     });
 
     // Auto-resize textarea
