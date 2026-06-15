@@ -57,8 +57,8 @@
                     @foreach($client->clientAppointments->take(10) as $appointment)
                         <div class="flex justify-between items-center p-3 border rounded">
                             <div>
-                                <h4 class="font-medium">{{ $appointment->service->name }}</h4>
-                                <p class="text-sm text-gray-600">{{ $appointment->master->name }}</p>
+                                <h4 class="font-medium">{{ $appointment->service?->name ?? 'Послугу видалено' }}</h4>
+                                <p class="text-sm text-gray-600">{{ $appointment->master?->name ?? 'Майстра видалено' }}</p>
                                 <p class="text-sm text-gray-500">
                                     {{ $appointment->appointment_date->format('d.m.Y') }} о {{ substr($appointment->appointment_time, 0, 5) }}
                                 </p>
